@@ -103,72 +103,40 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
               @if (expanded() === r.id) {
                 <tr class="trow-expand">
                   <td colspan="6">
-                    <div class="expand-grid">
-                      <div>
-                        <div class="tl-eyebrow" style="margin-bottom:8px">
+                    <div class="expand-body">
+                      <div class="row" style="margin-bottom:10px">
+                        <div class="tl-eyebrow">
                           Translations · <span class="tnum">{{ doneCount(r) }}/{{ r.translations.length }}</span>
                         </div>
+                        <div class="spacer"></div>
+                        <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); openHistory(r)">
+                          <tl-icon name="CalendarClock" [size]="13" />View full history
+                        </button>
+                      </div>
+                      <div class="tr-table">
                         @for (t of r.translations; track t.code) {
-                          <div class="tr-line">
+                          <div class="tr-row">
                             <span class="locale">{{ t.code }}</span>
-                            <span class="muted" style="width:96px;font-size:12px;flex:none">{{ t.name }}</span>
+                            <span class="tr-name">{{ t.name }}</span>
                             <span
-                              style="flex:1;font-size:13.5px"
-                              [style.color]="t.value ? 'var(--tl-ink-80)' : 'var(--tl-muted)'"
+                              class="tr-value"
+                              [style.color]="t.value ? 'var(--tl-ink)' : 'var(--tl-muted)'"
                               [style.font-style]="t.value ? 'normal' : 'italic'"
                             >{{ t.value || 'Untranslated' }}</span>
+                            <span class="tr-author">
+                              @if (t.modifiedBy; as m) {
+                                <tl-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
+                                <span class="tr-author-meta">
+                                  <span class="tr-author-name">{{ m.name }}</span>
+                                  <span class="muted tnum tr-author-at">{{ m.at }}</span>
+                                </span>
+                              } @else {
+                                <span class="muted" style="font-size:12px">—</span>
+                              }
+                            </span>
                             <tl-status-chip [status]="t.status" />
                           </div>
                         }
-                      </div>
-                      <div>
-                        <div class="row" style="margin-bottom:10px">
-                          <div class="tl-eyebrow">Audit history</div>
-                          <div class="spacer"></div>
-                          <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); openHistory(r)">
-                            <tl-icon name="CalendarClock" [size]="13" />View full history
-                          </button>
-                        </div>
-                        <div class="card" style="padding:13px;display:flex;flex-direction:column;gap:14px;margin-bottom:14px">
-                          @if (r.createdBy) {
-                            <div class="audit-line">
-                              <span class="audit-ico"><tl-icon name="Sparkles" [size]="13" color="var(--tl-slate)" /></span>
-                              <div style="flex:1;min-width:0">
-                                <div class="audit-label">Created</div>
-                                <div class="row" style="gap:7px;margin-top:3px">
-                                  <tl-avatar [i]="r.createdBy.avatar" [name]="r.createdBy.name" [sm]="true" />
-                                  <span style="font-size:12.5px;font-weight:600">{{ r.createdBy.name }}</span>
-                                </div>
-                              </div>
-                              <span class="muted tnum" style="font-size:11.5px">{{ r.createdAt }}</span>
-                            </div>
-                          }
-                          <div style="height:1px;background:var(--tl-line-2)"></div>
-                          @if (r.modifiedBy) {
-                            <div class="audit-line">
-                              <span class="audit-ico"><tl-icon name="PencilLine" [size]="13" color="var(--tl-slate)" /></span>
-                              <div style="flex:1;min-width:0">
-                                <div class="audit-label">Last modified</div>
-                                <div class="row" style="gap:7px;margin-top:3px">
-                                  <tl-avatar [i]="r.modifiedBy.avatar" [name]="r.modifiedBy.name" [sm]="true" />
-                                  <span style="font-size:12.5px;font-weight:600">{{ r.modifiedBy.name }}</span>
-                                </div>
-                              </div>
-                              <span class="muted tnum" style="font-size:11.5px">{{ r.modifiedAt }}</span>
-                            </div>
-                          }
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:11px;padding-left:4px">
-                          @for (h of r.history; track $index) {
-                            <div class="row" style="gap:9px;align-items:flex-start">
-                              <span class="hist-dot" [style.background]="$index === 0 ? 'var(--tl-accent)' : 'var(--tl-line)'"></span>
-                              <div style="font-size:12.5px;line-height:1.4;flex:1">
-                                <b style="font-weight:600">{{ h.name }}</b> <span class="muted">{{ h.action }}</span>
-                                <div class="muted tnum" style="font-size:11px;margin-top:1px">{{ h.at }}</div>
-                              </div>
-                            </div>
-                          }
-                        </div>
                       </div>
                     </div>
                   </td>
@@ -198,25 +166,54 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
   `,
   styles: `
-    .expand-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 28px;
-      padding: 18px 24px 22px 56px;
+    .expand-body {
+      padding: 16px 24px 20px 56px;
     }
-    .audit-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-weight: 600;
+    .tr-table {
+      display: flex;
+      flex-direction: column;
+    }
+    .tr-row {
+      display: grid;
+      grid-template-columns: 56px 120px 1fr 200px 120px;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--tl-line-2);
+    }
+    .tr-row:last-child {
+      border-bottom: none;
+    }
+    .tr-name {
+      font-size: 12px;
       color: var(--tl-muted);
     }
-    .hist-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      margin-top: 6px;
-      flex: none;
+    .tr-value {
+      font-size: 13.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tr-author {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .tr-author-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .tr-author-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tr-author-at {
+      font-size: 11px;
     }
   `,
 })

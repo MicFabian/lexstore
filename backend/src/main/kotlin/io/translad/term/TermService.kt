@@ -125,6 +125,9 @@ class TermService(
                 name = l.name,
                 value = t?.value,
                 status = (t?.status?.name ?: "UNTRANSLATED").lowercase(),
+                modifiedBy = t?.modifiedByName?.let {
+                    AuditEntry(it, t.modifiedByAvatar ?: 0, "edited", relativeTime(t.updatedAt))
+                },
             )
         }
         val cmts = comments.findByTermIdOrderByCreatedAt(term.id).map {
@@ -153,5 +156,21 @@ class TermService(
             comments = cmts,
             history = history,
         )
+    }
+
+    private fun relativeTime(at: Instant): String {
+        val d = java.time.Duration.between(at, Instant.now())
+        return when {
+            d.toMinutes() < 1 -> "just now"
+            d.toMinutes() < 60 -> "${d.toMinutes()}m ago"
+            d.toHours() < 24 -> "${d.toHours()}h ago"
+            d.toDays() < 7 -> "${d.toDays()}d ago"
+            else -> ISO.format(at)
+        }
+    }
+
+    companion object {
+        private val ISO: java.time.format.DateTimeFormatter =
+            java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(java.time.ZoneOffset.UTC)
     }
 }

@@ -19,6 +19,8 @@ data class TermTranslationView(
     val name: String,
     val value: String?,
     val status: String,
+    /** Who last changed this translation (null if never edited). */
+    val modifiedBy: AuditEntry?,
 )
 
 data class AuditEntry(val name: String, val avatar: Int, val action: String, val at: String)

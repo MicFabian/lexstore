@@ -100,15 +100,19 @@ test.describe('translation editor', () => {
 });
 
 test.describe('terms', () => {
-  test('expands a row to show translations and audit history', async ({ page }) => {
+  test('expands a row to show per-translation authors', async ({ page }) => {
     await page.goto('/terms');
     await waitShell(page);
     await page.locator('.trow', { hasText: 'checkout.button.pay' }).click();
     const expanded = page.locator('.trow-expand');
     await expect(expanded).toBeVisible();
-    // Per-language translation lines + audit history.
-    await expect(expanded.locator('.tr-line')).toHaveCount(6);
-    await expect(expanded).toContainText('Audit history');
+    // One row per language, each with its translation + author column.
+    await expect(expanded.locator('.tr-row')).toHaveCount(6);
+    // A translated language shows an author name.
+    await expect(expanded.locator('.tr-author-name').first()).toBeVisible();
+    // The full-history modal is reachable from the expanded row.
+    await expanded.locator('button', { hasText: 'View full history' }).click();
+    await expect(page.locator('.modal[aria-label="Translation history"]')).toBeVisible();
   });
 
   test('the "New only" toggle filters to new terms', async ({ page }) => {

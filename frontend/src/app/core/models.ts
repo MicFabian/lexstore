@@ -53,6 +53,7 @@ export interface TermTranslationView {
   name: string;
   value: string | null;
   status: TranslationStatus;
+  modifiedBy: AuditEntry | null;
 }
 
 export interface AuditEntry {
