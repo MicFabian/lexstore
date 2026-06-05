@@ -54,6 +54,9 @@ data class EditorRow(
     val target: String?,
     val status: String,
     val comments: List<CommentView>,
+    /** Who last changed this translation, and when (null if never edited). */
+    val modifiedBy: AuditEntry?,
+    val modifiedAt: String?,
 )
 
 data class EditorResponse(

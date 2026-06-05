@@ -286,6 +286,47 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         }
     }
 
+    // ---------------- Translation audit ----------------
+
+    @Test
+    fun `saving a translation records who changed it`() {
+        val id = mosaicId()
+        val termId = (getMap("/api/projects/$id/terms?size=50")["content"] as List<*>)
+            .map { it as Map<*, *> }.first { it["key"] == "auth.forgot" }["id"] as String
+
+        client.put().uri("/api/projects/$id/languages/de/translations/$termId")
+            .body(mapOf("value" to "Passwort vergessen?", "status" to "translated", "authorName" to "Lukas Brandt", "authorAvatar" to 3))
+            .retrieve().toBodilessEntity()
+
+        // The editor row now reports the last editor.
+        @Suppress("UNCHECKED_CAST")
+        val rows = getMap("/api/projects/$id/languages/de/translations")["rows"] as List<Map<String, Any?>>
+        val row = rows.first { it["key"] == "auth.forgot" }
+        @Suppress("UNCHECKED_CAST")
+        val modifiedBy = row["modifiedBy"] as Map<String, Any?>
+        assertThat(modifiedBy["name"]).isEqualTo("Lukas Brandt")
+    }
+
+    @Test
+    fun `term history returns events across languages newest first`() {
+        val id = mosaicId()
+        val termId = (getMap("/api/projects/$id/terms?size=50")["content"] as List<*>)
+            .map { it as Map<*, *> }.first { it["key"] == "nav.dashboard" }["id"] as String
+
+        // Seeded history already exists; add one more and confirm it lands on top.
+        client.put().uri("/api/projects/$id/languages/fr/translations/$termId")
+            .body(mapOf("value" to "Tableau de bord (révisé)", "status" to "proofread", "authorName" to "QA Bot"))
+            .retrieve().toBodilessEntity()
+
+        val history = getList("/api/projects/$id/terms/$termId/history")
+        assertThat(history).isNotEmpty()
+        assertThat(history.first()["authorName"]).isEqualTo("QA Bot")
+        assertThat(history.first()["newValue"]).isEqualTo("Tableau de bord (révisé)")
+        assertThat(history.first()["action"]).isEqualTo("proofread")
+        // Events span more than one language (seeded de/ja/es etc).
+        assertThat(history.map { it["languageCode"] }.toSet().size).isGreaterThan(1)
+    }
+
     // ---------------- Editor view integrity ----------------
 
     @Test

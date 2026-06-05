@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox, StatusChip, Tag } from '../../shared/primitives';
+import { HistoryModal } from '../../shared/history-modal';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -11,7 +12,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
 @Component({
   selector: 'tl-terms-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag],
+  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal],
   template: `
     <div class="content content__pad">
       <div class="row" style="margin-bottom:6px">
@@ -121,7 +122,13 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                         }
                       </div>
                       <div>
-                        <div class="tl-eyebrow" style="margin-bottom:10px">Audit history</div>
+                        <div class="row" style="margin-bottom:10px">
+                          <div class="tl-eyebrow">Audit history</div>
+                          <div class="spacer"></div>
+                          <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); openHistory(r)">
+                            <tl-icon name="CalendarClock" [size]="13" />View full history
+                          </button>
+                        </div>
                         <div class="card" style="padding:13px;display:flex;flex-direction:column;gap:14px;margin-bottom:14px">
                           @if (r.createdBy) {
                             <div class="audit-line">
@@ -180,6 +187,15 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
         </table>
       </div>
     </div>
+
+    @if (historyTerm(); as h) {
+      <tl-history-modal
+        [projectId]="projectId()!"
+        [termId]="h.id"
+        [termKey]="h.key"
+        (closed)="historyTerm.set(null)"
+      />
+    }
   `,
   styles: `
     .expand-grid {
@@ -214,6 +230,8 @@ export class TermsScreen implements OnInit {
   protected readonly tag = signal<string | null>(null);
   protected readonly newOnly = signal(false);
   protected readonly expanded = signal<string | null>(null);
+  protected readonly historyTerm = signal<TermView | null>(null);
+  protected readonly projectId = computed(() => this.state.current()?.id ?? null);
   protected readonly allTags = TAGS;
 
   protected readonly filtered = computed(() => {
@@ -234,6 +252,10 @@ export class TermsScreen implements OnInit {
 
   protected toggle(id: string): void {
     this.expanded.update((e) => (e === id ? null : id));
+  }
+
+  protected openHistory(term: TermView): void {
+    this.historyTerm.set(term);
   }
 
   protected doneCount(r: TermView): number {

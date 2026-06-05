@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, StatusChip, Tag } from '../../shared/primitives';
+import { HistoryModal } from '../../shared/history-modal';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
@@ -24,7 +25,7 @@ const SUGGESTIONS: Record<string, string> = {
 @Component({
   selector: 'tl-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, StatusChip, Avatar, Tag],
+  imports: [Icon, Btn, StatusChip, Avatar, Tag, HistoryModal],
   template: `
     <div class="inspector">
       <div class="inspector__head">
@@ -93,6 +94,21 @@ const SUGGESTIONS: Record<string, string> = {
           </tl-btn>
         </div>
 
+        <div class="lastedit">
+          @if (row().modifiedBy; as m) {
+            <tl-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
+            <span class="lastedit__text">
+              Last edited by <b>{{ m.name }}</b> · {{ row().modifiedAt }}
+            </span>
+          } @else {
+            <span class="muted" style="font-size:12px">Not yet translated.</span>
+          }
+          <div class="spacer"></div>
+          <button class="btn btn--subtle btn--sm" (click)="showHistory.set(true)">
+            <tl-icon name="CalendarClock" [size]="13" />History
+          </button>
+        </div>
+
         <div class="divider"></div>
 
         <div>
@@ -136,8 +152,30 @@ const SUGGESTIONS: Record<string, string> = {
         </div>
       </div>
     </div>
+
+    @if (showHistory()) {
+      <tl-history-modal
+        [projectId]="projectId()!"
+        [termId]="row().id"
+        [termKey]="row().key"
+        (closed)="showHistory.set(false)"
+      />
+    }
   `,
   styles: `
+    .lastedit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lastedit__text {
+      font-size: 12px;
+      color: var(--tl-slate);
+    }
+    .lastedit__text b {
+      color: var(--tl-ink);
+      font-weight: 600;
+    }
     .suggestion {
       padding: 11px 13px;
       text-align: left;
@@ -170,8 +208,10 @@ export class Inspector {
   protected readonly value = signal('');
   protected readonly draft = signal('');
   protected readonly comments = signal<CommentView[]>([]);
+  protected readonly showHistory = signal(false);
 
   protected readonly suggestion = computed(() => SUGGESTIONS[this.row().key] ?? null);
+  protected readonly projectId = computed(() => this.state.current()?.id ?? null);
 
   constructor() {
     // Reset editable state whenever the selected row changes.
@@ -180,6 +220,7 @@ export class Inspector {
       this.value.set(r.target ?? '');
       this.draft.set('');
       this.comments.set(r.comments);
+      this.showHistory.set(false);
     });
   }
 

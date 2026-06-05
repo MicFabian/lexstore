@@ -38,4 +38,10 @@ class Translation(
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
+
+    @Column(name = "modified_by_name")
+    var modifiedByName: String? = null,
+
+    @Column(name = "modified_by_avatar")
+    var modifiedByAvatar: Int? = null,
 )

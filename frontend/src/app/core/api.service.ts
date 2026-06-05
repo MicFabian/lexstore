@@ -13,6 +13,7 @@ import {
   ProjectDetail,
   ProjectSummary,
   TermView,
+  TranslationHistoryEntry,
   TranslationStatus,
 } from './models';
 
@@ -89,6 +90,12 @@ export class ApiService {
     return this.http.post<CommentView>(
       `${BASE}/projects/${projectId}/terms/${termId}/comments`,
       body,
+    );
+  }
+
+  termHistory(projectId: string, termId: string): Observable<TranslationHistoryEntry[]> {
+    return this.http.get<TranslationHistoryEntry[]>(
+      `${BASE}/projects/${projectId}/terms/${termId}/history`,
     );
   }
 

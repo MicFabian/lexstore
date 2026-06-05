@@ -55,6 +55,26 @@ test.describe('translation editor', () => {
     }
   });
 
+  test('inspector shows the last editor and opens full history', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    // A translated, proofread row carries a "last edited by" line.
+    await page.locator('.trow', { hasText: 'nav.dashboard' }).click();
+    const inspector = page.locator('.inspector');
+    await expect(inspector.locator('.lastedit__text')).toContainText('Last edited by');
+
+    // Open the history modal — it lists events across languages.
+    await inspector.locator('button', { hasText: 'History' }).click();
+    const modal = page.locator('.modal[aria-label="Translation history"]');
+    await expect(modal).toBeVisible();
+    await expect(modal).toContainText('nav.dashboard');
+    await expect(modal.locator('.event').first()).toBeVisible();
+    // Multiple languages appear in the trail.
+    await expect(modal.locator('.event .locale')).not.toHaveCount(0);
+    await modal.locator('button[aria-label="Close"]').click();
+    await expect(modal).toBeHidden();
+  });
+
   test('opens the inspector and saves a translation', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);

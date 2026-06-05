@@ -11,6 +11,17 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
+/** Full translation audit history for a single term, across all languages. */
+@RestController
+@RequestMapping("/api/projects/{projectId}/terms/{termId}/history")
+class TermHistoryController(private val service: EditorService) {
+    @GetMapping
+    fun history(
+        @PathVariable projectId: UUID,
+        @PathVariable termId: UUID,
+    ): List<TranslationHistoryEntry> = service.history(projectId, termId)
+}
+
 /**
  * Translations as a sub-resource of a language. The collection
  * `…/languages/{code}/translations` is the editor view (one entry per term);

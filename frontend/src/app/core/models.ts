@@ -91,6 +91,20 @@ export interface EditorRow {
   target: string | null;
   status: TranslationStatus;
   comments: CommentView[];
+  modifiedBy: AuditEntry | null;
+  modifiedAt: string | null;
+}
+
+export interface TranslationHistoryEntry {
+  languageCode: string;
+  action: string;
+  oldValue: string | null;
+  newValue: string | null;
+  oldStatus: string | null;
+  newStatus: string;
+  authorName: string;
+  authorAvatar: number;
+  at: string;
 }
 
 export interface EditorResponse {
