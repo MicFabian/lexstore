@@ -1,0 +1,111 @@
+/* ============================================================
+   TransLad — Foundations: Color + Type
+   Editorial precision meets developer utility.
+   Import this file, then use the semantic vars below.
+   Fonts load from Google Fonts (see @import). If you vendor
+   the TTFs into /fonts, swap the @import for @font-face.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---------- Brand palette ---------- */
+  --tl-cobalt-50:  #eef2ff;
+  --tl-cobalt-100: #dce4ff;
+  --tl-cobalt-200: #bccaff;
+  --tl-cobalt-300: #8fa6ff;
+  --tl-cobalt-400: #5e7bff;
+  --tl-cobalt-500: #3a5bff;   /* PRIMARY — electric cobalt */
+  --tl-cobalt-600: #2a44e6;   /* hover */
+  --tl-cobalt-700: #2236bd;   /* press */
+  --tl-cobalt-800: #1f3094;
+  --tl-cobalt-900: #1d2c75;
+
+  /* ---------- Ink / warm neutrals ---------- */
+  --tl-ink:    #151723;   /* near-black, cool navy-charcoal */
+  --tl-ink-80: #2d3142;
+  --tl-slate:  #5a6072;   /* secondary text */
+  --tl-muted:  #868da0;   /* tertiary / placeholder */
+  --tl-line:   #e3e5eb;   /* hairline borders (cool) */
+  --tl-line-2: #edeff3;   /* lighter divider */
+  --tl-fill:   #eff1f6;   /* subtle fill / track */
+  --tl-card:   #ffffff;
+  --tl-paper:  #f6f7fa;   /* cool off-white app background */
+  --tl-paper-2:#eef0f5;   /* secondary paper (rails) */
+
+  /* ---------- Semantic (UI feedback) ---------- */
+  --tl-success:    #1f9d57;
+  --tl-success-bg: #e7f6ee;
+  --tl-warning:    #c97a09;
+  --tl-warning-bg: #fbf0dc;
+  --tl-danger:     #d83a3a;
+  --tl-danger-bg:  #fbe9e9;
+  --tl-info:       var(--tl-cobalt-500);
+  --tl-info-bg:    var(--tl-cobalt-50);
+
+  /* ---------- Translation status (domain-specific) ---------- */
+  --tl-st-untranslated: #c97a09;  --tl-st-untranslated-bg: #fbf0dc;  /* amber  */
+  --tl-st-translated:   #1f9d57;  --tl-st-translated-bg:   #e7f6ee;  /* green  */
+  --tl-st-fuzzy:        #7b53d6;  --tl-st-fuzzy-bg:        #efe9fb;  /* violet — needs review */
+  --tl-st-new:          #3a5bff;  --tl-st-new-bg:          #eef2ff;  /* cobalt — newly added */
+  --tl-st-proofread:    #0f8aa0;  --tl-st-proofread-bg:    #e2f4f7;  /* teal — verified */
+
+  /* ---------- Type families ---------- */
+  --tl-serif: 'Newsreader', Georgia, 'Times New Roman', serif;   /* editorial display */
+  --tl-sans:  'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;  /* UI workhorse */
+  --tl-mono:  'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;            /* keys / codes */
+
+  /* ---------- Type scale (UI = sans) ---------- */
+  --tl-text-xs:   12px;   /* meta, table chrome, tags */
+  --tl-text-sm:   13px;   /* dense table cells, secondary */
+  --tl-text-base: 14px;   /* body / default UI */
+  --tl-text-md:   15px;
+  --tl-text-lg:   17px;
+  --tl-text-xl:   20px;   /* card titles */
+  --tl-text-2xl:  24px;
+  --tl-display-1: 56px;   /* serif hero */
+  --tl-display-2: 40px;   /* serif section */
+  --tl-display-3: 30px;
+
+  --tl-lh-tight:  1.15;
+  --tl-lh-snug:   1.35;
+  --tl-lh-normal: 1.55;
+
+  /* ---------- Radii ---------- */
+  --tl-r-xs: 4px;
+  --tl-r-sm: 6px;
+  --tl-r-md: 9px;
+  --tl-r-lg: 12px;
+  --tl-r-xl: 16px;
+  --tl-r-pill: 999px;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --tl-s-1: 4px;  --tl-s-2: 8px;  --tl-s-3: 12px; --tl-s-4: 16px;
+  --tl-s-5: 20px; --tl-s-6: 24px; --tl-s-8: 32px; --tl-s-10: 40px;
+  --tl-s-12: 48px; --tl-s-16: 64px;
+
+  /* ---------- Elevation (cool, low, tight) ---------- */
+  --tl-shadow-xs: 0 1px 2px rgba(21,23,35,.06);
+  --tl-shadow-sm: 0 1px 2px rgba(21,23,35,.05), 0 1px 1px rgba(21,23,35,.04);
+  --tl-shadow-md: 0 4px 12px rgba(21,23,35,.08), 0 1px 3px rgba(21,23,35,.05);
+  --tl-shadow-lg: 0 12px 32px rgba(21,23,35,.12), 0 4px 10px rgba(21,23,35,.06);
+  --tl-shadow-pop: 0 18px 48px rgba(21,23,35,.18), 0 6px 14px rgba(21,23,35,.10);
+  --tl-ring: 0 0 0 3px rgba(58,91,255,.20);   /* focus ring */
+}
+
+/* ============================================================
+   Semantic element styles — apply via classes .tl-h1 etc.
+   ============================================================ */
+.tl-display { font-family: var(--tl-serif); font-weight: 500; letter-spacing: -0.02em; line-height: var(--tl-lh-tight); color: var(--tl-ink); }
+.tl-display-1 { font-family: var(--tl-serif); font-weight: 500; font-size: var(--tl-display-1); line-height: 1.05; letter-spacing: -0.025em; color: var(--tl-ink); }
+.tl-display-2 { font-family: var(--tl-serif); font-weight: 500; font-size: var(--tl-display-2); line-height: 1.1; letter-spacing: -0.02em; color: var(--tl-ink); }
+.tl-display-3 { font-family: var(--tl-serif); font-weight: 500; font-size: var(--tl-display-3); line-height: 1.15; letter-spacing: -0.015em; color: var(--tl-ink); }
+
+.tl-h1 { font-family: var(--tl-sans); font-weight: 700; font-size: var(--tl-text-2xl); line-height: var(--tl-lh-snug); letter-spacing: -0.015em; color: var(--tl-ink); }
+.tl-h2 { font-family: var(--tl-sans); font-weight: 700; font-size: var(--tl-text-xl); line-height: var(--tl-lh-snug); letter-spacing: -0.01em; color: var(--tl-ink); }
+.tl-h3 { font-family: var(--tl-sans); font-weight: 600; font-size: var(--tl-text-lg); line-height: var(--tl-lh-snug); color: var(--tl-ink); }
+.tl-body { font-family: var(--tl-sans); font-weight: 400; font-size: var(--tl-text-base); line-height: var(--tl-lh-normal); color: var(--tl-ink-80); }
+.tl-small { font-family: var(--tl-sans); font-weight: 400; font-size: var(--tl-text-sm); line-height: var(--tl-lh-snug); color: var(--tl-slate); }
+.tl-eyebrow { font-family: var(--tl-sans); font-weight: 600; font-size: var(--tl-text-xs); letter-spacing: 0.10em; text-transform: uppercase; color: var(--tl-muted); }
+.tl-mono { font-family: var(--tl-mono); font-weight: 500; font-size: var(--tl-text-sm); letter-spacing: -0.01em; color: var(--tl-ink-80); }
+.tl-key { font-family: var(--tl-mono); font-weight: 500; font-size: var(--tl-text-sm); color: var(--tl-cobalt-700); background: var(--tl-cobalt-50); padding: 2px 6px; border-radius: var(--tl-r-xs); }

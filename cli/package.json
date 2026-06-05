@@ -1,0 +1,13 @@
+{
+  "name": "@translad/cli",
+  "version": "0.1.0",
+  "description": "TransLad command-line client — pull and push translations from your terminal.",
+  "type": "module",
+  "bin": {
+    "translad": "translad.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": ["translad.mjs"]
+}

@@ -1,0 +1,82 @@
+/* ============================================================
+   TransLad — minimalist refinement layer.
+   Loaded after app.css. Quiets visual chrome without touching
+   the brand tokens: less texture, fewer shadows, calmer accents,
+   more breathing room. Color stays reserved for meaning
+   (primary action + translation status).
+   ============================================================ */
+
+/* Drop the dot-grid texture from content wells and the dashboard
+   topbar — decorative noise, not information. */
+.content {
+  background-image: none;
+}
+.topbar--grid {
+  background-image: none;
+}
+
+/* Flatten elevation: cards and panels lift by hairline + value,
+   not by shadow. Reserve shadow for true overlays (menus, modals,
+   inspector, toast — untouched). */
+.card,
+.panel {
+  box-shadow: none;
+}
+
+/* Calmer primary button: no colored glow on hover, just a clean
+   one-step darken. */
+.btn--primary:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Quieter active nav: keep the cobalt indicator, drop the glow. */
+.navitem.active::before {
+  box-shadow: none;
+}
+
+/* Remove the progress-bar glow — a thin solid bar reads cleaner. */
+.progress .seg-translated {
+  box-shadow: none;
+}
+
+/* Soften the toggle glow. */
+.toggle.on {
+  box-shadow: none;
+}
+
+/* More air: roomier content padding and a slightly tighter reading
+   measure so dense screens breathe. */
+.content__pad {
+  padding: 32px 36px 72px;
+  max-width: 1120px;
+}
+
+/* Lighter table header — smaller, calmer, no heavy rule. */
+.ttable thead th {
+  letter-spacing: 0.06em;
+  border-bottom-color: var(--tl-line-2);
+}
+
+/* Hairline rows already; remove the row hover wash on the dense
+   contributor/term tables in favor of a subtler tint. */
+.trow:hover {
+  background: color-mix(in srgb, var(--tl-fill) 45%, transparent);
+}
+
+/* Segmented control: lose the inner border, let the fill define it. */
+.segmented {
+  border-color: transparent;
+  background: var(--tl-fill);
+}
+
+/* Search + command inputs: drop to a single hairline, no fill jump. */
+.cmdk,
+.searchbox {
+  background: transparent;
+}
+
+/* Quieter chips: thinner border so status color carries, not the
+   outline. */
+.chip {
+  border-color: color-mix(in srgb, currentColor 18%, transparent);
+}

@@ -1,0 +1,25 @@
+# Build output
+backend/build/
+backend/.gradle/
+frontend/dist/
+frontend/.angular/
+cli/node_modules/
+
+# Dependencies
+node_modules/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.iml
+
+# Tooling scratch
+frontend/shots/
+frontend/.playwright-mcp/
+.playwright-mcp/
+
+# Logs / env
+*.log
+.env
+.env.local
