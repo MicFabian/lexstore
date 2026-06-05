@@ -1,5 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from './global';
 
+// The global fixture resets the backend before each test (order-independent).
 // The app boots on the editor; wait for the rail brand to confirm the shell mounted.
 async function waitShell(page: Page) {
   await expect(page.locator('.rail__brand')).toBeVisible();

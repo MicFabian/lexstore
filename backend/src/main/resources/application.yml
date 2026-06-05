@@ -18,6 +18,13 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    # Allow Flyway clean so the dev-reset endpoint can wipe + reseed. The endpoint
+    # itself is still gated by translad.dev-reset below, so prod stays safe.
+    clean-disabled: false
+
+# Local-dev convenience: gate POST /api/dev/reset (off by default).
+translad:
+  dev-reset: ${TRANSLAD_DEV_RESET:false}
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
