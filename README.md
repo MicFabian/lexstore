@@ -62,6 +62,18 @@ and opens the translation editor.
 Theme (dark/light), accent, and density are switchable via the appearance panel
 (bottom-right) and persist to `localStorage`.
 
+## Testing
+
+| Layer | What | Run |
+|---|---|---|
+| Backend | 29 Testcontainers integration tests — happy paths + validation, 404s, full CRUD lifecycles, status transitions, plurals, pagination edges, project isolation. Spins a real Postgres, resets the schema per test. | `cd backend && ./gradlew test` |
+| CLI | 14 smoke + edge-case checks — every command, error paths, JSON validity, unknown-key skip. | `cd cli && bash test.sh` (backend must be running) |
+| Frontend | 15 Playwright E2E specs — navigation, editor save + inspector, terms expand + filters, languages/contributors/settings, theme/accent persistence, project switching. | `cd frontend && npm run e2e` (backend + `npm start` running) |
+
+The E2E suite mutates data; reset the dev DB between full runs with
+`docker exec translad-postgres psql -U translad -d translad -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`
+then restart the backend (Flyway reseeds).
+
 ## API
 
 Base: `http://localhost:8088/api`

@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    clean-disabled: false   # tests reset the schema between methods
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false

@@ -18,6 +18,8 @@ node_modules/
 frontend/shots/
 frontend/.playwright-mcp/
 .playwright-mcp/
+frontend/test-results/
+frontend/playwright-report/
 
 # Logs / env
 *.log
