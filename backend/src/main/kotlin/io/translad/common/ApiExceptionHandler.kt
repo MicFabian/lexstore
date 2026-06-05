@@ -1,5 +1,6 @@
 package io.translad.common
 
+import io.translad.ai.AiTranslationException
 import io.translad.apikey.*
 import io.translad.language.DuplicateLanguageException
 import io.translad.project.DuplicateProjectCodeException
@@ -31,6 +32,10 @@ class ApiExceptionHandler {
     @ExceptionHandler(LanguageNotInProjectException::class, IllegalArgumentException::class)
     fun badRequest(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.message)
+
+    @ExceptionHandler(AiTranslationException::class)
+    fun aiFailure(ex: AiTranslationException): ProblemDetail =
+        problem(HttpStatus.BAD_GATEWAY, "Translation provider error", ex.message)
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun validation(ex: MethodArgumentNotValidException): ProblemDetail {

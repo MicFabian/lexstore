@@ -15,13 +15,6 @@ import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 
-const SUGGESTIONS: Record<string, string> = {
-  'billing.plan.pro': 'Forfait Pro — facturé annuellement',
-  'billing.seats': '# sièges',
-  'empty.invoices': 'Aucune facture pour le moment',
-  'onboarding.step1': 'Invitez votre équipe',
-};
-
 @Component({
   selector: 'tl-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,16 +62,22 @@ const SUGGESTIONS: Record<string, string> = {
           ></textarea>
         </div>
 
-        @if (suggestion() && !row().target) {
-          <button
-            class="card suggestion"
-            (click)="value.set(suggestion()!)"
-          >
+        @if (suggestion(); as s) {
+          <button class="card suggestion" (click)="value.set(s)">
             <tl-icon name="WandSparkles" [size]="16" color="var(--tl-st-fuzzy)" style="margin-top:1px" />
             <div>
-              <div class="suggestion-label">Machine suggestion</div>
-              <div style="font-size:13.5px;color:var(--tl-ink)">{{ suggestion() }}</div>
+              <div class="suggestion-label">
+                Machine suggestion
+                @if (suggestionMeta(); as m) {
+                  <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.7"> · {{ m }}</span>
+                }
+              </div>
+              <div style="font-size:13.5px;color:var(--tl-ink)">{{ s }}</div>
             </div>
+          </button>
+        } @else if (!row().target) {
+          <button class="btn btn--subtle btn--sm" [disabled]="suggestBusy()" (click)="fetchSuggestion()" style="align-self:flex-start">
+            <tl-icon name="WandSparkles" [size]="14" />{{ suggestBusy() ? 'Thinking…' : 'Suggest translation' }}
           </button>
         }
 
@@ -209,8 +208,10 @@ export class Inspector {
   protected readonly draft = signal('');
   protected readonly comments = signal<CommentView[]>([]);
   protected readonly showHistory = signal(false);
+  protected readonly suggestion = signal<string | null>(null);
+  protected readonly suggestionMeta = signal<string | null>(null);
+  protected readonly suggestBusy = signal(false);
 
-  protected readonly suggestion = computed(() => SUGGESTIONS[this.row().key] ?? null);
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
 
   constructor() {
@@ -221,6 +222,24 @@ export class Inspector {
       this.draft.set('');
       this.comments.set(r.comments);
       this.showHistory.set(false);
+      this.suggestion.set(null);
+      this.suggestionMeta.set(null);
+    });
+  }
+
+  protected fetchSuggestion(): void {
+    const pid = this.projectId();
+    if (!pid) return;
+    this.suggestBusy.set(true);
+    this.api.suggestTranslation(pid, this.row().id, this.lang()).subscribe({
+      next: (s) => {
+        this.suggestion.set(s.text);
+        this.suggestionMeta.set(`${s.provider} · ${s.cacheHit ? 'cached' : 'fresh'}`);
+        this.suggestBusy.set(false);
+      },
+      error: () => {
+        this.suggestBusy.set(false);
+      },
     });
   }
 

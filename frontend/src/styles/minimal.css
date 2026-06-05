@@ -80,3 +80,14 @@
 .chip {
   border-color: color-mix(in srgb, currentColor 18%, transparent);
 }
+
+/* Project switcher spans the full rail width (flush with brand + nav). */
+.rail__proj {
+  margin-left: 12px;
+  margin-right: 12px;
+  width: calc(100% - 24px);
+}
+.proj-menu {
+  left: 12px;
+  right: 12px;
+}

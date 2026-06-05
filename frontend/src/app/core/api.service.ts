@@ -15,6 +15,11 @@ import {
   TermView,
   TranslationHistoryEntry,
   TranslationStatus,
+  TranslateResponse,
+  RequestLogView,
+  CacheEntryView,
+  CacheStats,
+  AiSettings,
 } from './models';
 
 const BASE = '/api';
@@ -119,5 +124,54 @@ export class ApiService {
     body: { label: string; scope?: string; test?: boolean },
   ): Observable<ApiKeyCreated> {
     return this.http.post<ApiKeyCreated>(`${BASE}/projects/${projectId}/api-keys`, body);
+  }
+
+  // ---- AI translation service (project-independent) ----
+  aiTranslate(body: {
+    sourceText: string;
+    sourceLang: string;
+    targetLang: string;
+    noCache?: boolean;
+  }): Observable<TranslateResponse> {
+    return this.http.post<TranslateResponse>(`${BASE}/ai/translate`, body);
+  }
+  aiRequests(page = 0, size = 80): Observable<RequestLogView[]> {
+    return this.http.get<RequestLogView[]>(`${BASE}/ai/requests`, { params: { page, size } });
+  }
+  aiCache(q = '', page = 0, size = 80): Observable<CacheEntryView[]> {
+    const params: Record<string, string | number> = { page, size };
+    if (q) params['q'] = q;
+    return this.http.get<CacheEntryView[]>(`${BASE}/ai/cache`, { params });
+  }
+  aiCacheStats(): Observable<CacheStats> {
+    return this.http.get<CacheStats>(`${BASE}/ai/cache/stats`);
+  }
+  aiDeleteCacheEntry(id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/ai/cache/${id}`);
+  }
+  aiInvalidateContent(sourceText: string): Observable<unknown> {
+    return this.http.delete(`${BASE}/ai/cache`, { params: { sourceText } });
+  }
+  aiClearCache(): Observable<unknown> {
+    return this.http.delete(`${BASE}/ai/cache`, { params: { all: true } });
+  }
+  aiSettings(): Observable<AiSettings> {
+    return this.http.get<AiSettings>(`${BASE}/ai/settings`);
+  }
+  aiUpdateSettings(body: Partial<AiSettings>): Observable<AiSettings> {
+    return this.http.put<AiSettings>(`${BASE}/ai/settings`, body);
+  }
+
+  // ---- editor AI actions ----
+  suggestTranslation(projectId: string, termId: string, lang: string): Observable<{ text: string; provider: string; model: string; cacheHit: boolean }> {
+    return this.http.get<{ text: string; provider: string; model: string; cacheHit: boolean }>(
+      `${BASE}/projects/${projectId}/languages/${lang}/translations/${termId}/suggestion`,
+    );
+  }
+  autoTranslate(projectId: string, lang: string): Observable<{ translated: number; status: string }> {
+    return this.http.post<{ translated: number; status: string }>(
+      `${BASE}/projects/${projectId}/languages/${lang}/translations/auto`,
+      {},
+    );
   }
 }

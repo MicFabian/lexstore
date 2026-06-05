@@ -7,6 +7,10 @@ export const routes: Routes = [
       import('./screens/projects-dashboard/projects-dashboard').then((m) => m.ProjectsDashboard),
   },
   {
+    path: 'ai',
+    loadComponent: () => import('./screens/ai/ai-overview').then((m) => m.AiOverview),
+  },
+  {
     path: '',
     loadComponent: () => import('./shell/shell-layout').then((m) => m.ShellLayout),
     children: [

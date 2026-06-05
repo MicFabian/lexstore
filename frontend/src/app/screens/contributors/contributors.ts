@@ -20,7 +20,7 @@ import { ContributorView } from '../../core/models';
           </p>
         </div>
         <div class="spacer"></div>
-        <tl-btn variant="primary" icon="UserPlus" (clicked)="toast.show('Invite sent')">Invite contributor</tl-btn>
+        <tl-btn variant="primary" icon="UserPlus" (clicked)="invite()">Invite contributor</tl-btn>
       </div>
 
       <div class="panel">
@@ -104,5 +104,21 @@ export class ContributorsScreen implements OnInit {
     if (role === 'Admin') return 'chip--new';
     if (role === 'Proofreader') return 'chip--proofread';
     return 'chip--neutral';
+  }
+
+  protected invite(): void {
+    const name = window.prompt('Contributor name');
+    if (!name) return;
+    const email = window.prompt('Email address');
+    if (!email) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.invite(pid, { name, email, role: 'Translator' }).subscribe({
+      next: () => {
+        this.api.listContributors(pid).subscribe((c) => this.people.set(c));
+        this.toast.show(`Invited ${name}`);
+      },
+      error: () => this.toast.show('Invalid email or duplicate'),
+    });
   }
 }

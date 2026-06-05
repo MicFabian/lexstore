@@ -141,6 +141,66 @@ export interface ApiKeyCreated {
   scope: string;
 }
 
+// ---- AI translation service ----
+export interface TranslateResponse {
+  text: string;
+  provider: string;
+  model: string;
+  cacheHit: boolean;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface RequestLogView {
+  id: string;
+  sourceText: string;
+  sourceLang: string;
+  targetLang: string;
+  provider: string;
+  model: string;
+  resultText: string | null;
+  cacheHit: boolean;
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  status: string;
+  errorMessage: string | null;
+  at: string;
+}
+
+export interface CacheEntryView {
+  id: string;
+  sourceText: string;
+  sourceLang: string;
+  targetLang: string;
+  provider: string;
+  model: string;
+  targetText: string;
+  hits: number;
+  createdAt: string;
+  lastUsedAt: string;
+}
+
+export interface CacheStats {
+  entries: number;
+  totalHits: number;
+  requests: number;
+  cacheHits: number;
+  hitRate: number;
+}
+
+export interface AiSettings {
+  provider: string;
+  model: string;
+  temperature: number;
+  formality: string;
+  tone: string | null;
+  autoFlagFuzzy: boolean;
+  cacheTtlHours: number;
+  claudeAvailable: boolean;
+}
+
 export const STATUS_LABEL: Record<TranslationStatus, string> = {
   untranslated: 'Untranslated',
   translated: 'Translated',

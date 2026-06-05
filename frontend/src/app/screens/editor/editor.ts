@@ -47,10 +47,10 @@ import { EditorRow, TranslationStatus } from '../../core/models';
 
         <div class="spacer"></div>
         <tl-search placeholder="Search keys or text" [value]="query()" [width]="220" (changed)="query.set($event)" />
-        <tl-btn variant="ghost" [sm]="true" icon="WandSparkles" (clicked)="toast.show('Auto-translating…')">
-          Auto-translate
+        <tl-btn variant="ghost" [sm]="true" icon="WandSparkles" [disabled]="autoBusy()" (clicked)="autoTranslate()">
+          {{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
         </tl-btn>
-        <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="toast.show('Add term')">Add term</tl-btn>
+        <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="addTerm()">Add term</tl-btn>
       </div>
 
       <div class="editor__scroll">
@@ -122,6 +122,7 @@ export class EditorScreen implements OnInit {
   protected readonly sel = signal<string | null>(null);
   protected readonly savedId = signal<string | null>(null);
   protected readonly langMenuOpen = signal(false);
+  protected readonly autoBusy = signal(false);
 
   /** Target languages available for this project (from the API). */
   protected readonly languages = signal<{ code: string; name: string }[]>([]);
@@ -193,6 +194,41 @@ export class EditorScreen implements OnInit {
     this.sel.set(null);
     const pid = this.state.current()?.id;
     if (pid) this.loadEditor(pid);
+  }
+
+  protected autoTranslate(): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.autoBusy.set(true);
+    this.api.autoTranslate(pid, this.lang()).subscribe({
+      next: (r) => {
+        this.autoBusy.set(false);
+        this.loadEditor(pid);
+        this.toast.show(
+          r.translated === 0 ? 'Nothing left to translate' : `Auto-translated ${r.translated} terms (${r.status})`,
+        );
+      },
+      error: () => {
+        this.autoBusy.set(false);
+        this.toast.show('Auto-translate failed');
+      },
+    });
+  }
+
+  protected addTerm(): void {
+    const key = window.prompt('New term key (e.g. checkout.button.confirm)');
+    if (!key) return;
+    const source = window.prompt('Source text (English)');
+    if (!source) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.createTerm(pid, { key, source }).subscribe({
+      next: () => {
+        this.loadEditor(pid);
+        this.toast.show('Term added');
+      },
+      error: () => this.toast.show('That key already exists'),
+    });
   }
 
   protected select(id: string): void {

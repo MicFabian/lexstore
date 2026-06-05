@@ -20,8 +20,8 @@ import { LanguageView } from '../../core/models';
           </p>
         </div>
         <div class="spacer"></div>
-        <tl-btn variant="ghost" icon="FileDown" (clicked)="toast.show('Exporting all languages')">Export all</tl-btn>
-        <tl-btn variant="primary" icon="Plus" (clicked)="toast.show('Choose a language to add')">Add language</tl-btn>
+        <tl-btn variant="ghost" icon="FileDown" (clicked)="exportAll()">Export all</tl-btn>
+        <tl-btn variant="primary" icon="Plus" (clicked)="addLanguage()">Add language</tl-btn>
       </div>
 
       <div class="lang-grid">
@@ -84,5 +84,25 @@ export class LanguagesScreen implements OnInit {
 
   protected contributorSlots(l: LanguageView): number[] {
     return Array.from({ length: Math.min(l.contributors, 3) }, (_, i) => i + l.code.length);
+  }
+
+  protected addLanguage(): void {
+    const code = window.prompt('Language code (e.g. it, ko, pt-BR)');
+    if (!code) return;
+    const name = window.prompt('Language name (e.g. Italian)');
+    if (!name) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.addLanguage(pid, { code, name }).subscribe({
+      next: () => {
+        this.api.listLanguages(pid).subscribe((l) => this.langs.set(l));
+        this.toast.show(`Added ${name}`);
+      },
+      error: () => this.toast.show(`'${code}' is already in this project`),
+    });
+  }
+
+  protected exportAll(): void {
+    this.toast.show('Use the CLI: translad pull --project … --lang …');
   }
 }

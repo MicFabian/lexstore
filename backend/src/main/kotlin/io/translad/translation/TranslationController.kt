@@ -44,4 +44,19 @@ class TranslationController(private val service: EditorService) {
         @PathVariable termId: UUID,
         @Valid @RequestBody req: SaveTranslationRequest,
     ): EditorRow = service.save(projectId, termId, code, req)
+
+    /** AI machine-translation suggestion for one term (cached, not saved). */
+    @org.springframework.web.bind.annotation.GetMapping("/{termId}/suggestion")
+    fun suggestion(
+        @PathVariable projectId: UUID,
+        @PathVariable code: String,
+        @PathVariable termId: UUID,
+    ): SuggestionResponse = service.suggest(projectId, termId, code)
+
+    /** Auto-translate every untranslated term in this language. */
+    @org.springframework.web.bind.annotation.PostMapping("/auto")
+    fun auto(
+        @PathVariable projectId: UUID,
+        @PathVariable code: String,
+    ): AutoTranslateResult = service.autoTranslate(projectId, code, "You There")
 }

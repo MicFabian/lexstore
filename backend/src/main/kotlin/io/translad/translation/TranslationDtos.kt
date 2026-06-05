@@ -12,6 +12,15 @@ data class SaveTranslationRequest(
     val authorAvatar: Int? = null,
 )
 
+data class SuggestionResponse(
+    val text: String,
+    val provider: String,
+    val model: String,
+    val cacheHit: Boolean,
+)
+
+data class AutoTranslateResult(val translated: Int, val status: String)
+
 /** One audit entry in a term's translation history, newest first. */
 data class TranslationHistoryEntry(
     val languageCode: String,

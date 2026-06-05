@@ -91,6 +91,12 @@ interface QuickItem {
             <span class="count">{{ q.count }}</span>
           </a>
         }
+
+        <div class="rail__group">Workspace</div>
+        <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
+          <tl-icon name="WandSparkles" [size]="16" />
+          <span>Translation AI</span>
+        </a>
       </nav>
 
       <div class="rail__foot">

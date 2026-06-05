@@ -327,6 +327,71 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         assertThat(history.map { it["languageCode"] }.toSet().size).isGreaterThan(1)
     }
 
+    // ---------------- AI translation + cache ----------------
+
+    @Test
+    fun `ai translate is a miss then a hit and the cache fills`() {
+        val first = client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Pay now", "sourceLang" to "en", "targetLang" to "de"))
+            .retrieve().body(mapType)!!
+        assertThat(first["cacheHit"]).isEqualTo(false)
+        assertThat(first["text"]).isEqualTo("Jetzt bezahlen")
+
+        val second = client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Pay now", "sourceLang" to "en", "targetLang" to "de"))
+            .retrieve().body(mapType)!!
+        assertThat(second["cacheHit"]).isEqualTo(true)
+        assertThat(second["text"]).isEqualTo("Jetzt bezahlen")
+
+        val stats = getMap("/api/ai/cache/stats")
+        assertThat((stats["requests"] as Number).toInt()).isGreaterThanOrEqualTo(2)
+        assertThat((stats["cacheHits"] as Number).toInt()).isGreaterThanOrEqualTo(1)
+    }
+
+    @Test
+    fun `noCache forces a fresh translation`() {
+        client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Projects", "sourceLang" to "en", "targetLang" to "fr"))
+            .retrieve().toBodilessEntity()
+        val forced = client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Projects", "sourceLang" to "en", "targetLang" to "fr", "noCache" to true))
+            .retrieve().body(mapType)!!
+        assertThat(forced["cacheHit"]).isEqualTo(false)
+    }
+
+    @Test
+    fun `cache can be invalidated per content`() {
+        client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Dashboard", "sourceLang" to "en", "targetLang" to "de"))
+            .retrieve().toBodilessEntity()
+        // Invalidate that content; a subsequent translate is a miss again.
+        client.delete().uri("/api/ai/cache?sourceText=Dashboard").retrieve().toBodilessEntity()
+        val after = client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Dashboard", "sourceLang" to "en", "targetLang" to "de"))
+            .retrieve().body(mapType)!!
+        assertThat(after["cacheHit"]).isEqualTo(false)
+    }
+
+    @Test
+    fun `auto-translate fills untranslated terms for a language`() {
+        val id = mosaicId()
+        val result = client.post().uri("/api/projects/$id/languages/nl/translations/auto")
+            .retrieve().body(mapType)!!
+        assertThat((result["translated"] as Number).toInt()).isEqualTo(14)
+        // With auto-flag-fuzzy on (default), they land as fuzzy.
+        assertThat(result["status"]).isEqualTo("fuzzy")
+    }
+
+    @Test
+    fun `updating ai settings persists`() {
+        val updated = client.put().uri("/api/ai/settings")
+            .body(mapOf("formality" to "formal", "temperature" to 0.5, "tone" to "Keep it short."))
+            .retrieve().body(mapType)!!
+        assertThat(updated["formality"]).isEqualTo("formal")
+        assertThat((updated["temperature"] as Number).toDouble()).isEqualTo(0.5)
+        assertThat(updated["tone"]).isEqualTo("Keep it short.")
+    }
+
     // ---------------- Editor view integrity ----------------
 
     @Test

@@ -32,6 +32,7 @@ class EditorService(
     private val projects: ProjectRepository,
     private val comments: TermCommentRepository,
     private val events: TranslationEventRepository,
+    private val ai: io.translad.ai.AiTranslationService,
 ) {
     fun editor(projectId: UUID, languageCode: String): EditorResponse {
         val project = projects.findById(projectId)
@@ -116,6 +117,51 @@ class EditorService(
 
         return editorRow(term, saved, comments.findByTermIdOrderByCreatedAt(termId)
             .map { CommentView(it.id, it.authorName, it.authorAvatar, it.text, it.timeLabel) })
+    }
+
+    /** AI machine-translation suggestion for one term (cached). Does not save. */
+    fun suggest(projectId: UUID, termId: UUID, languageCode: String): SuggestionResponse {
+        val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
+        require(term.projectId == projectId) { "Term does not belong to this project." }
+        val project = projects.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId.toString()) }
+        val res = ai.translate(
+            io.translad.ai.TranslateRequest(
+                sourceText = term.sourceText,
+                sourceLang = project.sourceLang,
+                targetLang = languageCode,
+            ),
+        )
+        return SuggestionResponse(res.text, res.provider, res.model, res.cacheHit)
+    }
+
+    /** Auto-translate every untranslated term for a language. Saved as fuzzy when settings ask. */
+    @Transactional
+    fun autoTranslate(projectId: UUID, languageCode: String, author: String): AutoTranslateResult {
+        val project = projects.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId.toString()) }
+        languages.findByProjectIdAndCode(projectId, languageCode)
+            ?: throw LanguageNotInProjectException(languageCode)
+
+        val flagFuzzy = ai.settings().autoFlagFuzzy
+        val targetStatus = if (flagFuzzy) "fuzzy" else "translated"
+
+        val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
+        val existing = translations.findByTermIdIn(projTerms.map { it.id })
+            .filter { it.languageCode == languageCode }
+            .associateBy { it.termId }
+
+        var translated = 0
+        for (t in projTerms) {
+            val cur = existing[t.id]
+            if (!cur?.value.isNullOrBlank()) continue // skip already-translated
+            val res = ai.translate(
+                io.translad.ai.TranslateRequest(t.sourceText, project.sourceLang, languageCode),
+            )
+            save(projectId, t.id, languageCode, SaveTranslationRequest(res.text, null, targetStatus, author, 0))
+            translated++
+        }
+        return AutoTranslateResult(translated, targetStatus)
     }
 
     /** Full translation history for a term across every language, newest first. */
