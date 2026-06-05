@@ -15,11 +15,33 @@ import { EditorRow, TranslationStatus } from '../../core/models';
   template: `
     <div class="editor" style="position:relative">
       <div class="editor__toolbar">
-        <button class="btn btn--ghost btn--sm" style="font-weight:600">
-          <span class="locale" style="background:var(--tl-accent-soft);color:var(--tl-accent-text)">{{ lang() }}</span>
-          {{ langName() }}
-          <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
-        </button>
+        <div style="position:relative">
+          <button
+            class="btn btn--ghost btn--sm"
+            style="font-weight:600"
+            [attr.aria-expanded]="langMenuOpen()"
+            (click)="langMenuOpen.set(!langMenuOpen())"
+          >
+            <span class="locale" style="background:var(--tl-accent-soft);color:var(--tl-accent-text)">{{ lang() }}</span>
+            {{ langName() }}
+            <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
+          </button>
+          @if (langMenuOpen()) {
+            <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
+            <div class="menu" style="top:calc(100% + 4px);left:0;min-width:200px">
+              <div class="menu__label">Translate into</div>
+              @for (l of languages(); track l.code) {
+                <button class="menu__item" [class.on]="l.code === lang()" (click)="selectLang(l.code)">
+                  <span class="locale">{{ l.code }}</span>
+                  <span>{{ l.name }}</span>
+                  @if (l.code === lang()) {
+                    <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
 
         <tl-segmented [options]="filterOptions()" [value]="filter()" (changed)="filter.set($any($event))" />
 
@@ -99,16 +121,13 @@ export class EditorScreen implements OnInit {
   protected readonly query = signal('');
   protected readonly sel = signal<string | null>(null);
   protected readonly savedId = signal<string | null>(null);
+  protected readonly langMenuOpen = signal(false);
 
-  private readonly langNames: Record<string, string> = {
-    fr: 'French',
-    de: 'German',
-    'es-ES': 'Spanish (Spain)',
-    ja: 'Japanese',
-    'pt-BR': 'Portuguese (Brazil)',
-    nl: 'Dutch',
-  };
-  protected readonly langName = computed(() => this.langNames[this.lang()] ?? this.lang());
+  /** Target languages available for this project (from the API). */
+  protected readonly languages = signal<{ code: string; name: string }[]>([]);
+  protected readonly langName = computed(
+    () => this.languages().find((l) => l.code === this.lang())?.name ?? this.lang(),
+  );
 
   protected readonly counts = computed(() => {
     const r = this.rows();
@@ -150,9 +169,30 @@ export class EditorScreen implements OnInit {
   );
 
   ngOnInit(): void {
-    this.state.whenReady((pid) =>
-      this.api.editor(pid, this.lang()).subscribe((res) => this.rows.set(res.rows)),
-    );
+    this.state.whenReady((pid) => {
+      this.api.listLanguages(pid).subscribe((langs) => {
+        // Only languages with at least one term make sense; backend returns all.
+        this.languages.set(langs.map((l) => ({ code: l.code, name: l.name })));
+        // Default to the first language if the current one isn't in the project.
+        if (langs.length && !langs.some((l) => l.code === this.lang())) {
+          this.lang.set(langs[0].code);
+        }
+      });
+      this.loadEditor(pid);
+    });
+  }
+
+  private loadEditor(pid: string): void {
+    this.api.editor(pid, this.lang()).subscribe((res) => this.rows.set(res.rows));
+  }
+
+  protected selectLang(code: string): void {
+    this.langMenuOpen.set(false);
+    if (code === this.lang()) return;
+    this.lang.set(code);
+    this.sel.set(null);
+    const pid = this.state.current()?.id;
+    if (pid) this.loadEditor(pid);
   }
 
   protected select(id: string): void {
