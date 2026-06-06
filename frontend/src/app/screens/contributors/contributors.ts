@@ -69,7 +69,11 @@ import { ContributorView } from '../../core/models';
                     <span class="muted" style="font-size:12.5px">{{ c.active }}</span>
                   }
                 </td>
-                <td><tl-icon name="MoreHorizontal" [size]="17" color="var(--tl-muted)" /></td>
+                <td>
+                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove contributor" (click)="remove(c)">
+                    <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
@@ -119,6 +123,19 @@ export class ContributorsScreen implements OnInit {
         this.toast.show(`Invited ${name}`);
       },
       error: () => this.toast.show('Invalid email or duplicate'),
+    });
+  }
+
+  protected remove(c: ContributorView): void {
+    if (!window.confirm(`Remove ${c.name} from this project?`)) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.deleteContributor(pid, c.id).subscribe({
+      next: () => {
+        this.people.update((list) => list.filter((x) => x.id !== c.id));
+        this.toast.show(`Removed ${c.name}`);
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
     });
   }
 }

@@ -60,10 +60,22 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       </div>
 
       <div class="panel">
+        @if (selectedCount() > 0) {
+          <div class="bulk-bar">
+            <span style="font-size:13px;font-weight:600;color:var(--tl-accent-text)">{{ selectedCount() }} selected</span>
+            <div class="spacer"></div>
+            <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); clearSelection()">Clear</button>
+            <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger)" (click)="$event.stopPropagation(); deleteSelected()">
+              <tl-icon name="Trash2" [size]="14" />Delete selected
+            </button>
+          </div>
+        }
         <table class="ttable">
           <thead>
             <tr>
-              <th style="width:40px;padding-left:18px"></th>
+              <th style="width:40px;padding-left:18px">
+                <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)" aria-label="Select all" />
+              </th>
               <th>Key</th>
               <th>Source text</th>
               <th>Tags</th>
@@ -74,7 +86,9 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
           <tbody>
             @for (r of filtered(); track r.id) {
               <tr class="trow" [class.is-expanded]="expanded() === r.id" style="cursor:pointer" (click)="toggle(r.id)">
-                <td style="padding-left:18px"></td>
+                <td style="padding-left:18px" (click)="$event.stopPropagation()">
+                  <input type="checkbox" [checked]="selected().has(r.id)" (change)="toggleOne(r.id)" [attr.aria-label]="'Select ' + r.key" />
+                </td>
                 <td>
                   <div style="display:flex;align-items:center">
                     <span class="expand-toggle" [class.open]="expanded() === r.id"><tl-icon name="ChevronRight" [size]="15" /></span>
@@ -98,7 +112,11 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                   </div>
                 </td>
                 <td><span class="muted tnum" style="font-size:12px">{{ r.added }}</span></td>
-                <td><tl-icon name="MoreHorizontal" [size]="16" color="var(--tl-muted)" /></td>
+                <td (click)="$event.stopPropagation()">
+                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="deleteTerm(r)">
+                    <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                  </button>
+                </td>
               </tr>
               @if (expanded() === r.id) {
                 <tr class="trow-expand">
@@ -166,6 +184,14 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
   `,
   styles: `
+    .bulk-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--tl-accent-soft);
+      border-bottom: 1px solid var(--tl-line);
+    }
     .expand-body {
       padding: 16px 24px 20px 56px;
     }
@@ -230,6 +256,12 @@ export class TermsScreen implements OnInit {
   protected readonly historyTerm = signal<TermView | null>(null);
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
   protected readonly allTags = TAGS;
+  protected readonly selected = signal<Set<string>>(new Set());
+  protected readonly selectedCount = computed(() => this.selected().size);
+  protected readonly allSelected = computed(() => {
+    const f = this.filtered();
+    return f.length > 0 && f.every((r) => this.selected().has(r.id));
+  });
 
   protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
@@ -257,5 +289,56 @@ export class TermsScreen implements OnInit {
 
   protected doneCount(r: TermView): number {
     return r.translations.filter((t) => t.value).length;
+  }
+
+  // ---- selection ----
+  protected toggleOne(id: string): void {
+    this.selected.update((s) => {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+  protected toggleAll(e: Event): void {
+    const checked = (e.target as HTMLInputElement).checked;
+    this.selected.set(checked ? new Set(this.filtered().map((r) => r.id)) : new Set());
+  }
+  protected clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  // ---- delete ----
+  protected deleteTerm(r: TermView): void {
+    if (!window.confirm(`Delete term "${r.key}" and all its translations?`)) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.deleteTerm(pid, r.id).subscribe({
+      next: () => {
+        this.rows.update((list) => list.filter((x) => x.id !== r.id));
+        this.toast.show('Term deleted');
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
+    });
+  }
+
+  protected deleteSelected(): void {
+    const ids = [...this.selected()];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} terms?`)) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    let done = 0;
+    for (const id of ids) {
+      this.api.deleteTerm(pid, id).subscribe({
+        next: () => {
+          this.rows.update((list) => list.filter((x) => x.id !== id));
+          if (++done === ids.length) {
+            this.clearSelection();
+            this.toast.show(`Deleted ${ids.length} terms`);
+          }
+        },
+        error: () => this.toast.show('Not allowed (needs admin)'),
+      });
+    }
   }
 }

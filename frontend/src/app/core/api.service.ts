@@ -53,6 +53,9 @@ export class ApiService {
   addLanguage(projectId: string, body: { code: string; name: string }): Observable<LanguageView> {
     return this.http.post<LanguageView>(`${BASE}/projects/${projectId}/languages`, body);
   }
+  deleteLanguage(projectId: string, code: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/languages/${code}`);
+  }
 
   // ---- Translations (the editor view is the translations collection of a language) ----
   editor(projectId: string, lang: string): Observable<EditorResponse> {
@@ -87,6 +90,16 @@ export class ApiService {
   ): Observable<TermView> {
     return this.http.post<TermView>(`${BASE}/projects/${projectId}/terms`, body);
   }
+  updateTerm(
+    projectId: string,
+    termId: string,
+    body: { source?: string; ctx?: string; tags?: string[] },
+  ): Observable<TermView> {
+    return this.http.patch<TermView>(`${BASE}/projects/${projectId}/terms/${termId}`, body);
+  }
+  deleteTerm(projectId: string, termId: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/terms/${termId}`);
+  }
   addComment(
     projectId: string,
     termId: string,
@@ -114,6 +127,9 @@ export class ApiService {
   ): Observable<ContributorView> {
     return this.http.post<ContributorView>(`${BASE}/projects/${projectId}/contributors`, body);
   }
+  deleteContributor(projectId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/contributors/${id}`);
+  }
 
   // ---- API keys ----
   listApiKeys(projectId: string): Observable<ApiKeyView[]> {
@@ -124,6 +140,28 @@ export class ApiService {
     body: { label: string; scope?: string; test?: boolean },
   ): Observable<ApiKeyCreated> {
     return this.http.post<ApiKeyCreated>(`${BASE}/projects/${projectId}/api-keys`, body);
+  }
+  revokeApiKey(projectId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/api-keys/${id}`);
+  }
+
+  // ---- Import / Export ----
+  importTranslations(
+    projectId: string,
+    lang: string,
+    entries: Record<string, string>,
+  ): Observable<{ created: number; updated: number; total: number }> {
+    return this.http.post<{ created: number; updated: number; total: number }>(
+      `${BASE}/projects/${projectId}/import`,
+      entries,
+      { params: { lang } },
+    );
+  }
+  exportTranslations(projectId: string, lang: string, format: 'json' | 'csv'): Observable<Blob> {
+    return this.http.get(`${BASE}/projects/${projectId}/export`, {
+      params: { lang, format },
+      responseType: 'blob',
+    });
   }
 
   // ---- AI translation service (project-independent) ----

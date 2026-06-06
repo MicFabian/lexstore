@@ -44,7 +44,7 @@ import { ProjectSummary } from '../../core/models';
             </div>
             <div class="spacer"></div>
             <tl-search placeholder="Search projects" [value]="query()" [width]="220" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="Plus" (clicked)="toast.show('New project')">New project</tl-btn>
+            <tl-btn variant="primary" icon="Plus" (clicked)="newProject()">New project</tl-btn>
           </div>
 
           <div class="stat-grid">
@@ -224,5 +224,20 @@ export class ProjectsDashboard implements OnInit {
     this.state.select(p.id);
     this.toast.show('Switched to ' + p.name);
     this.router.navigate(['/', 'editor']);
+  }
+
+  protected newProject(): void {
+    const name = window.prompt('Project name');
+    if (!name) return;
+    const suggested = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const code = window.prompt('Project slug (lowercase, hyphens)', suggested);
+    if (!code) return;
+    this.api.createProject({ name, code }).subscribe({
+      next: (p) => {
+        this.state.load();
+        this.toast.show(`Created ${p.name}`);
+      },
+      error: () => this.toast.show('That slug already exists or is invalid'),
+    });
   }
 }

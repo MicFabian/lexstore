@@ -31,7 +31,9 @@ import { LanguageView } from '../../core/models';
               <span class="locale" style="font-size:12px;padding:3px 7px">{{ l.code }}</span>
               <span style="font-weight:700;font-size:14.5px">{{ l.name }}</span>
               <div class="spacer"></div>
-              <tl-icon name="MoreHorizontal" [size]="17" color="var(--tl-muted)" />
+              <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove language" (click)="removeLanguage(l)">
+                <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+              </button>
             </div>
             <div class="row" style="align-items:baseline;margin-bottom:8px">
               <span class="tl-display-3" style="font-size:26px">{{ l.translated }}%</span>
@@ -104,5 +106,18 @@ export class LanguagesScreen implements OnInit {
 
   protected exportAll(): void {
     this.toast.show('Use the CLI: translad pull --project … --lang …');
+  }
+
+  protected removeLanguage(l: LanguageView): void {
+    if (!window.confirm(`Remove ${l.name} and its translations?`)) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.deleteLanguage(pid, l.code).subscribe({
+      next: () => {
+        this.langs.update((list) => list.filter((x) => x.code !== l.code));
+        this.toast.show(`Removed ${l.name}`);
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
+    });
   }
 }

@@ -64,7 +64,7 @@ interface IntegrationItem {
                         <div style="text-align:right;flex:none;min-width:150px">
                           <div class="muted" style="font-size:12px">Last used {{ k.used }}</div>
                           <div class="muted" style="font-size:11.5px;margin-top:2px">Created {{ k.created }}</div>
-                          <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger);margin-top:4px">
+                          <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger);margin-top:4px" (click)="revoke(k)">
                             <tl-icon name="Trash2" [size]="14" />Revoke
                           </button>
                         </div>
@@ -127,14 +127,26 @@ interface IntegrationItem {
                 <div class="card" style="padding:18px">
                   <tl-icon name="FileUp" [size]="20" color="var(--tl-accent-hi)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Import strings</div>
-                  <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Upload JSON, PO, XLIFF, CSV, or Strings files.</p>
-                  <tl-btn variant="ghost" icon="Upload" (clicked)="toast.show('Import strings')">Choose file</tl-btn>
+                  <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Upload a JSON file of key→value pairs into a language.</p>
+                  <div class="field" style="margin-bottom:10px">
+                    <label>Target language</label>
+                    <input class="input" [value]="ioLang()" (input)="ioLang.set($any($event.target).value)" placeholder="fr" />
+                  </div>
+                  <input #fileInput type="file" accept=".json,application/json" style="display:none" (change)="onImportFile($event)" />
+                  <tl-btn variant="ghost" icon="Upload" (clicked)="fileInput.click()">Choose JSON file</tl-btn>
                 </div>
                 <div class="card" style="padding:18px">
                   <tl-icon name="FileDown" [size]="20" color="var(--tl-accent-hi)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Export translations</div>
-                  <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Download by language in any supported format.</p>
-                  <tl-btn variant="ghost" icon="Download" (clicked)="toast.show('Exporting translations')">Export</tl-btn>
+                  <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Download one language as JSON or CSV.</p>
+                  <div class="field" style="margin-bottom:10px">
+                    <label>Language</label>
+                    <input class="input" [value]="ioLang()" (input)="ioLang.set($any($event.target).value)" placeholder="fr" />
+                  </div>
+                  <div class="row" style="gap:8px">
+                    <tl-btn variant="ghost" icon="Download" (clicked)="exportFile('json')">JSON</tl-btn>
+                    <tl-btn variant="ghost" icon="Download" (clicked)="exportFile('csv')">CSV</tl-btn>
+                  </div>
                 </div>
               </div>
             }
@@ -230,9 +242,69 @@ export class SettingsScreen implements OnInit {
   protected generate(): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
-    this.api.generateApiKey(pid, { label: 'New key' }).subscribe(() => {
-      this.toast.show('New API key generated');
-      this.api.listApiKeys(pid).subscribe((k) => this.keys.set(k));
+    const label = window.prompt('Key label', 'New key');
+    if (!label) return;
+    this.api.generateApiKey(pid, { label }).subscribe({
+      next: (k) => {
+        this.toast.show('New API key generated');
+        window.alert(`Copy your key now — it won't be shown again:\n\n${k.secret}`);
+        this.api.listApiKeys(pid).subscribe((list) => this.keys.set(list));
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
+    });
+  }
+
+  protected readonly ioLang = signal('fr');
+
+  protected onImportFile(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string) as Record<string, string>;
+        this.api.importTranslations(pid, this.ioLang(), data).subscribe({
+          next: (r) => this.toast.show(`Imported ${r.total} strings (${r.created} new)`),
+          error: () => this.toast.show('Import failed (check the language and file)'),
+        });
+      } catch {
+        this.toast.show('Not valid JSON');
+      }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  protected exportFile(format: 'json' | 'csv'): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.exportTranslations(pid, this.ioLang(), format).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `translations-${this.ioLang()}.${format}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.show(`Exported ${this.ioLang()}.${format}`);
+      },
+      error: () => this.toast.show('Export failed'),
+    });
+  }
+
+  protected revoke(k: ApiKeyView): void {
+    if (!window.confirm(`Revoke "${k.label}"? Apps using it will stop working.`)) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.revokeApiKey(pid, k.id).subscribe({
+      next: () => {
+        this.keys.update((list) => list.filter((x) => x.id !== k.id));
+        this.toast.show('Key revoked');
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
     });
   }
 }
