@@ -4,12 +4,13 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { authInterceptor, provideAuth } from 'angular-auth-oidc-client';
 
 import { routes } from './app.routes';
+import { e2eTokenInterceptor } from './core/e2e-token.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor()])),
+    provideHttpClient(withFetch(), withInterceptors([e2eTokenInterceptor, authInterceptor()])),
     provideAuth({
       config: {
         authority: 'http://localhost:8089/realms/translad',
@@ -20,6 +21,10 @@ export const appConfig: ApplicationConfig = {
         responseType: 'code',
         silentRenew: true,
         useRefreshToken: true,
+        // Don't let the library auto-navigate after checkAuth; the Angular
+        // router owns routing (otherwise deep links like /projects get
+        // overridden by a redirect to redirectUrl).
+        triggerAuthorizationResultEvent: true,
         // Attach the bearer token only to backend API calls.
         secureRoutes: ['/api'],
       },

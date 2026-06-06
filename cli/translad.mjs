@@ -13,6 +13,30 @@
  */
 
 const API = process.env.TRANSLAD_API || 'http://localhost:8088/api';
+const KEYCLOAK = process.env.TRANSLAD_KEYCLOAK || 'http://localhost:8089/realms/translad';
+
+// ---------- auth ----------
+let cachedToken = process.env.TRANSLAD_TOKEN || null;
+
+async function getToken() {
+  if (cachedToken) return cachedToken;
+  const user = process.env.TRANSLAD_USER;
+  const pass = process.env.TRANSLAD_PASS;
+  if (!user || !pass) return null; // unauthenticated (reads may still work in dev)
+  const res = await fetch(`${KEYCLOAK}/protocol/openid-connect/token`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: 'translad-spa',
+      grant_type: 'password',
+      username: user,
+      password: pass,
+    }),
+  });
+  if (!res.ok) return null;
+  cachedToken = (await res.json()).access_token;
+  return cachedToken;
+}
 
 // ---------- tiny arg parser ----------
 function parseArgs(argv) {
@@ -40,9 +64,11 @@ function fail(msg) {
 }
 
 async function api(path, init) {
+  const token = await getToken();
+  const auth = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(`${API}${path}`, {
     ...init,
-    headers: { 'content-type': 'application/json', ...(init?.headers || {}) },
+    headers: { 'content-type': 'application/json', ...auth, ...(init?.headers || {}) },
   });
   if (!res.ok) {
     let detail = res.statusText;

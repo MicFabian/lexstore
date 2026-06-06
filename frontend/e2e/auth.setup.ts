@@ -1,18 +1,32 @@
-import { test as setup, expect } from '@playwright/test';
+import { test as setup, expect, request } from '@playwright/test';
 
 const AUTH_FILE = 'e2e/.auth/owner.json';
 
 /**
- * Log in once through Keycloak as the owner and persist the browser storage so
- * every test runs authenticated. Runs as a dependency of the chromium project.
+ * Obtain a Keycloak token via the password grant and persist it as a
+ * localStorage entry, so every test runs authenticated without driving the
+ * full OIDC redirect flow (the app reads `tl.e2e.token` in E2E mode).
  */
-setup('authenticate as owner', async ({ page }) => {
-  await page.goto('/editor');
-  // Redirected to Keycloak.
-  await page.locator('input#username').fill('owner');
-  await page.locator('input#password').fill('owner');
-  await page.locator('button:has-text("Sign In")').click();
-  // Back in the app, authenticated.
+setup('authenticate as owner', async ({ page, baseURL }) => {
+  const api = await request.newContext();
+  const res = await api.post(
+    'http://localhost:8089/realms/translad/protocol/openid-connect/token',
+    {
+      form: {
+        client_id: 'translad-spa',
+        grant_type: 'password',
+        username: 'owner',
+        password: 'owner',
+      },
+    },
+  );
+  expect(res.ok()).toBeTruthy();
+  const token = (await res.json()).access_token as string;
+  await api.dispose();
+
+  // Seed localStorage before any app code runs, then load the app once.
+  await page.addInitScript((t) => localStorage.setItem('tl.e2e.token', t), token);
+  await page.goto(baseURL! + '/editor');
   await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
   await page.context().storageState({ path: AUTH_FILE });
 });

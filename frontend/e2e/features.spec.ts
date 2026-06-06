@@ -75,12 +75,13 @@ test.describe('editor — language switch + AI suggestion', () => {
 // ----------------------------------------------------------------------------
 test.describe('live actions — create term / language / contributor', () => {
 
+  // Assert on durable state (a new row/card), not the ephemeral toast.
   test('add term appears in the editor', async ({ page }) => {
     answerPrompts(page, ['qa.new.term', 'A brand new string']);
     await page.goto('/editor');
     await waitShell(page);
+    await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
     await page.locator('.editor__toolbar button', { hasText: 'Add term' }).click();
-    await expect(page.locator('.toast')).toContainText('Term added');
     await expect(page.locator('.trow', { hasText: 'qa.new.term' })).toBeVisible();
   });
 
@@ -88,8 +89,9 @@ test.describe('live actions — create term / language / contributor', () => {
     answerPrompts(page, ['it', 'Italian']);
     await page.goto('/languages');
     await waitShell(page);
+    // Wait until the existing languages have loaded (project is ready) before adding.
+    await expect(page.locator('.lang-grid .card').first()).toBeVisible();
     await page.locator('button', { hasText: 'Add language' }).click();
-    await expect(page.locator('.toast')).toContainText('Added Italian');
     await expect(page.locator('.lang-grid .card', { hasText: 'Italian' })).toBeVisible();
   });
 
@@ -97,19 +99,19 @@ test.describe('live actions — create term / language / contributor', () => {
     answerPrompts(page, ['QA Tester', 'qa@translad.io']);
     await page.goto('/contributors');
     await waitShell(page);
+    await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
     await page.locator('button', { hasText: 'Invite contributor' }).click();
-    await expect(page.locator('.toast')).toContainText('Invited QA Tester');
     await expect(page.locator('.ttable', { hasText: 'qa@translad.io' })).toBeVisible();
   });
 
   test('generate API key adds a key row', async ({ page }) => {
+    // Generate prompts for a label, then alerts the one-time secret.
+    answerPrompts(page, ['QA CI key', null]);
     await page.goto('/settings');
     await waitShell(page);
     const before = await page.locator('.keyrow').count();
     await page.locator('button', { hasText: 'Generate key' }).click();
-    await expect(page.locator('.toast')).toContainText('generated');
-    // A new key row appears (label "New key" from the API).
-    await expect(page.locator('.keyrow').filter({ hasText: 'New key' })).toBeVisible();
+    await expect(page.locator('.keyrow').filter({ hasText: 'QA CI key' })).toBeVisible();
     expect(await page.locator('.keyrow').count()).toBeGreaterThan(before);
   });
 });

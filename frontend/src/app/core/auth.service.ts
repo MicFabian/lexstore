@@ -28,10 +28,42 @@ export class AuthService {
     this.init();
   }
 
+  /** E2E-only: a pre-fetched bearer token injected by the test harness. */
+  static readonly E2E_TOKEN_KEY = 'tl.e2e.token';
+  readonly e2eToken = (() => {
+    try {
+      return localStorage.getItem(AuthService.E2E_TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  })();
+
   /** Run once at app start: process any auth callback, hydrate the user. */
   init(): void {
     if (this.started) return;
     this.started = true;
+
+    // E2E bypass: skip the OIDC redirect dance, hydrate from the injected token.
+    if (this.e2eToken) {
+      const claims = this.decode(this.e2eToken);
+      const roles: string[] = (claims?.realm_access?.roles ?? []).filter((r: string) =>
+        ['owner', 'admin', 'translator', 'proofreader'].includes(r),
+      );
+      const name =
+        [claims?.given_name, claims?.family_name].filter(Boolean).join(' ').trim() ||
+        claims?.preferred_username ||
+        'E2E User';
+      this.authenticated.set(true);
+      this.user.set({
+        name,
+        email: claims?.email ?? null,
+        username: claims?.preferred_username ?? '',
+        roles,
+      });
+      this.ready.set(true);
+      return;
+    }
+
     this.oidc.checkAuth().subscribe({
       next: ({ isAuthenticated, userData, accessToken }) => this.hydrate(isAuthenticated, userData, accessToken),
       error: () => {

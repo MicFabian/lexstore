@@ -14,7 +14,12 @@ Or run directly: `node cli/translad.mjs <command>`.
 ## Configure
 
 ```bash
-export TRANSLAD_API=http://localhost:8088/api   # default
+export TRANSLAD_API=http://localhost:8088/api          # default
+export TRANSLAD_KEYCLOAK=http://localhost:8089/realms/translad  # default
+
+# Authenticate (the API requires a Keycloak token). Either:
+export TRANSLAD_USER=owner TRANSLAD_PASS=owner         # password grant, or
+export TRANSLAD_TOKEN=<access-token>                   # a pre-fetched token
 ```
 
 ## Commands

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # CLI smoke + edge-case sweep. Exits non-zero on first failure.
+# Authenticates as the owner test user (the API requires a Keycloak token).
 set -u
+export TRANSLAD_USER="${TRANSLAD_USER:-owner}"
+export TRANSLAD_PASS="${TRANSLAD_PASS:-owner}"
 CLI="node $(dirname "$0")/translad.mjs"
 PASS=0; FAIL=0
 ok()   { echo "  ✓ $1"; PASS=$((PASS+1)); }
