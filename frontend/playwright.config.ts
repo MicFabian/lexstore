@@ -16,5 +16,12 @@ export default defineConfig({
     trace: 'on-first-retry',
     viewport: { width: 1440, height: 900 },
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/owner.json' },
+      dependencies: ['setup'],
+    },
+  ],
 });

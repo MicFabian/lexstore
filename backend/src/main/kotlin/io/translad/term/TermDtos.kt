@@ -100,6 +100,7 @@ data class UpdateTermRequest(
 
 data class AddCommentRequest(
     @field:NotBlank val text: String,
-    val authorName: String = "You There",
-    val authorAvatar: Int = 0,
+    // Author is taken from the authenticated user; these are accepted but ignored.
+    val authorName: String? = null,
+    val authorAvatar: Int? = null,
 )

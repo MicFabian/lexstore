@@ -1,4 +1,7 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration
   jpa:
     hibernate:
       ddl-auto: validate

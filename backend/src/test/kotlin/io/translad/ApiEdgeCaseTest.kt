@@ -240,13 +240,14 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         val before = getList("/api/projects/$id/terms/$termId/comments").size
 
         val added = client.post().uri("/api/projects/$id/terms/$termId/comments")
-            .body(mapOf("text" to "QA test comment", "authorName" to "QA Bot"))
+            .body(mapOf("text" to "QA test comment"))
             .retrieve().body(mapType)!!
         assertThat(added["text"]).isEqualTo("QA test comment")
+        // Unauthenticated test context stamps the placeholder author.
+        assertThat(added["authorName"]).isEqualTo("You There")
 
         val after = getList("/api/projects/$id/terms/$termId/comments")
         assertThat(after).hasSize(before + 1)
-        assertThat(after.last()["authorName"]).isEqualTo("QA Bot")
     }
 
     // ---------------- Pagination edges ----------------
@@ -390,6 +391,62 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         assertThat(updated["formality"]).isEqualTo("formal")
         assertThat((updated["temperature"] as Number).toDouble()).isEqualTo(0.5)
         assertThat(updated["tone"]).isEqualTo("Keep it short.")
+    }
+
+    // ---------------- Import / Export ----------------
+
+    @Test
+    fun `import creates missing terms and fills translations`() {
+        val id = mosaicId()
+        val before = (getMap("/api/projects/$id/terms?size=1")["total"] as Number).toInt()
+        val result = client.post().uri("/api/projects/$id/import?lang=nl")
+            .body(mapOf("nav.dashboard" to "Dashboard NL", "fresh.imported.key" to "Vers geïmporteerd"))
+            .retrieve().body(mapType)!!
+        assertThat((result["created"] as Number).toInt()).isEqualTo(1)
+        assertThat((result["total"] as Number).toInt()).isEqualTo(2)
+        val after = (getMap("/api/projects/$id/terms?size=1")["total"] as Number).toInt()
+        assertThat(after).isEqualTo(before + 1)
+        // The new Dutch value is present in the editor view.
+        @Suppress("UNCHECKED_CAST")
+        val rows = getMap("/api/projects/$id/languages/nl/translations")["rows"] as List<Map<String, Any?>>
+        assertThat(rows.first { it["key"] == "nav.dashboard" }["target"]).isEqualTo("Dashboard NL")
+    }
+
+    @Test
+    fun `export returns a key-value map for a language`() {
+        val id = mosaicId()
+        val json = getMap("/api/projects/$id/export?lang=fr")
+        assertThat(json["nav.dashboard"]).isEqualTo("Tableau de bord")
+        assertThat(json).containsKey("billing.plan.pro") // untranslated → empty string
+    }
+
+    // ---------------- Term detail + comment delete ----------------
+
+    @Test
+    fun `updating a term changes context and tags`() {
+        val id = mosaicId()
+        val termId = (getMap("/api/projects/$id/terms?size=50")["content"] as List<*>)
+            .map { it as Map<*, *> }.first { it["key"] == "auth.forgot" }["id"] as String
+        val updated = client.patch().uri("/api/projects/$id/terms/$termId")
+            .body(mapOf("ctx" to "Reset flow", "tags" to listOf("auth", "qa")))
+            .retrieve().body(mapType)!!
+        assertThat(updated["ctx"]).isEqualTo("Reset flow")
+        assertThat(updated["tags"]).isEqualTo(listOf("auth", "qa"))
+    }
+
+    @Test
+    fun `a comment can be added then deleted`() {
+        val id = mosaicId()
+        val termId = (getMap("/api/projects/$id/terms?size=50")["content"] as List<*>)
+            .map { it as Map<*, *> }.first { it["key"] == "settings.profile" }["id"] as String
+        val added = client.post().uri("/api/projects/$id/terms/$termId/comments")
+            .body(mapOf("text" to "to be deleted"))
+            .retrieve().body(mapType)!!
+        val commentId = added["id"] as String
+        client.delete().uri("/api/projects/$id/terms/$termId/comments/$commentId")
+            .retrieve().toBodilessEntity()
+        assertThat(getList("/api/projects/$id/terms/$termId/comments").map { it["id"] })
+            .doesNotContain(commentId)
     }
 
     // ---------------- Editor view integrity ----------------

@@ -17,6 +17,8 @@ import org.testcontainers.containers.PostgreSQLContainer
  * resets the schema via Flyway so mutating tests stay isolated.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@org.springframework.test.context.ActiveProfiles("test")
+@org.springframework.context.annotation.Import(TestSecurityConfig::class)
 abstract class IntegrationTestBase {
 
     companion object {

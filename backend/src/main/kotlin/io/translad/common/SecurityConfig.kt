@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableMethodSecurity
+@org.springframework.context.annotation.Profile("!test")
 class SecurityConfig {
 
     @Bean

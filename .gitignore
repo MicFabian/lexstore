@@ -20,6 +20,7 @@ frontend/.playwright-mcp/
 .playwright-mcp/
 frontend/test-results/
 frontend/playwright-report/
+frontend/e2e/.auth/
 
 # Logs / env
 *.log
