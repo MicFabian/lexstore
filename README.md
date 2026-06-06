@@ -8,9 +8,10 @@ Built to the **TransLad design system** (dark-first, electric-cobalt accent, edi
 
 | Layer | Tech |
 |---|---|
-| Backend | Spring Boot 4 · Kotlin · Java 25 · Spring Data JPA · Flyway · PostgreSQL 17 |
-| Frontend | Angular 22 · TypeScript 6 · standalone components · signals |
-| Infra | Docker Compose (Postgres) |
+| Backend | Spring Boot 4 · Kotlin · Java 25 · Spring Data JPA · Flyway · PostgreSQL 17 · OAuth2 resource server |
+| Frontend | Angular 22 · TypeScript 6 · standalone components · signals · angular-auth-oidc-client |
+| Auth | Keycloak 26 (OIDC, PKCE) with role-based access control |
+| Infra | Docker Compose (Postgres + Keycloak) |
 
 ## Layout
 
@@ -25,11 +26,13 @@ frontend/   Angular app. Design tokens in src/styles/, feature screens in
 
 ## Run
 
-**1. Postgres**
+**1. Postgres + Keycloak**
 ```bash
 cd backend
-docker compose up -d
+docker compose up -d        # Postgres :5432, Keycloak :8089 (realm "translad")
 ```
+Keycloak imports the `translad` realm with three test users (password = username):
+`owner` (all roles), `translator`, `proofreader`.
 
 **2. Backend** (Java 25, runs on `:8088`)
 ```bash
@@ -37,16 +40,22 @@ cd backend
 JAVA_HOME=/path/to/jdk25 ./gradlew bootRun
 ```
 Flyway creates the schema and seeds the demo *Mosaic Web App* project (6 languages,
-14 terms, translations, contributors, API keys) on first boot.
+14 terms, translations, contributors, API keys) on first boot. The API validates
+Keycloak JWTs and enforces roles (`@PreAuthorize`).
 
-**3. Frontend** (Node ≥22.22.3, runs on `:4200`, proxies `/api` → `:8088`)
+**3. Frontend** (Node ≥22.22.3, runs on `:4300`, proxies `/api` → `:8088`)
 ```bash
 cd frontend
 npm install
 npm start
 ```
-Open the dev server URL. The app loads the projects, defaults to *Mosaic Web App*,
-and opens the translation editor.
+Open the dev server URL; you're redirected to Keycloak to sign in (try `owner` /
+`owner`), then land in the translation editor. The signed-in user's name stamps
+audit history and comments; their roles gate the write actions.
+
+> If tokens stop validating or the API returns 500/401 after a break, the
+> Keycloak or Postgres container has likely stopped — `docker compose up -d`
+> brings them back and the backend re-fetches the signing keys.
 
 ## Screens
 
