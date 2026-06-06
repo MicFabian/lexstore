@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -38,6 +39,7 @@ class TranslationController(private val service: EditorService) {
 
     /** PUT is an idempotent upsert of the translation for (term, language). */
     @PutMapping("/{termId}")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR','PROOFREADER')")
     fun upsert(
         @PathVariable projectId: UUID,
         @PathVariable code: String,
@@ -55,8 +57,9 @@ class TranslationController(private val service: EditorService) {
 
     /** Auto-translate every untranslated term in this language. */
     @org.springframework.web.bind.annotation.PostMapping("/auto")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
     fun auto(
         @PathVariable projectId: UUID,
         @PathVariable code: String,
-    ): AutoTranslateResult = service.autoTranslate(projectId, code, "You There")
+    ): AutoTranslateResult = service.autoTranslate(projectId, code)
 }

@@ -33,6 +33,7 @@ class EditorService(
     private val comments: TermCommentRepository,
     private val events: TranslationEventRepository,
     private val ai: io.translad.ai.AiTranslationService,
+    private val currentUser: io.translad.common.CurrentUser,
 ) {
     fun editor(projectId: UUID, languageCode: String): EditorResponse {
         val project = projects.findById(projectId)
@@ -65,8 +66,9 @@ class EditorService(
             ?: throw LanguageNotInProjectException(languageCode)
 
         val newStatus = TranslationStatus.from(req.status)
-        val author = req.authorName ?: "You There"
-        val avatar = req.authorAvatar ?: 0
+        val me = currentUser.identity()
+        val author = req.authorName ?: me.name
+        val avatar = req.authorAvatar ?: me.avatar
         val now = Instant.now()
 
         val existing = translations.findByTermIdAndLanguageCode(termId, languageCode)
@@ -137,7 +139,8 @@ class EditorService(
 
     /** Auto-translate every untranslated term for a language. Saved as fuzzy when settings ask. */
     @Transactional
-    fun autoTranslate(projectId: UUID, languageCode: String, author: String): AutoTranslateResult {
+    fun autoTranslate(projectId: UUID, languageCode: String): AutoTranslateResult {
+        val author = currentUser.name()
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
         languages.findByProjectIdAndCode(projectId, languageCode)

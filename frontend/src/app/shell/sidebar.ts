@@ -4,6 +4,7 @@ import { Icon, IconName } from '../shared/icon';
 import { Avatar } from '../shared/primitives';
 import { BrandMark } from './brand-mark';
 import { ProjectStateService } from '../core/project-state.service';
+import { AuthService } from '../core/auth.service';
 
 interface NavItem {
   path: string;
@@ -99,17 +100,43 @@ interface QuickItem {
         </a>
       </nav>
 
-      <div class="rail__foot">
-        <tl-avatar [i]="0" name="You There" [sm]="true" />
-        <div style="min-width:0;flex:1">
-          <div class="foot-name">You There</div>
-          <div class="foot-role">Owner</div>
-        </div>
-        <tl-icon name="Settings" [size]="15" color="var(--tl-muted)" />
+      <div class="proj-switch">
+        <button class="rail__foot foot-btn" (click)="userMenuOpen.set(!userMenuOpen())">
+          <tl-avatar [i]="userAvatar()" [name]="userName()" [sm]="true" />
+          <div style="min-width:0;flex:1;text-align:left">
+            <div class="foot-name">{{ userName() }}</div>
+            <div class="foot-role">{{ topRole() }}</div>
+          </div>
+          <tl-icon name="ChevronsUpDown" [size]="15" color="var(--tl-muted)" />
+        </button>
+        @if (userMenuOpen()) {
+          <div class="menu-backdrop" (click)="userMenuOpen.set(false)"></div>
+          <div class="menu" style="bottom:calc(100% + 6px);left:12px;right:12px">
+            <div class="menu__label">{{ userEmail() || userName() }}</div>
+            @for (r of roles(); track r) {
+              <div class="menu__item" style="cursor:default">
+                <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" /><span style="text-transform:capitalize">{{ r }}</span>
+              </div>
+            }
+            <div class="menu__divider"></div>
+            <button class="menu__item" (click)="logout()">
+              <tl-icon name="ArrowRight" [size]="15" color="var(--tl-slate)" /><span>Sign out</span>
+            </button>
+          </div>
+        }
       </div>
     </aside>
   `,
   styles: `
+    .foot-btn {
+      width: 100%;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    .foot-btn:hover {
+      background: var(--tl-fill);
+    }
     .foot-name {
       font-size: 12.5px;
       font-weight: 600;
@@ -120,14 +147,31 @@ interface QuickItem {
     .foot-role {
       font-size: 11px;
       color: var(--tl-muted);
+      text-transform: capitalize;
     }
   `,
 })
 export class Sidebar {
   private readonly state = inject(ProjectStateService);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   protected readonly switcherOpen = signal(false);
+  protected readonly userMenuOpen = signal(false);
+  protected readonly roles = this.auth.roles;
+  protected readonly userName = computed(() => this.auth.user()?.name ?? 'Loading…');
+  protected readonly userEmail = computed(() => this.auth.user()?.email ?? null);
+  protected readonly userAvatar = computed(() => {
+    const name = this.auth.user()?.name ?? '';
+    let h = 0;
+    for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
+    return h % 7;
+  });
+  protected readonly topRole = computed(() => {
+    const order = ['owner', 'admin', 'proofreader', 'translator'];
+    const r = this.roles();
+    return order.find((o) => r.includes(o)) ?? 'member';
+  });
   protected readonly projects = this.state.projects;
   protected readonly current = this.state.current;
 
@@ -157,5 +201,10 @@ export class Sidebar {
   protected viewAll(): void {
     this.switcherOpen.set(false);
     this.router.navigate(['/', 'projects']);
+  }
+
+  protected logout(): void {
+    this.userMenuOpen.set(false);
+    this.auth.logout();
   }
 }

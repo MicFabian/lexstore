@@ -4,6 +4,11 @@ spring:
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/translad}
   datasource:
     url: jdbc:postgresql://localhost:5432/translad
     username: translad

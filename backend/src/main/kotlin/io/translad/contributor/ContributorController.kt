@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -21,6 +22,7 @@ class ContributorController(private val service: ContributorService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun invite(
         @PathVariable projectId: UUID,
         @Valid @RequestBody req: InviteContributorRequest,
@@ -28,5 +30,6 @@ class ContributorController(private val service: ContributorService) {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun remove(@PathVariable projectId: UUID, @PathVariable id: UUID) = service.remove(projectId, id)
 }

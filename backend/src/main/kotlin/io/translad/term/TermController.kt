@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -31,10 +32,12 @@ class TermController(private val service: TermService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
     fun create(@PathVariable projectId: UUID, @Valid @RequestBody req: CreateTermRequest): TermView =
         service.create(projectId, req)
 
     @PatchMapping("/{termId}")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable termId: UUID,
@@ -43,6 +46,7 @@ class TermController(private val service: TermService) {
 
     @DeleteMapping("/{termId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun delete(@PathVariable projectId: UUID, @PathVariable termId: UUID) =
         service.delete(projectId, termId)
 

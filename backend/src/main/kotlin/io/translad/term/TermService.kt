@@ -20,6 +20,7 @@ class TermService(
     private val translations: TranslationRepository,
     private val languages: LanguageRepository,
     private val comments: io.translad.term.TermCommentRepository,
+    private val currentUser: io.translad.common.CurrentUser,
 ) {
     fun list(projectId: UUID): List<TermView> {
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
@@ -100,11 +101,12 @@ class TermService(
     fun addComment(projectId: UUID, termId: UUID, req: AddCommentRequest): CommentView {
         val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
         require(term.projectId == projectId) { "Term does not belong to this project." }
+        val me = currentUser.identity()
         val saved = comments.save(
             TermComment(
                 termId = termId,
-                authorName = req.authorName,
-                authorAvatar = req.authorAvatar,
+                authorName = me.name,
+                authorAvatar = me.avatar,
                 text = req.text,
                 timeLabel = "just now",
             ),

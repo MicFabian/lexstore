@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -21,6 +22,7 @@ class ApiKeyController(private val service: ApiKeyService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun generate(
         @PathVariable projectId: UUID,
         @Valid @RequestBody req: GenerateApiKeyRequest,
@@ -28,5 +30,6 @@ class ApiKeyController(private val service: ApiKeyService) {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     fun revoke(@PathVariable projectId: UUID, @PathVariable id: UUID) = service.revoke(projectId, id)
 }
