@@ -32,9 +32,20 @@ export class AuthService {
   init(): void {
     if (this.started) return;
     this.started = true;
-    this.oidc.checkAuth().subscribe(({ isAuthenticated, userData, accessToken }) => {
-      this.authenticated.set(isAuthenticated);
-      if (isAuthenticated) {
+    this.oidc.checkAuth().subscribe({
+      next: ({ isAuthenticated, userData, accessToken }) => this.hydrate(isAuthenticated, userData, accessToken),
+      error: () => {
+        // A stale/invalid stored token can make checkAuth error — treat as logged out.
+        this.authenticated.set(false);
+        this.user.set(null);
+        this.ready.set(true);
+      },
+    });
+  }
+
+  private hydrate(isAuthenticated: boolean, userData: any, accessToken: string | undefined): void {
+    this.authenticated.set(isAuthenticated);
+    if (isAuthenticated) {
         // Roles live in realm_access of the ACCESS token, not the userinfo payload.
         const claims = this.decode(accessToken);
         const roles: string[] = claims?.realm_access?.roles ?? userData?.realm_access?.roles ?? [];
@@ -53,9 +64,8 @@ export class AuthService {
           username: userData?.preferred_username ?? claims?.preferred_username ?? '',
           roles: roles.filter((r) => ['owner', 'admin', 'translator', 'proofreader'].includes(r)),
         });
-      }
-      this.ready.set(true);
-    });
+    }
+    this.ready.set(true);
   }
 
   private decode(token: string | undefined): any | null {

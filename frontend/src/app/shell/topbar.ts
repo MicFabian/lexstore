@@ -6,6 +6,7 @@ import { Icon } from '../shared/icon';
 import { Btn } from '../shared/primitives';
 import { ToastService } from '../core/toast.service';
 import { ProjectStateService } from '../core/project-state.service';
+import { CommandService } from '../core/command.service';
 
 const LABELS: Record<string, string> = {
   editor: 'Translations',
@@ -28,7 +29,7 @@ const LABELS: Record<string, string> = {
       </div>
       <div class="spacer"></div>
 
-      <button class="cmdk" type="button" (click)="toast.show('Command palette')">
+      <button class="cmdk" type="button" (click)="cmd.show()">
         <tl-icon name="Search" [size]="14" color="var(--tl-muted)" />
         <span>Search</span>
         <span class="cmdk__keys"><span class="kbd">⌘</span><span class="kbd">K</span></span>
@@ -65,6 +66,7 @@ const LABELS: Record<string, string> = {
 })
 export class Topbar {
   protected readonly toast = inject(ToastService);
+  protected readonly cmd = inject(CommandService);
   private readonly router = inject(Router);
   protected readonly project = inject(ProjectStateService).current;
 

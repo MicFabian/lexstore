@@ -8,6 +8,7 @@ import { TweaksPanel } from '../../shell/tweaks-panel';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
+import { CommandService } from '../../core/command.service';
 import { ProjectSummary } from '../../core/models';
 
 @Component({
@@ -22,7 +23,7 @@ import { ProjectSummary } from '../../core/models';
           <span class="word" style="font-weight:800;font-size:16px;letter-spacing:-.02em">Trans<b style="color:var(--tl-accent)">Lad</b></span>
         </div>
         <div class="spacer"></div>
-        <button class="cmdk" type="button" (click)="toast.show('Command palette')">
+        <button class="cmdk" type="button" (click)="cmd.show()">
           <tl-icon name="Search" [size]="14" color="var(--tl-muted)" />
           <span>Search</span>
           <span class="cmdk__keys"><span class="kbd">⌘</span><span class="kbd">K</span></span>
@@ -196,6 +197,7 @@ export class ProjectsDashboard implements OnInit {
   private readonly state = inject(ProjectStateService);
   private readonly router = inject(Router);
   protected readonly toast = inject(ToastService);
+  protected readonly cmd = inject(CommandService);
 
   protected readonly projects = this.state.projects;
   protected readonly query = signal('');

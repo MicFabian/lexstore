@@ -9,6 +9,7 @@ export class ProjectStateService {
   readonly projects = signal<ProjectSummary[]>([]);
   readonly currentId = signal<string | null>(null);
   readonly loaded = signal(false);
+  private loading = false;
 
   readonly current = computed<ProjectSummary | null>(() => {
     const id = this.currentId();
@@ -16,13 +17,23 @@ export class ProjectStateService {
   });
 
   load(): void {
-    this.api.listProjects().subscribe((list) => {
-      this.projects.set(list);
-      if (!this.currentId()) {
-        const primary = list.find((p) => p.code === 'mosaic-web') ?? list[0];
-        if (primary) this.currentId.set(primary.id);
-      }
-      this.loaded.set(true);
+    if (this.loading) return; // single-flight
+    this.loading = true;
+    this.api.listProjects().subscribe({
+      next: (list) => {
+        this.projects.set(list);
+        if (!this.currentId()) {
+          const primary = list.find((p) => p.code === 'mosaic-web') ?? list[0];
+          if (primary) this.currentId.set(primary.id);
+        }
+        this.loaded.set(true);
+        this.loading = false;
+      },
+      error: () => {
+        // Mark loaded so dependent screens stop polling; they'll show empty.
+        this.loaded.set(true);
+        this.loading = false;
+      },
     });
   }
 
@@ -31,13 +42,15 @@ export class ProjectStateService {
   }
 
   /** Invoke `cb` with the current project id as soon as one is available. */
-  whenReady(cb: (projectId: string) => void): void {
+  whenReady(cb: (projectId: string) => void, attempts = 0): void {
     const id = this.current()?.id;
     if (id) {
       cb(id);
       return;
     }
-    if (!this.loaded()) this.load();
-    setTimeout(() => this.whenReady(cb), 80);
+    if (!this.loaded() && !this.loading) this.load();
+    // Give up after ~4s (loaded but no project = unauthorized or empty).
+    if (this.loaded() || attempts > 50) return;
+    setTimeout(() => this.whenReady(cb, attempts + 1), 80);
   }
 }

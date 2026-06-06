@@ -63,4 +63,13 @@ class TermController(private val service: TermService) {
         @PathVariable termId: UUID,
         @Valid @RequestBody req: AddCommentRequest,
     ): CommentView = service.addComment(projectId, termId, req)
+
+    @DeleteMapping("/{termId}/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR','PROOFREADER')")
+    fun deleteComment(
+        @PathVariable projectId: UUID,
+        @PathVariable termId: UUID,
+        @PathVariable commentId: UUID,
+    ) = service.deleteComment(projectId, termId, commentId)
 }

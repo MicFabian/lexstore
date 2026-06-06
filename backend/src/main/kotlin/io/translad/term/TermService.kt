@@ -114,6 +114,15 @@ class TermService(
         return CommentView(saved.id, saved.authorName, saved.authorAvatar, saved.text, saved.timeLabel)
     }
 
+    @Transactional
+    fun deleteComment(projectId: UUID, termId: UUID, commentId: UUID) {
+        val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
+        require(term.projectId == projectId) { "Term does not belong to this project." }
+        comments.findById(commentId).ifPresent {
+            if (it.termId == termId) comments.delete(it)
+        }
+    }
+
     private fun toView(
         term: Term,
         langs: List<io.translad.language.Language>,

@@ -34,14 +34,27 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
         <div>
           <div class="tl-eyebrow" style="margin-bottom:6px">Key</div>
           <div class="keytag" style="font-size:13px">{{ row().key }}</div>
-          <div class="muted" style="font-size:12px;margin-top:4px">Context · {{ row().ctx }}</div>
-          @if (row().tags.length) {
-            <div class="row" style="gap:5px;margin-top:8px;flex-wrap:wrap">
-              @for (t of row().tags; track t) {
-                <tl-tag>{{ t }}</tl-tag>
-              }
-            </div>
-          }
+          <div class="row" style="margin-top:4px;gap:6px">
+            <span class="muted" style="font-size:12px">Context ·</span>
+            <input
+              class="ctx-input"
+              [value]="ctx()"
+              (input)="ctx.set($any($event.target).value)"
+              (blur)="saveContext()"
+              placeholder="Add context…"
+            />
+          </div>
+          <div class="row" style="gap:5px;margin-top:8px;flex-wrap:wrap">
+            @for (t of tags(); track t) {
+              <span class="tl-tag-edit">
+                {{ t }}
+                <button class="tag-x" aria-label="Remove tag" (click)="removeTag(t)"><tl-icon name="X" [size]="11" /></button>
+              </span>
+            }
+            <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" (click)="addTag()">
+              <tl-icon name="Plus" [size]="12" />
+            </button>
+          </div>
         </div>
 
         <div>
@@ -125,6 +138,10 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
                   <div class="row" style="gap:6px">
                     <b style="font-weight:600">{{ c.authorName }}</b>
                     <span class="muted" style="font-size:11.5px">{{ c.time }}</span>
+                    <div class="spacer"></div>
+                    <button class="btn btn--subtle btn--sm btn--icon" style="height:20px;width:20px" aria-label="Delete comment" (click)="deleteComment(c)">
+                      <tl-icon name="Trash2" [size]="12" color="var(--tl-muted)" />
+                    </button>
                   </div>
                   <div style="color:var(--tl-ink-80);margin-top:2px">{{ c.text }}</div>
                 </div>
@@ -162,6 +179,47 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     }
   `,
   styles: `
+    .ctx-input {
+      flex: 1;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--tl-ink-80);
+      outline: none;
+      border-bottom: 1px solid transparent;
+      padding: 1px 0;
+    }
+    .ctx-input:focus {
+      border-bottom-color: var(--tl-accent);
+    }
+    .ctx-input::placeholder {
+      color: var(--tl-muted);
+    }
+    .tl-tag-edit {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+      padding: 0 4px 0 7px;
+      border-radius: 5px;
+      background: var(--tl-fill);
+      border: 1px solid var(--tl-line);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--tl-slate);
+    }
+    .tag-x {
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      color: var(--tl-muted);
+    }
+    .tag-x:hover {
+      color: var(--tl-danger);
+    }
     .lastedit {
       display: flex;
       align-items: center;
@@ -211,6 +269,8 @@ export class Inspector {
   protected readonly suggestion = signal<string | null>(null);
   protected readonly suggestionMeta = signal<string | null>(null);
   protected readonly suggestBusy = signal(false);
+  protected readonly ctx = signal('');
+  protected readonly tags = signal<string[]>([]);
 
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
 
@@ -221,9 +281,47 @@ export class Inspector {
       this.value.set(r.target ?? '');
       this.draft.set('');
       this.comments.set(r.comments);
+      this.ctx.set(r.ctx);
+      this.tags.set([...r.tags]);
       this.showHistory.set(false);
       this.suggestion.set(null);
       this.suggestionMeta.set(null);
+    });
+  }
+
+  // ---- term-detail editing ----
+  private patchTerm(body: { ctx?: string; tags?: string[] }): void {
+    const pid = this.projectId();
+    if (!pid) return;
+    this.api.updateTerm(pid, this.row().id, body).subscribe({
+      error: () => {},
+    });
+  }
+
+  protected saveContext(): void {
+    if (this.ctx() !== this.row().ctx) this.patchTerm({ ctx: this.ctx() });
+  }
+
+  protected addTag(): void {
+    const t = window.prompt('Tag name')?.trim().toLowerCase();
+    if (!t || this.tags().includes(t)) return;
+    const next = [...this.tags(), t];
+    this.tags.set(next);
+    this.patchTerm({ tags: next });
+  }
+
+  protected removeTag(tag: string): void {
+    const next = this.tags().filter((t) => t !== tag);
+    this.tags.set(next);
+    this.patchTerm({ tags: next });
+  }
+
+  protected deleteComment(c: CommentView): void {
+    const pid = this.projectId();
+    if (!pid) return;
+    this.api.deleteComment(pid, this.row().id, c.id).subscribe({
+      next: () => this.comments.update((list) => list.filter((x) => x.id !== c.id)),
+      error: () => {},
     });
   }
 
