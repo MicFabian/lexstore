@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox, StatusChip } from '../../shared/primitives';
 import { Segmented, SegmentOption } from '../../shared/segmented';
@@ -118,6 +127,16 @@ export class EditorScreen implements OnInit {
   protected readonly rows = signal<EditorRow[]>([]);
   protected readonly lang = signal('fr');
   protected readonly filter = signal('all');
+
+  /** Optional ?filter= deep link (sidebar quick filters); bound by the router. */
+  readonly filterParam = input<string | undefined>(undefined, { alias: 'filter' });
+
+  private readonly applyFilterParam = effect(() => {
+    const f = this.filterParam();
+    if (f && ['all', 'untranslated', 'new', 'fuzzy', 'proofread'].includes(f)) {
+      this.filter.set(f);
+    }
+  });
   protected readonly query = signal('');
   protected readonly sel = signal<string | null>(null);
   protected readonly savedId = signal<string | null>(null);

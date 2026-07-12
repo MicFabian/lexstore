@@ -18,6 +18,28 @@ function answerPrompts(page: Page, answers: (string | null)[]) {
 }
 
 // ----------------------------------------------------------------------------
+test.describe('sidebar quick filters', () => {
+  test('deep-link with the filter applied and show real counts', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
+
+    // "Needs review" navigates to the editor with the fuzzy filter active.
+    await page.locator('a.navitem', { hasText: 'Needs review' }).click();
+    await expect(page.locator('.segmented button.on')).toContainText('Needs review');
+    await expect(page.locator('.ttable tbody tr.trow')).toHaveCount(2);
+
+    // "Newly added" navigates to terms with New-only active.
+    await page.locator('a.navitem', { hasText: 'Newly added' }).click();
+    await expect(page.locator('.ttable tbody tr.trow')).toHaveCount(3);
+    await expect(page.locator('.ttable tbody .chip--new')).toHaveCount(3);
+
+    // Counts come from the project, not hardcoded placeholders.
+    await expect(page.locator('a.navitem', { hasText: 'Untranslated' }).locator('.count')).toContainText('47');
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('editor — language switch + AI suggestion', () => {
 
   test('language dropdown switches the translation column', async ({ page }) => {

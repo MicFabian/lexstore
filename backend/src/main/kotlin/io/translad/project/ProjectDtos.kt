@@ -16,6 +16,7 @@ data class ProjectSummary(
     val progress: Int,
     val untranslated: Long,
     val newTerms: Long,
+    val needsReview: Long,
     val updated: String?,
 )
 

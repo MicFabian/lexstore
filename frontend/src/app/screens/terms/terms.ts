@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox, StatusChip, Tag } from '../../shared/primitives';
 import { HistoryModal } from '../../shared/history-modal';
@@ -252,6 +261,13 @@ export class TermsScreen implements OnInit {
   protected readonly query = signal('');
   protected readonly tag = signal<string | null>(null);
   protected readonly newOnly = signal(false);
+
+  /** Optional ?new=1 deep link (sidebar quick filter); bound by the router. */
+  readonly newParam = input<string | undefined>(undefined, { alias: 'new' });
+
+  private readonly applyNewParam = effect(() => {
+    if (this.newParam() === '1') this.newOnly.set(true);
+  });
   protected readonly expanded = signal<string | null>(null);
   protected readonly historyTerm = signal<TermView | null>(null);
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);

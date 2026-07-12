@@ -13,6 +13,7 @@ export interface ProjectSummary {
   progress: number;
   untranslated: number;
   newTerms: number;
+  needsReview: number;
   updated: string | null;
 }
 

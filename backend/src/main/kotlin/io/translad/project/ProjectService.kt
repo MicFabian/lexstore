@@ -75,6 +75,7 @@ class ProjectService(
             it.status != TranslationStatus.UNTRANSLATED && it.value != null
         }
         val newTerms = projTerms.count { it.isNew }.toLong()
+        val needsReview = allTr.count { it.status == TranslationStatus.FUZZY }.toLong()
 
         return ProjectSummary(
             id = p.id,
@@ -87,6 +88,7 @@ class ProjectService(
             progress = progress,
             untranslated = untranslated.coerceAtLeast(0),
             newTerms = newTerms,
+            needsReview = needsReview,
             updated = p.updatedLabel,
         )
     }

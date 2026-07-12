@@ -18,6 +18,8 @@ interface QuickItem {
   label: string;
   count: number;
   color: string;
+  link: string[];
+  params: Record<string, string>;
 }
 
 @Component({
@@ -85,8 +87,8 @@ interface QuickItem {
         }
 
         <div class="rail__group">Quick filters</div>
-        @for (q of quick; track q.label) {
-          <a class="navitem" [routerLink]="['/', 'terms']">
+        @for (q of quick(); track q.label) {
+          <a class="navitem" [routerLink]="q.link" [queryParams]="q.params">
             <tl-icon [name]="q.icon" [size]="15" [color]="q.color" />
             <span>{{ q.label }}</span>
             <span class="count">{{ q.count }}</span>
@@ -181,11 +183,37 @@ export class Sidebar {
     ];
   });
 
-  protected readonly quick: QuickItem[] = [
-    { icon: 'Circle', label: 'Untranslated', count: 169, color: 'var(--tl-st-untranslated)' },
-    { icon: 'Sparkles', label: 'Newly added', count: 12, color: 'var(--tl-st-new)' },
-    { icon: 'Eye', label: 'Needs review', count: 25, color: 'var(--tl-st-fuzzy)' },
-  ];
+  /** Live counts from the current project; each entry deep-links with its filter applied. */
+  protected readonly quick = computed<QuickItem[]>(() => {
+    const c = this.current();
+    const items: QuickItem[] = [
+      {
+        icon: 'Circle',
+        label: 'Untranslated',
+        count: c?.untranslated ?? 0,
+        color: 'var(--tl-st-untranslated)',
+        link: ['/editor'],
+        params: { filter: 'untranslated' },
+      },
+      {
+        icon: 'Sparkles',
+        label: 'Newly added',
+        count: c?.newTerms ?? 0,
+        color: 'var(--tl-st-new)',
+        link: ['/terms'],
+        params: { new: '1' },
+      },
+      {
+        icon: 'Eye',
+        label: 'Needs review',
+        count: c?.needsReview ?? 0,
+        color: 'var(--tl-st-fuzzy)',
+        link: ['/editor'],
+        params: { filter: 'fuzzy' },
+      },
+    ];
+    return items;
+  });
 
   protected pick(id: string): void {
     this.state.select(id);
