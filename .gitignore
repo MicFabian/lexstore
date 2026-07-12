@@ -26,3 +26,4 @@ frontend/e2e/.auth/
 *.log
 .env
 .env.local
+design-baseline/
