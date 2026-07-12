@@ -10,7 +10,7 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/translad}
   datasource:
-    url: jdbc:postgresql://localhost:5432/translad
+    url: jdbc:postgresql://localhost:5442/translad
     username: translad
     password: translad
   jpa:

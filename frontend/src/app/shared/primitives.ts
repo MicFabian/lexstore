@@ -4,6 +4,13 @@ import { STATUS_LABEL, TranslationStatus } from '../core/models';
 
 const AV = ['#3a5bff', '#1f9d57', '#c97a09', '#7b53d6', '#0f8aa0', '#d83a3a', '#2a44e6'];
 
+/** Deterministic avatar palette index for a display name (mirrors the backend). */
+export function avatarIndexFor(name: string): number {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
+  return h % AV.length;
+}
+
 /* ---------------- Button ---------------- */
 @Component({
   selector: 'tl-btn',

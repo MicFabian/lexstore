@@ -15,7 +15,7 @@ import { LanguageView } from '../../core/models';
       <div class="row" style="margin-bottom:20px">
         <div>
           <h1 class="tl-h1">Languages</h1>
-          <p class="muted" style="font-size:13.5px;margin:4px 0 0">
+          <p class="page-sub">
             {{ langs().length }} languages · source is <span class="locale">en</span> English
           </p>
         </div>

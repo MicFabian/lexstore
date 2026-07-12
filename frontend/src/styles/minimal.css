@@ -2,15 +2,15 @@
    TransLad — minimalist refinement layer.
    Loaded after app.css. Quiets visual chrome without touching
    the brand tokens: less texture, fewer shadows, calmer accents,
-   more breathing room. Color stays reserved for meaning
+   generous breathing room. Color stays reserved for meaning
    (primary action + translation status).
    ============================================================ */
 
+/* ---------- Quiet surfaces ---------- */
+
 /* Drop the dot-grid texture from content wells and the dashboard
    topbar — decorative noise, not information. */
-.content {
-  background-image: none;
-}
+.content,
 .topbar--grid {
   background-image: none;
 }
@@ -29,38 +29,25 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-/* Quieter active nav: keep the cobalt indicator, drop the glow. */
-.navitem.active::before {
-  box-shadow: none;
-}
-
-/* Remove the progress-bar glow — a thin solid bar reads cleaner. */
-.progress .seg-translated {
-  box-shadow: none;
-}
-
-/* Soften the toggle glow. */
+/* Quieter active nav / progress / toggle: keep the color, drop the glow. */
+.navitem.active::before,
+.progress .seg-translated,
 .toggle.on {
   box-shadow: none;
 }
 
-/* More air: roomier content padding and a slightly tighter reading
-   measure so dense screens breathe. */
-.content__pad {
-  padding: 32px 36px 72px;
-  max-width: 1120px;
+/* Chips carry meaning through tint + text color alone — no outline. */
+.chip {
+  border-color: transparent;
+}
+.chip--neutral {
+  border-color: var(--tl-line);
 }
 
-/* Lighter table header — smaller, calmer, no heavy rule. */
-.ttable thead th {
-  letter-spacing: 0.06em;
-  border-bottom-color: var(--tl-line-2);
-}
-
-/* Hairline rows already; remove the row hover wash on the dense
-   contributor/term tables in favor of a subtler tint. */
-.trow:hover {
-  background: color-mix(in srgb, var(--tl-fill) 45%, transparent);
+/* Search + command inputs: a single hairline, no fill jump. */
+.cmdk,
+.searchbox {
+  background: transparent;
 }
 
 /* Segmented control: lose the inner border, let the fill define it. */
@@ -69,17 +56,104 @@
   background: var(--tl-fill);
 }
 
-/* Search + command inputs: drop to a single hairline, no fill jump. */
-.cmdk,
-.searchbox {
-  background: transparent;
+/* ---------- Generous space ---------- */
+
+/* Roomier content padding and a comfortable reading measure. */
+.content__pad {
+  padding: 44px 48px 88px;
+  max-width: 1120px;
 }
 
-/* Quieter chips: thinner border so status color carries, not the
-   outline. */
-.chip {
-  border-color: color-mix(in srgb, currentColor 18%, transparent);
+/* Screens breathe: more distance between the page header and content. */
+.content__pad > .row:first-child {
+  margin-bottom: 28px;
 }
+
+/* Editor rows get taller for easier scanning (cozy density). */
+:root[data-density='cozy'] .trow td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+/* Editor toolbar: looser grouping. */
+.editor__toolbar {
+  gap: 14px;
+  padding: 14px 32px;
+}
+.editor__scroll .ttable td:first-child,
+.editor__scroll .ttable th:first-child {
+  padding-left: 32px;
+}
+
+/* Panels: airier header + section padding. */
+.panel__head {
+  padding: 16px 20px;
+}
+
+/* Rail: clearer group separation, calmer labels. */
+.rail__group {
+  padding-top: 22px;
+}
+
+/* Topbar: quieter crumb, roomier height. */
+.topbar {
+  height: 60px;
+  padding: 0 24px;
+}
+
+/* ---------- Tables, calmer ---------- */
+
+.ttable thead th {
+  letter-spacing: 0.06em;
+  border-bottom-color: var(--tl-line-2);
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+/* Subtle row hover — an affordance, not a highlight. */
+.trow:hover {
+  background: color-mix(in srgb, var(--tl-fill) 45%, transparent);
+}
+
+/* ---------- Shared page-header pattern ---------- */
+
+/* Used by every screen: <h1 class="tl-h1"> + <p class="page-sub">. */
+.page-sub {
+  font-size: 13.5px;
+  color: var(--tl-muted);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* ---------- Accessibility ---------- */
+
+/* Keyboard focus is always visible — a crisp accent ring, no layout shift. */
+:focus-visible {
+  outline: 2px solid var(--tl-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.btn:focus-visible,
+.navitem:focus-visible,
+.segmented button:focus-visible {
+  outline-offset: 1px;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline: none; /* inputs already show the accent ring via box-shadow */
+}
+
+/* Respect reduced motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Layout fixes ---------- */
 
 /* Project switcher spans the full rail width (flush with brand + nav). */
 .rail__proj {

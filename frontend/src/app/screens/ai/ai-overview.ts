@@ -43,7 +43,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
           <div class="row" style="margin-bottom:18px">
             <div>
               <h1 class="tl-display-3" style="font-size:28px">Translation AI</h1>
-              <p class="muted" style="font-size:13.5px;margin:5px 0 0">
+              <p class="page-sub">
                 A caching machine-translation service. Every call is logged; identical requests are served from cache.
               </p>
             </div>

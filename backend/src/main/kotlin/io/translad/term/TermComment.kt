@@ -1,5 +1,6 @@
 package io.translad.term
 
+import io.translad.common.RelativeTime
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -25,9 +26,9 @@ class TermComment(
     @Column(nullable = false, length = 2000)
     var text: String,
 
-    @Column(name = "time_label", nullable = false)
-    var timeLabel: String,
-
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
 )
+
+fun TermComment.toView(): CommentView =
+    CommentView(id, authorName, authorAvatar, text, RelativeTime.format(createdAt))

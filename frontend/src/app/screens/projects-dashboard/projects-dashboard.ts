@@ -39,7 +39,7 @@ import { ProjectSummary } from '../../core/models';
           <div class="row" style="margin-bottom:22px">
             <div>
               <h1 class="tl-display-3" style="font-size:28px">Projects</h1>
-              <p class="muted" style="font-size:13.5px;margin:5px 0 0">
+              <p class="page-sub">
                 {{ projects().length }} projects · {{ totalTerms().toLocaleString() }} terms total
               </p>
             </div>

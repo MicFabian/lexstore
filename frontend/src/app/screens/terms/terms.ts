@@ -18,7 +18,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       <div class="row" style="margin-bottom:6px">
         <div>
           <h1 class="tl-h1">Terms</h1>
-          <p class="muted" style="font-size:13.5px;margin:4px 0 0">
+          <p class="page-sub">
             {{ rows().length }} source strings · <span class="locale">en</span> English. Manage the keys; translate them per language.
           </p>
         </div>

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../shared/icon';
-import { Avatar } from '../shared/primitives';
+import { Avatar, avatarIndexFor } from '../shared/primitives';
 import { BrandMark } from './brand-mark';
 import { ProjectStateService } from '../core/project-state.service';
 import { AuthService } from '../core/auth.service';
@@ -161,12 +161,7 @@ export class Sidebar {
   protected readonly roles = this.auth.roles;
   protected readonly userName = computed(() => this.auth.user()?.name ?? 'Loading…');
   protected readonly userEmail = computed(() => this.auth.user()?.email ?? null);
-  protected readonly userAvatar = computed(() => {
-    const name = this.auth.user()?.name ?? '';
-    let h = 0;
-    for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
-    return h % 7;
-  });
+  protected readonly userAvatar = computed(() => avatarIndexFor(this.auth.user()?.name ?? ''));
   protected readonly topRole = computed(() => {
     const order = ['owner', 'admin', 'proofreader', 'translator'];
     const r = this.roles();

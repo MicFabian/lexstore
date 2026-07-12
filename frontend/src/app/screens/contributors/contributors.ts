@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox } from '../../shared/primitives';
 import { ApiService } from '../../core/api.service';
@@ -15,7 +15,7 @@ import { ContributorView } from '../../core/models';
       <div class="row" style="margin-bottom:20px">
         <div>
           <h1 class="tl-h1">Contributors</h1>
-          <p class="muted" style="font-size:13.5px;margin:4px 0 0">
+          <p class="page-sub">
             {{ people().length }} people · scoped per language
           </p>
         </div>
@@ -96,13 +96,13 @@ export class ContributorsScreen implements OnInit {
     );
   }
 
-  protected filtered(): ContributorView[] {
+  protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
     if (!q) return this.people();
     return this.people().filter(
       (c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q),
     );
-  }
+  });
 
   protected roleChip(role: string): string {
     if (role === 'Admin') return 'chip--new';
