@@ -135,6 +135,11 @@ interface QuickItem {
     </aside>
   `,
   styles: `
+    /* The host must dissolve so .rail itself is the app-grid item and
+       stretches to the full viewport height. */
+    :host {
+      display: contents;
+    }
     .foot-btn {
       width: 100%;
       border: none;

@@ -213,6 +213,12 @@
 .rail__group {
   padding-top: 22px;
 }
+/* Nav takes the slack so the user footer sits at the bottom of the rail. */
+.rail__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 .topbar {
   height: 60px;
   padding: 0 24px;
@@ -225,6 +231,17 @@
 .proj-menu {
   left: 12px;
   right: 12px;
+}
+/* Stack name over code in the switcher menu; keep long names tidy. */
+.proj-menu .pm-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.proj-menu .pm-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Tables, editorial ---------- */
