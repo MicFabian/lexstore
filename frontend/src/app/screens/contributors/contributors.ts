@@ -11,47 +11,43 @@ import { ContributorView } from '../../core/models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Avatar, Btn, SearchBox],
   template: `
-    <div class="content content__pad">
-      <div class="row" style="margin-bottom:20px">
-        <div>
-          <h1 class="tl-h1">Contributors</h1>
-          <p class="page-sub">
-            {{ people().length }} people · scoped per language
-          </p>
+    <div class="well">
+      <div class="pad">
+        <div class="phead">
+          <div>
+            <div class="eyebrow">Team</div>
+            <h1 class="serif">Contributors</h1>
+            <div class="psub">{{ people().length }} people · scoped by language</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <tl-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
+            <tl-btn variant="primary" icon="UserPlus" (clicked)="invite()">Invite contributor</tl-btn>
+          </div>
         </div>
-        <div class="spacer"></div>
-        <tl-btn variant="primary" icon="UserPlus" (clicked)="invite()">Invite contributor</tl-btn>
-      </div>
 
-      <div class="panel">
-        <div class="panel__head">
-          <h2>Team</h2>
-          <div class="spacer"></div>
-          <tl-search placeholder="Search people" [value]="query()" [width]="220" (changed)="query.set($event)" />
-        </div>
-        <table class="ttable">
+        <table class="ttable people">
           <thead>
             <tr>
-              <th style="padding-left:18px">Person</th>
-              <th>Role</th>
+              <th>Person</th>
+              <th style="width:150px">Role</th>
               <th>Languages</th>
-              <th>Last active</th>
+              <th style="width:120px;text-align:right">Active</th>
               <th style="width:44px"></th>
             </tr>
           </thead>
           <tbody>
             @for (c of filtered(); track c.id) {
               <tr class="trow" style="cursor:default">
-                <td style="padding-left:18px">
+                <td>
                   <div class="row">
                     <tl-avatar [i]="c.avatar" [name]="c.name" />
                     <div>
-                      <div style="font-size:13.5px;font-weight:600;white-space:nowrap">{{ c.name }}</div>
-                      <div class="muted" style="font-size:12px">{{ c.email }}</div>
+                      <div style="font-size:14px;font-weight:600;white-space:nowrap;color:var(--tl-ink)">{{ c.name }}</div>
+                      <div class="cmail">{{ c.email }}</div>
                     </div>
                   </div>
                 </td>
-                <td><span [class]="'chip ' + roleChip(c.role)">{{ c.role }}</span></td>
+                <td><span class="cap" [style.color]="roleColor(c.role)">{{ c.role }}</span></td>
                 <td>
                   <div class="row" style="gap:4px;flex-wrap:wrap">
                     @for (code of c.langs.slice(0, 4); track code) {
@@ -62,11 +58,11 @@ import { ContributorView } from '../../core/models';
                     }
                   </div>
                 </td>
-                <td>
+                <td style="text-align:right">
                   @if (c.active === 'Online') {
-                    <span style="color:var(--tl-st-translated);font-weight:600;font-size:12.5px">● Online</span>
+                    <span style="color:var(--tl-st-translated);font-weight:600;font-size:12px">● Online</span>
                   } @else {
-                    <span class="muted" style="font-size:12.5px">{{ c.active }}</span>
+                    <span class="cwhen">{{ c.active }}</span>
                   }
                 </td>
                 <td>
@@ -80,6 +76,20 @@ import { ContributorView } from '../../core/models';
         </table>
       </div>
     </div>
+  `,
+  styles: `
+    .people {
+      background: transparent;
+    }
+    .cmail {
+      font: 500 11.5px var(--tl-mono);
+      color: var(--tl-muted);
+      margin-top: 2px;
+    }
+    .cwhen {
+      font: 500 11.5px var(--tl-mono);
+      color: var(--tl-muted);
+    }
   `,
 })
 export class ContributorsScreen implements OnInit {
@@ -104,10 +114,10 @@ export class ContributorsScreen implements OnInit {
     );
   });
 
-  protected roleChip(role: string): string {
-    if (role === 'Admin') return 'chip--new';
-    if (role === 'Proofreader') return 'chip--proofread';
-    return 'chip--neutral';
+  protected roleColor(role: string): string {
+    if (role === 'Owner' || role === 'Admin') return 'var(--tl-accent-text)';
+    if (role === 'Proofreader') return 'var(--tl-st-proofread)';
+    return 'var(--tl-st-translated)';
   }
 
   protected invite(): void {

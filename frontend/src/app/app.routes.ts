@@ -3,22 +3,22 @@ import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'projects',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./screens/projects-dashboard/projects-dashboard').then((m) => m.ProjectsDashboard),
-  },
-  {
-    path: 'ai',
-    canActivate: [authGuard],
-    loadComponent: () => import('./screens/ai/ai-overview').then((m) => m.AiOverview),
-  },
-  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./shell/shell-layout').then((m) => m.ShellLayout),
     children: [
       { path: '', redirectTo: 'editor', pathMatch: 'full' },
+      {
+        path: 'projects',
+        loadComponent: () =>
+          import('./screens/projects-dashboard/projects-dashboard').then(
+            (m) => m.ProjectsDashboard,
+          ),
+      },
+      {
+        path: 'ai',
+        loadComponent: () => import('./screens/ai/ai-overview').then((m) => m.AiOverview),
+      },
       {
         path: 'editor',
         loadComponent: () => import('./screens/editor/editor').then((m) => m.EditorScreen),

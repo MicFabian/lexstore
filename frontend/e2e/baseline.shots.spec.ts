@@ -6,7 +6,7 @@ import { test, expect, type Page } from './global';
 
 const OUT = '../design-baseline';
 const shot = (page: Page, name: string, fullPage = false) =>
-  page.screenshot({ path: `${OUT}/${name}.png`, fullPage });
+  page.screenshot({ path: `${OUT}/${name}.png`, fullPage, animations: 'disabled' });
 
 async function waitShell(page: Page) {
   await expect(page.locator('.rail__brand')).toBeVisible();
@@ -20,7 +20,7 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
 
   // --- Projects dashboard -------------------------------------------------
   await page.goto('/projects');
-  await expect(page.locator('.proj-card').first()).toBeVisible();
+  await expect(page.locator('.proj-row').first()).toBeVisible();
   await shot(page, '01-projects-dashboard', true);
 
   // --- Editor -------------------------------------------------------------
@@ -29,7 +29,7 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
   await shot(page, '02-editor-default');
 
-  await page.locator('.editor__toolbar .btn--ghost').first().click();
+  await page.locator('.ed-head .btn--ghost').first().click();
   await expect(page.locator('.menu__item').first()).toBeVisible();
   await shot(page, '03-editor-language-dropdown');
   await page.keyboard.press('Escape');
@@ -37,11 +37,11 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
 
   // Quick filter: untranslated
   await page.locator('a.navitem', { hasText: 'Untranslated' }).click();
-  await expect(page.locator('.segmented button.on')).toContainText('Untranslated');
+  await expect(page.locator('.ftab.on')).toContainText('Untranslated');
   await shot(page, '04-editor-filter-untranslated');
 
   // Inspector on a translated row (author, comments, history section)
-  await page.locator('.segmented button', { hasText: 'All' }).click();
+  await page.locator('.ftab', { hasText: 'All' }).click();
   await page.locator('.trow', { hasText: 'nav.dashboard' }).click();
   await expect(page.locator('.inspector')).toBeVisible();
   await shot(page, '05-editor-inspector');
@@ -84,7 +84,7 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   // --- Languages / Contributors ---------------------------------------------
   await page.goto('/languages');
   await waitShell(page);
-  await expect(page.locator('.lang-grid .card').first()).toBeVisible();
+  await expect(page.locator('.lang-row').first()).toBeVisible();
   await shot(page, '12-languages', true);
 
   await page.goto('/contributors');
@@ -112,14 +112,14 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.panel .card').last()).toBeVisible();
   await shot(page, '18-ai-playground-result', true);
 
-  await page.locator('.segmented button', { hasText: 'Requests' }).click();
+  await page.locator('.subnav button', { hasText: 'Requests' }).click();
   await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
   await shot(page, '19-ai-requests', true);
 
-  await page.locator('.segmented button', { hasText: 'Cache' }).click();
+  await page.locator('.subnav button', { hasText: 'Cache' }).click();
   await shot(page, '20-ai-cache', true);
 
-  await page.locator('.segmented button', { hasText: 'Settings' }).click();
+  await page.locator('.subnav button', { hasText: 'Settings' }).click();
   await shot(page, '21-ai-settings', true);
 
   // --- Global chrome -----------------------------------------------------------
@@ -147,16 +147,16 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.tweaks-seg').first()).toBeVisible();
   await shot(page, '25-tweaks-panel');
 
-  // --- Light theme -------------------------------------------------------------
-  await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
-  await page.locator('button[aria-label="Appearance"]').click(); // close panel
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await shot(page, '26-editor-light');
-  await page.goto('/projects');
-  await expect(page.locator('.proj-card').first()).toBeVisible();
-  await shot(page, '27-projects-light', true);
-
-  // Restore dark for whoever uses the browser next.
-  await page.locator('button[aria-label="Appearance"]').click();
+  // --- Dark theme --------------------------------------------------------------
   await page.locator('.tweaks-seg button', { hasText: 'dark' }).click();
+  await page.locator('button[aria-label="Appearance"]').click(); // close panel
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await shot(page, '26-editor-dark');
+  await page.goto('/projects');
+  await expect(page.locator('.proj-row').first()).toBeVisible();
+  await shot(page, '27-projects-dark', true);
+
+  // Restore the light default for whoever uses the browser next.
+  await page.locator('button[aria-label="Appearance"]').click();
+  await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
 });

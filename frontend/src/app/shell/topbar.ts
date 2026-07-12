@@ -14,7 +14,12 @@ const LABELS: Record<string, string> = {
   languages: 'Languages',
   contributors: 'Contributors',
   settings: 'Settings',
+  projects: 'Projects',
+  ai: 'Translation AI',
 };
+
+/** Screens that belong to the workspace, not the selected project. */
+const WORKSPACE = new Set(['projects', 'ai']);
 
 @Component({
   selector: 'tl-topbar',
@@ -23,7 +28,7 @@ const LABELS: Record<string, string> = {
   template: `
     <header class="topbar">
       <div class="crumb">
-        <span>{{ project()?.name }}</span>
+        <span>{{ crumbRoot() }}</span>
         <tl-icon name="ChevronRight" [size]="14" color="var(--tl-line)" />
         <span class="crumb-active">{{ screenLabel() }}</span>
       </div>
@@ -79,8 +84,11 @@ export class Topbar {
     { initialValue: this.router.url },
   );
 
-  protected readonly screenLabel = computed(() => {
-    const seg = this.url().split('?')[0].split('/').filter(Boolean)[0] ?? 'editor';
-    return LABELS[seg] ?? 'Translations';
-  });
+  private readonly segment = computed(
+    () => this.url().split('?')[0].split('/').filter(Boolean)[0] ?? 'editor',
+  );
+  protected readonly screenLabel = computed(() => LABELS[this.segment()] ?? 'Translations');
+  protected readonly crumbRoot = computed(() =>
+    WORKSPACE.has(this.segment()) ? 'Workspace' : (this.project()?.name ?? ''),
+  );
 }

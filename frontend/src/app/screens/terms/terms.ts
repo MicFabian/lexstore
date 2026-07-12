@@ -23,17 +23,18 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal],
   template: `
-    <div class="content content__pad">
-      <div class="row" style="margin-bottom:6px">
+    <div class="well">
+      <div class="pad">
+      <div class="phead" style="margin-bottom:14px">
         <div>
-          <h1 class="tl-h1">Terms</h1>
-          <p class="page-sub">
-            {{ rows().length }} source strings · <span class="locale">en</span> English. Manage the keys; translate them per language.
-          </p>
+          <div class="eyebrow">Source strings · English</div>
+          <h1 class="serif">Terms</h1>
+          <div class="psub">{{ rows().length }} terms · manage the keys; translate them per language</div>
         </div>
-        <div class="spacer"></div>
-        <tl-btn variant="ghost" icon="FileUp" (clicked)="toast.show('Import terms')">Import</tl-btn>
-        <tl-btn variant="primary" icon="Plus" (clicked)="toast.show('Add term')">Add term</tl-btn>
+        <div style="display:flex;gap:8px">
+          <tl-btn variant="ghost" icon="FileUp" (clicked)="toast.show('Import terms')">Import</tl-btn>
+          <tl-btn variant="primary" icon="Plus" (clicked)="toast.show('Add term')">Add term</tl-btn>
+        </div>
       </div>
 
       <div class="row" style="margin:16px 0 12px;gap:8px;flex-wrap:wrap">
@@ -68,7 +69,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
         </div>
       </div>
 
-      <div class="panel">
+      <div>
         @if (selectedCount() > 0) {
           <div class="bulk-bar">
             <span style="font-size:13px;font-weight:600;color:var(--tl-accent-text)">{{ selectedCount() }} selected</span>
@@ -86,9 +87,9 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)" aria-label="Select all" />
               </th>
               <th>Key</th>
-              <th>Source text</th>
-              <th>Tags</th>
-              <th style="width:92px">Added</th>
+              <th>Source</th>
+              <th style="width:150px">Tags</th>
+              <th style="width:130px;text-align:right">Coverage</th>
               <th style="width:40px"></th>
             </tr>
           </thead>
@@ -120,7 +121,12 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                     }
                   </div>
                 </td>
-                <td><span class="muted tnum" style="font-size:12px">{{ r.added }}</span></td>
+                <td>
+                  <div class="covcell">
+                    <span class="progress" style="width:64px;height:5px"><i class="seg-translated" [style.width.%]="covPct(r)"></i></span>
+                    <span class="covnum">{{ doneCount(r) }}/{{ r.translations.length }}</span>
+                  </div>
+                </td>
                 <td (click)="$event.stopPropagation()">
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="deleteTerm(r)">
                     <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
@@ -173,13 +179,14 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
             @if (filtered().length === 0) {
               <tr>
                 <td colspan="6" style="padding:48px 16px;text-align:center">
-                  <div class="tl-display-3" style="margin-bottom:6px;font-size:22px">No terms found</div>
+                  <div class="serif" style="margin-bottom:6px;font-size:22px">No terms found</div>
                   <div class="muted" style="font-size:13.5px">Try another search, tag, or time range.</div>
                 </td>
               </tr>
             }
           </tbody>
         </table>
+      </div>
       </div>
     </div>
 
@@ -193,6 +200,18 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
   `,
   styles: `
+    .covcell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      justify-content: flex-end;
+    }
+    .covnum {
+      font: 500 12px var(--tl-mono);
+      color: var(--tl-muted);
+      width: 34px;
+      text-align: right;
+    }
     .bulk-bar {
       display: flex;
       align-items: center;
@@ -305,6 +324,11 @@ export class TermsScreen implements OnInit {
 
   protected doneCount(r: TermView): number {
     return r.translations.filter((t) => t.value).length;
+  }
+
+  protected covPct(r: TermView): number {
+    const total = r.translations.length;
+    return total === 0 ? 0 : Math.round((this.doneCount(r) / total) * 100);
   }
 
   // ---- selection ----

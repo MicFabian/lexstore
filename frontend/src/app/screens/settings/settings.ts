@@ -18,13 +18,18 @@ interface IntegrationItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, Toggle],
   template: `
-    <div class="content content__pad">
-      <h1 class="tl-h1" style="margin-bottom:18px">Settings</h1>
-      <div class="settings-grid">
-        <div class="settings-nav">
+    <div class="well">
+      <div class="pad">
+        <div class="phead" style="margin-bottom:20px">
+          <div>
+            <div class="eyebrow">Configuration</div>
+            <h1 class="serif">Settings</h1>
+          </div>
+        </div>
+        <div class="subnav" style="margin-bottom:30px">
           @for (t of tabs; track t.id) {
-            <button class="navitem" [class.active]="tab() === t.id" (click)="tab.set(t.id)">
-              <tl-icon [name]="t.icon" [size]="16" /><span>{{ t.label }}</span>
+            <button [class.on]="tab() === t.id" (click)="tab.set(t.id)">
+              <tl-icon [name]="t.icon" [size]="14" /><span>{{ t.label }}</span>
             </button>
           }
         </div>
@@ -156,19 +161,6 @@ interface IntegrationItem {
     </div>
   `,
   styles: `
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 188px 1fr;
-      gap: 28px;
-      align-items: start;
-    }
-    .settings-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      position: sticky;
-      top: 0;
-    }
     .keyrow {
       display: flex;
       align-items: flex-start;

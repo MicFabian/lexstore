@@ -9,8 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { Icon } from '../../shared/icon';
-import { Btn, SearchBox, StatusChip } from '../../shared/primitives';
-import { Segmented, SegmentOption } from '../../shared/segmented';
+import { Btn, SearchBox } from '../../shared/primitives';
+import { SegmentOption } from '../../shared/segmented';
 import { Inspector } from './inspector';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
@@ -20,56 +20,78 @@ import { EditorRow, TranslationStatus } from '../../core/models';
 @Component({
   selector: 'tl-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, StatusChip, Segmented, Inspector],
+  imports: [Icon, Btn, SearchBox, Inspector],
   template: `
     <div class="editor" style="position:relative">
-      <div class="editor__toolbar">
-        <div style="position:relative">
-          <button
-            class="btn btn--ghost btn--sm"
-            style="font-weight:600"
-            [attr.aria-expanded]="langMenuOpen()"
-            (click)="langMenuOpen.set(!langMenuOpen())"
-          >
-            <span class="locale" style="background:var(--tl-accent-soft);color:var(--tl-accent-text)">{{ lang() }}</span>
-            {{ langName() }}
-            <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
-          </button>
-          @if (langMenuOpen()) {
-            <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
-            <div class="menu" style="top:calc(100% + 4px);left:0;min-width:200px">
-              <div class="menu__label">Translate into</div>
-              @for (l of languages(); track l.code) {
-                <button class="menu__item" [class.on]="l.code === lang()" (click)="selectLang(l.code)">
-                  <span class="locale">{{ l.code }}</span>
-                  <span>{{ l.name }}</span>
-                  @if (l.code === lang()) {
-                    <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
-                  }
-                </button>
-              }
-            </div>
-          }
+      <div class="ed-head">
+        <div>
+          <div class="eyebrow">Editing · {{ langName() }} <span style="color:var(--tl-slate)">{{ lang() }}</span></div>
+          <div style="display:flex;align-items:baseline;gap:14px;margin-top:12px">
+            <span class="serif" style="font-size:52px;line-height:1">{{ pct().done }}%</span>
+            <span class="serif" style="font-size:22px;color:var(--tl-slate);font-style:italic">translated</span>
+          </div>
+          <div class="progress" style="width:340px;margin-top:16px;height:5px">
+            <i class="seg-translated" [style.width.%]="pct().done"></i>
+            <i class="seg-fuzzy" [style.width.%]="pct().fuzzy"></i>
+            <i class="seg-untranslated" [style.width.%]="pct().open"></i>
+          </div>
+          <div class="ed-counts">
+            {{ counts().all - counts().untranslated - counts().fuzzy }} translated ·
+            {{ counts().fuzzy }} need review · {{ counts().untranslated }} untranslated
+          </div>
         </div>
+        <div style="display:flex;gap:8px">
+          <div style="position:relative">
+            <button
+              class="btn btn--ghost btn--sm"
+              style="font-weight:600"
+              [attr.aria-expanded]="langMenuOpen()"
+              (click)="langMenuOpen.set(!langMenuOpen())"
+            >
+              <span class="locale">{{ lang() }}</span>
+              {{ langName() }}
+              <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
+            </button>
+            @if (langMenuOpen()) {
+              <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
+              <div class="menu" style="top:calc(100% + 4px);right:0;min-width:200px">
+                <div class="menu__label">Translate into</div>
+                @for (l of languages(); track l.code) {
+                  <button class="menu__item" [class.on]="l.code === lang()" (click)="selectLang(l.code)">
+                    <span class="locale">{{ l.code }}</span>
+                    <span>{{ l.name }}</span>
+                    @if (l.code === lang()) {
+                      <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <tl-btn variant="ghost" [sm]="true" icon="WandSparkles" [disabled]="autoBusy()" (clicked)="autoTranslate()">
+            {{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
+          </tl-btn>
+          <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="addTerm()">Add term</tl-btn>
+        </div>
+      </div>
 
-        <tl-segmented [options]="filterOptions()" [value]="filter()" (changed)="filter.set($any($event))" />
-
+      <div class="ed-tabs">
+        @for (o of filterOptions(); track o.value) {
+          <button class="ftab" [class.on]="filter() === o.value" (click)="filter.set($any(o.value))">
+            {{ o.label }}<span class="n">{{ o.n }}</span>
+          </button>
+        }
         <div class="spacer"></div>
-        <tl-search placeholder="Search keys or text" [value]="query()" [width]="220" (changed)="query.set($event)" />
-        <tl-btn variant="ghost" [sm]="true" icon="WandSparkles" [disabled]="autoBusy()" (clicked)="autoTranslate()">
-          {{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
-        </tl-btn>
-        <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="addTerm()">Add term</tl-btn>
+        <tl-search placeholder="Search keys or text" [value]="query()" [width]="200" (changed)="query.set($event)" />
       </div>
 
       <div class="editor__scroll">
         <table class="ttable">
           <thead>
             <tr>
-              <th style="width:132px">Status</th>
-              <th class="keycell">Key</th>
-              <th>Source — <span class="locale">en</span></th>
-              <th>Translation — <span class="locale">{{ lang() }}</span></th>
+              <th class="keycell" style="width:280px">Key</th>
+              <th>Source · <span class="locale">en</span></th>
+              <th>Translation · <span class="locale">{{ lang() }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -80,17 +102,11 @@ import { EditorRow, TranslationStatus } from '../../core/models';
                 [class.cell-saved]="savedId() === r.id"
                 (click)="select(r.id)"
               >
-                <td>
-                  <div class="row" style="gap:6px">
-                    <tl-status-chip [status]="r.status" />
-                    @if (r.isNew) {
-                      <span class="chip chip--new">New</span>
-                    }
-                  </div>
-                </td>
                 <td class="keycell">
                   <div class="keytag">{{ r.key }}</div>
-                  <div class="keysub">{{ r.ctx }}</div>
+                  <div class="stcap" style="margin-top:7px" [style.color]="'var(--tl-st-' + r.status + ')'">
+                    {{ statusLabel(r.status) }}{{ r.isNew ? ' · New' : '' }}
+                  </div>
                 </td>
                 <td class="src">{{ r.plural ? r.plural.one + ' / ' + r.plural.other : r.source }}</td>
                 <td class="tgt" [class.empty]="!r.target">{{ r.target || 'Add translation…' }}</td>
@@ -98,8 +114,8 @@ import { EditorRow, TranslationStatus } from '../../core/models';
             }
             @if (filtered().length === 0) {
               <tr>
-                <td colspan="4" style="padding:56px 16px;text-align:center">
-                  <div class="tl-display-3" style="margin-bottom:6px">Nothing here</div>
+                <td colspan="3" style="padding:56px 16px;text-align:center">
+                  <div class="serif" style="font-size:26px;margin-bottom:6px">Nothing here</div>
                   <div class="muted" style="font-size:13.5px">No terms match this filter — try another.</div>
                 </td>
               </tr>
@@ -117,6 +133,28 @@ import { EditorRow, TranslationStatus } from '../../core/models';
         />
       }
     </div>
+  `,
+  styles: `
+    .ed-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 32px 22px;
+    }
+    .ed-counts {
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--tl-slate);
+    }
+    .ed-tabs {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--tl-line);
+      flex: none;
+    }
   `,
 })
 export class EditorScreen implements OnInit {
@@ -159,6 +197,19 @@ export class EditorScreen implements OnInit {
       proofread: r.filter((x) => x.status === 'proofread').length,
     };
   });
+
+  /** Stacked progress segments for the editorial headline. */
+  protected readonly pct = computed(() => {
+    const c = this.counts();
+    if (c.all === 0) return { done: 0, fuzzy: 0, open: 0 };
+    const done = Math.round(((c.all - c.untranslated - c.fuzzy) / c.all) * 100);
+    const fuzzy = Math.round((c.fuzzy / c.all) * 100);
+    return { done, fuzzy, open: Math.max(0, 100 - done - fuzzy) };
+  });
+
+  protected statusLabel(s: TranslationStatus): string {
+    return s === 'fuzzy' ? 'Needs review' : s.charAt(0).toUpperCase() + s.slice(1);
+  }
 
   protected readonly filterOptions = computed<SegmentOption[]>(() => {
     const c = this.counts();

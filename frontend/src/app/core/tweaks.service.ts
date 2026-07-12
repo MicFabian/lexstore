@@ -11,11 +11,13 @@ export const ACCENTS: { key: Accent; hex: string }[] = [
   { key: 'amber', hex: '#f7a83b' },
 ];
 
-const KEY = 'translad.tweaks';
+/* v2: the editorial redesign made light the default — the bump discards
+   pre-redesign persisted tweaks so everyone starts from the new baseline. */
+const KEY = 'translad.tweaks.v2';
 
 @Injectable({ providedIn: 'root' })
 export class TweaksService {
-  readonly theme = signal<Theme>('dark');
+  readonly theme = signal<Theme>('light');
   readonly accent = signal<Accent>('cobalt');
   readonly density = signal<Density>('cozy');
 

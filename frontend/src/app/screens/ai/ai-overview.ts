@@ -1,11 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
-import { Avatar, Btn, SearchBox } from '../../shared/primitives';
-import { Segmented } from '../../shared/segmented';
-import { BrandMark } from '../../shell/brand-mark';
-import { Toast } from '../../shell/toast';
-import { TweaksPanel } from '../../shell/tweaks-panel';
+import { Btn, SearchBox } from '../../shared/primitives';
 import { ApiService } from '../../core/api.service';
 import { ToastService } from '../../core/toast.service';
 import {
@@ -21,55 +16,31 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
 @Component({
   selector: 'tl-ai-overview',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, Segmented, BrandMark, Toast, TweaksPanel],
+  imports: [Icon, Btn, SearchBox],
   template: `
-    <div class="ai-root">
-      <header class="topbar topbar--grid" style="padding-left:20px">
-        <button class="rail__brand brand-btn" (click)="goHome()" style="padding:0;border:none;background:none">
-          <tl-brand-mark [size]="26" [radius]="7" />
-          <span class="word" style="font-weight:800;font-size:16px;letter-spacing:-.02em">Trans<b style="color:var(--tl-accent)">Lad</b></span>
-        </button>
-        <tl-icon name="ChevronRight" [size]="14" color="var(--tl-line)" />
-        <span style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px">
-          <tl-icon name="WandSparkles" [size]="15" color="var(--tl-accent)" />Translation AI
-        </span>
-        <div class="spacer"></div>
-        <tl-btn variant="ghost" [sm]="true" icon="LayoutGrid" (clicked)="goHome()">Projects</tl-btn>
-        <tl-avatar [i]="0" name="You There" [sm]="true" />
-      </header>
-
-      <div class="content">
-        <div class="content__pad" style="max-width:1240px">
-          <div class="row" style="margin-bottom:18px">
+    <div class="well">
+      <div class="pad" style="max-width:1180px">
+          <div class="phead" style="margin-bottom:26px">
             <div>
-              <h1 class="tl-display-3" style="font-size:28px">Translation AI</h1>
-              <p class="page-sub">
+              <div class="eyebrow">Workspace</div>
+              <h1 class="serif">Translation AI</h1>
+              <div class="psub">
                 A caching machine-translation service. Every call is logged; identical requests are served from cache.
-              </p>
+              </div>
             </div>
           </div>
 
-          <div class="stat-grid">
-            <div class="card stat-card">
-              <span class="stat-ico"><tl-icon name="Sparkles" [size]="18" color="var(--tl-accent)" /></span>
-              <div><div class="stat-num">{{ stats()?.requests ?? 0 }}</div><div class="muted stat-label">Requests</div></div>
-            </div>
-            <div class="card stat-card">
-              <span class="stat-ico"><tl-icon name="KeyRound" [size]="18" color="var(--tl-st-translated)" /></span>
-              <div><div class="stat-num" style="color:var(--tl-st-translated)">{{ stats()?.hitRate ?? 0 }}%</div><div class="muted stat-label">Cache hit rate</div></div>
-            </div>
-            <div class="card stat-card">
-              <span class="stat-ico"><tl-icon name="FileText" [size]="18" color="var(--tl-slate)" /></span>
-              <div><div class="stat-num">{{ stats()?.entries ?? 0 }}</div><div class="muted stat-label">Cached entries</div></div>
-            </div>
-            <div class="card stat-card">
-              <span class="stat-ico"><tl-icon name="CheckCheck" [size]="18" color="var(--tl-st-proofread)" /></span>
-              <div><div class="stat-num">{{ stats()?.totalHits ?? 0 }}</div><div class="muted stat-label">Cache hits served</div></div>
-            </div>
+          <div class="statstrip">
+            <div class="statcell"><div class="eyebrow">Requests</div><div class="serif statnum">{{ stats()?.requests ?? 0 }}</div></div>
+            <div class="statcell"><div class="eyebrow">Cache hit rate</div><div class="serif statnum" style="color:var(--tl-st-translated)">{{ stats()?.hitRate ?? 0 }}%</div></div>
+            <div class="statcell"><div class="eyebrow">Cached entries</div><div class="serif statnum">{{ stats()?.entries ?? 0 }}</div></div>
+            <div class="statcell"><div class="eyebrow">Cache hits served</div><div class="serif statnum" style="color:var(--tl-st-proofread)">{{ stats()?.totalHits ?? 0 }}</div></div>
           </div>
 
-          <div style="margin:20px 0 16px">
-            <tl-segmented [options]="tabs" [value]="tab()" (changed)="setTab($any($event))" />
+          <div class="subnav" style="margin-bottom:26px">
+            @for (t of tabs; track t.value) {
+              <button [class.on]="tab() === t.value" (click)="setTab($any(t.value))">{{ t.label }}</button>
+            }
           </div>
 
           @switch (tab()) {
@@ -263,27 +234,27 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
               }
             }
           }
-        </div>
       </div>
-
-      <tl-toast />
-      <tl-tweaks-panel />
     </div>
   `,
   styles: `
-    .ai-root { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--tl-paper); }
-    .brand-btn { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .stat-card { padding: 16px; display: flex; align-items: center; gap: 13px; }
-    .stat-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--tl-fill); display: grid; place-items: center; flex: none; }
-    .stat-num { font-family: var(--tl-mono); font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
-    .stat-label { font-size: 12px; white-space: nowrap; }
+    .statstrip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--tl-line);
+      border-radius: var(--tl-r-xl);
+      background: var(--tl-card);
+      overflow: hidden;
+      margin-bottom: 26px;
+    }
+    .statcell { padding: 20px 22px; }
+    .statcell + .statcell { border-left: 1px solid var(--tl-line); }
+    .statnum { font-size: 34px; margin-top: 8px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   `,
 })
 export class AiOverview implements OnInit {
   private readonly api = inject(ApiService);
-  private readonly router = inject(Router);
   protected readonly toast = inject(ToastService);
 
   protected readonly tab = signal<Tab>('playground');
@@ -366,10 +337,6 @@ export class AiOverview implements OnInit {
       this.draft.set(s);
       this.toast.show('AI settings saved');
     });
-  }
-
-  protected goHome(): void {
-    this.router.navigate(['/', 'projects']);
   }
 
   protected truncate(s: string, n: number): string {

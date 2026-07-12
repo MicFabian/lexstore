@@ -37,18 +37,18 @@ test.describe('translation editor', () => {
     await page.goto('/editor');
     await waitShell(page);
     // "New" filter narrows to the 3 newly-added terms.
-    await page.locator('.segmented button', { hasText: 'New' }).click();
+    await page.locator('.ftab', { hasText: 'New' }).click();
     await expect(page.locator('.ttable tbody tr')).toHaveCount(3);
-    await expect(page.locator('.chip--new').first()).toBeVisible();
+    await expect(page.locator('.stcap', { hasText: 'New' }).first()).toBeVisible();
     // Back to all.
-    await page.locator('.segmented button', { hasText: 'All' }).click();
+    await page.locator('.ftab', { hasText: 'All' }).click();
     await expect(page.locator('.ttable tbody tr')).toHaveCount(14);
   });
 
   test('search narrows the rows', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);
-    await page.locator('.editor__toolbar input').fill('checkout');
+    await page.locator('.ed-tabs input').fill('checkout');
     const rows = page.locator('.ttable tbody tr');
     await expect(rows).toHaveCount(3);
     for (const cell of await rows.locator('.keytag').allTextContents()) {
@@ -134,15 +134,15 @@ test.describe('languages + contributors + settings', () => {
   test('languages render progress cards', async ({ page }) => {
     await page.goto('/languages');
     await waitShell(page);
-    await expect(page.locator('.lang-grid .card')).toHaveCount(6);
-    await expect(page.locator('.card', { hasText: 'French' })).toContainText('%');
+    await expect(page.locator('.lang-row')).toHaveCount(6);
+    await expect(page.locator('.lang-row', { hasText: 'French' })).toContainText('%');
   });
 
   test('contributors table lists the team', async ({ page }) => {
     await page.goto('/contributors');
     await waitShell(page);
     await expect(page.locator('.ttable tbody tr')).toHaveCount(5);
-    await expect(page.locator('.chip', { hasText: 'Admin' })).toBeVisible();
+    await expect(page.locator('.cap', { hasText: 'Admin' })).toBeVisible();
   });
 
   test('settings reveals an API key', async ({ page }) => {
@@ -158,9 +158,9 @@ test.describe('languages + contributors + settings', () => {
   test('settings tabs switch content', async ({ page }) => {
     await page.goto('/settings');
     await waitShell(page);
-    await page.locator('.settings-nav .navitem', { hasText: 'Integrations' }).click();
+    await page.locator('.subnav button', { hasText: 'Integrations' }).click();
     await expect(page.locator('.card', { hasText: 'GitHub' })).toBeVisible();
-    await page.locator('.settings-nav .navitem', { hasText: 'Import / Export' }).click();
+    await page.locator('.subnav button', { hasText: 'Import / Export' }).click();
     await expect(page.locator('.card', { hasText: 'Import strings' })).toBeVisible();
   });
 });
@@ -185,7 +185,7 @@ test.describe('Translation AI', () => {
     // Ensure at least one translation exists, then open the log.
     await page.locator('.panel textarea').fill('Projects');
     await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await page.locator('.segmented button', { hasText: 'Requests' }).click();
+    await page.locator('.subnav button', { hasText: 'Requests' }).click();
     await expect(page.locator('.panel', { hasText: 'Request log' })).toBeVisible();
     await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
   });
@@ -202,14 +202,14 @@ test.describe('projects dashboard + theming', () => {
   test('dashboard shows all projects with real progress', async ({ page }) => {
     await page.goto('/projects');
     await expect(page.locator('h1', { hasText: 'Projects' })).toBeVisible();
-    await expect(page.locator('.proj-card')).toHaveCount(5);
+    await expect(page.locator('.proj-row')).toHaveCount(5);
     // Stat row.
-    await expect(page.locator('.stat-card').first()).toContainText('5');
+    await expect(page.locator('.statcell').first()).toContainText('5');
   });
 
   test('opening a project routes into its editor', async ({ page }) => {
     await page.goto('/projects');
-    await page.locator('.proj-card', { hasText: 'Mosaic iOS' }).click();
+    await page.locator('.proj-row', { hasText: 'Mosaic iOS' }).click();
     await expect(page).toHaveURL(/\/editor/);
     await expect(page.locator('.rail__proj')).toContainText('Mosaic iOS');
   });
@@ -217,18 +217,18 @@ test.describe('projects dashboard + theming', () => {
   test('theme toggle switches and persists', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);
-    // Default is dark.
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await page.locator('button[aria-label="Appearance"]').click();
-    await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
+    // The redesign is light-first.
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    // Persists across reload.
-    await page.reload();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    // Reset to dark for other runs.
     await page.locator('button[aria-label="Appearance"]').click();
     await page.locator('.tweaks-seg button', { hasText: 'dark' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    // Persists across reload.
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    // Reset to light for other runs.
+    await page.locator('button[aria-label="Appearance"]').click();
+    await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   });
 
   test('accent change updates the document attribute', async ({ page }) => {

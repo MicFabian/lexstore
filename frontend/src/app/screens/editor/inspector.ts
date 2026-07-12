@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { Icon } from '../../shared/icon';
-import { Avatar, Btn, StatusChip, Tag } from '../../shared/primitives';
+import { Avatar, Btn, StatusChip } from '../../shared/primitives';
 import { HistoryModal } from '../../shared/history-modal';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
@@ -18,7 +18,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 @Component({
   selector: 'tl-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, StatusChip, Avatar, Tag, HistoryModal],
+  imports: [Icon, Btn, StatusChip, Avatar, HistoryModal],
   template: `
     <div class="inspector">
       <div class="inspector__head">

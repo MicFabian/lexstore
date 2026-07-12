@@ -75,6 +75,17 @@ interface QuickItem {
       </div>
 
       <nav class="rail__nav">
+        <div class="rail__group">Workspace</div>
+        <a class="navitem" [routerLink]="['/', 'projects']" routerLinkActive="active">
+          <tl-icon name="LayoutGrid" [size]="17" />
+          <span>Projects</span>
+          <span class="count">{{ projects().length }}</span>
+        </a>
+        <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
+          <tl-icon name="WandSparkles" [size]="16" />
+          <span>Translation AI</span>
+        </a>
+
         <div class="rail__group">Project</div>
         @for (n of nav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
@@ -94,12 +105,6 @@ interface QuickItem {
             <span class="count">{{ q.count }}</span>
           </a>
         }
-
-        <div class="rail__group">Workspace</div>
-        <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
-          <tl-icon name="WandSparkles" [size]="16" />
-          <span>Translation AI</span>
-        </a>
       </nav>
 
       <div class="proj-switch">
@@ -175,9 +180,9 @@ export class Sidebar {
   protected readonly nav = computed<NavItem[]>(() => {
     const c = this.current();
     return [
-      { path: 'editor', icon: 'List', label: 'Translations', count: c?.terms },
+      { path: 'editor', icon: 'Languages', label: 'Translations', count: c?.terms },
       { path: 'terms', icon: 'FileText', label: 'Terms', count: c?.terms },
-      { path: 'languages', icon: 'Languages', label: 'Languages', count: c?.langs },
+      { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },
       { path: 'contributors', icon: 'Users', label: 'Contributors' },
       { path: 'settings', icon: 'Settings', label: 'Settings' },
     ];
@@ -188,7 +193,7 @@ export class Sidebar {
     const c = this.current();
     const items: QuickItem[] = [
       {
-        icon: 'Circle',
+        icon: 'CircleDashed',
         label: 'Untranslated',
         count: c?.untranslated ?? 0,
         color: 'var(--tl-st-untranslated)',
