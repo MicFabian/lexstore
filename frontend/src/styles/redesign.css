@@ -229,6 +229,19 @@
   box-shadow: none;
 }
 
+/* Menus and dialogs float above every surface, including sticky table cells
+   and the rows that follow the one they belong to. */
+.menu {
+  z-index: 80;
+}
+.menu-backdrop {
+  z-index: 70;
+}
+.ttable .trow:has(.menu) td {
+  position: relative;
+  z-index: 75;
+}
+
 /* The toast is an overlay: as a plain grid child it claimed a second row of
    the app grid and cut the rail short of the viewport. */
 tl-toast {

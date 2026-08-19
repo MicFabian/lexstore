@@ -47,7 +47,31 @@ import { ContributorView } from '../../core/models';
                     </div>
                   </div>
                 </td>
-                <td><span class="cap" [style.color]="roleColor(c.role)">{{ c.role }}</span></td>
+                <td style="position:relative">
+                  <button
+                    class="role-btn cap"
+                    [style.color]="roleColor(c.role)"
+                    [attr.aria-expanded]="roleMenu() === c.id"
+                    (click)="roleMenu.set(roleMenu() === c.id ? null : c.id)"
+                  >
+                    {{ c.role }}
+                    <tl-icon name="ChevronDown" [size]="13" color="var(--tl-muted)" />
+                  </button>
+                  @if (roleMenu() === c.id) {
+                    <div class="menu-backdrop" (click)="roleMenu.set(null)"></div>
+                    <div class="menu" style="top:calc(100% - 4px);left:0;min-width:170px">
+                      <div class="menu__label">Role</div>
+                      @for (r of roles; track r) {
+                        <button class="menu__item" [class.on]="r === c.role" (click)="setRole(c, r)">
+                          <span class="cap" [style.color]="roleColor(r)">{{ r }}</span>
+                          @if (r === c.role) {
+                            <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                          }
+                        </button>
+                      }
+                    </div>
+                  }
+                </td>
                 <td>
                   <div class="row" style="gap:4px;flex-wrap:wrap">
                     @for (code of c.langs.slice(0, 4); track code) {
@@ -78,6 +102,21 @@ import { ContributorView } from '../../core/models';
     </div>
   `,
   styles: `
+    .role-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 6px;
+      margin-left: -6px;
+      border: none;
+      background: none;
+      border-radius: var(--tl-r-sm);
+      cursor: pointer;
+    }
+    .role-btn:hover {
+      background: var(--tl-fill);
+    }
     .people {
       background: transparent;
     }
@@ -99,6 +138,8 @@ export class ContributorsScreen implements OnInit {
 
   protected readonly people = signal<ContributorView[]>([]);
   protected readonly query = signal('');
+  protected readonly roleMenu = signal<string | null>(null);
+  protected readonly roles = ['Owner', 'Admin', 'Proofreader', 'Translator'];
 
   ngOnInit(): void {
     this.state.whenReady((pid) =>
@@ -118,6 +159,20 @@ export class ContributorsScreen implements OnInit {
     if (role === 'Owner' || role === 'Admin') return 'var(--tl-accent-text)';
     if (role === 'Proofreader') return 'var(--tl-st-proofread)';
     return 'var(--tl-st-translated)';
+  }
+
+  protected setRole(c: ContributorView, role: string): void {
+    this.roleMenu.set(null);
+    if (role === c.role) return;
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.updateContributor(pid, c.id, { role }).subscribe({
+      next: (updated) => {
+        this.people.update((list) => list.map((x) => (x.id === c.id ? updated : x)));
+        this.toast.show(`${c.name} is now ${role.toLowerCase()}`);
+      },
+      error: () => this.toast.show('Not allowed (needs admin)'),
+    });
   }
 
   protected invite(): void {

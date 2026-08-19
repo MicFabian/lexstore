@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { Icon } from '../shared/icon';
+import { ApiService } from '../core/api.service';
 import { Btn } from '../shared/primitives';
 import { ToastService } from '../core/toast.service';
 import { ProjectStateService } from '../core/project-state.service';
@@ -24,14 +25,14 @@ const WORKSPACE = new Set(['projects', 'ai']);
 @Component({
   selector: 'tl-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn],
+  imports: [Icon, Btn, RouterLink],
   template: `
     <header class="topbar">
-      <div class="crumb">
-        <span>{{ crumbRoot() }}</span>
+      <nav class="crumb" aria-label="Breadcrumb">
+        <a class="crumb-link" [routerLink]="['/', 'projects']">{{ crumbRoot() }}</a>
         <tl-icon name="ChevronRight" [size]="14" color="var(--tl-line)" />
-        <span class="crumb-active">{{ screenLabel() }}</span>
-      </div>
+        <span class="crumb-active" aria-current="page">{{ screenLabel() }}</span>
+      </nav>
       <div class="spacer"></div>
 
       <button class="cmdk" type="button" (click)="cmd.show()">
@@ -45,12 +46,70 @@ const WORKSPACE = new Set(['projects', 'ai']);
         <span class="bell-dot"></span>
       </button>
 
-      <tl-btn variant="primary" [sm]="true" icon="UserPlus" (clicked)="toast.show('Invite sent')">
-        Invite
-      </tl-btn>
+      <div style="position:relative">
+        <tl-btn variant="primary" [sm]="true" icon="UserPlus" (clicked)="openInvite()">Invite</tl-btn>
+        @if (inviteOpen()) {
+          <div class="menu-backdrop" (click)="inviteOpen.set(false)"></div>
+          <div class="menu invite" role="dialog" aria-label="Invite a contributor">
+            <div class="menu__label">Invite to {{ project()?.name }}</div>
+            <div class="field">
+              <label for="invite-name">Name</label>
+              <input id="invite-name" class="input" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="Jane Doe" />
+            </div>
+            <div class="field">
+              <label for="invite-email">Email</label>
+              <input
+                id="invite-email"
+                class="input"
+                type="email"
+                [value]="email()"
+                (input)="email.set($any($event.target).value)"
+                (keydown.enter)="sendInvite()"
+                placeholder="jane@example.com"
+              />
+            </div>
+            <div class="field">
+              <label for="invite-role">Role</label>
+              <div class="row" style="gap:6px;flex-wrap:wrap">
+                @for (r of roles; track r) {
+                  <button
+                    [class]="'btn btn--sm ' + (role() === r ? 'btn--ghost' : 'btn--subtle')"
+                    [style.border-color]="role() === r ? 'var(--tl-accent)' : null"
+                    (click)="role.set(r)"
+                  >{{ r }}</button>
+                }
+              </div>
+            </div>
+            <div class="row" style="gap:8px;margin-top:4px">
+              <tl-btn variant="primary" [sm]="true" [disabled]="!name() || !email() || busy()" (clicked)="sendInvite()">
+                {{ busy() ? 'Inviting…' : 'Send invite' }}
+              </tl-btn>
+              <tl-btn variant="subtle" [sm]="true" (clicked)="inviteOpen.set(false)">Cancel</tl-btn>
+            </div>
+          </div>
+        }
+      </div>
     </header>
   `,
   styles: `
+    .crumb-link {
+      color: inherit;
+      text-decoration: none;
+      border-radius: var(--tl-r-xs);
+    }
+    .crumb-link:hover {
+      color: var(--tl-ink);
+      text-decoration: underline;
+    }
+    .invite {
+      top: calc(100% + 6px);
+      right: 0;
+      width: 280px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
     .crumb-active {
       color: var(--tl-ink);
       font-weight: 600;
@@ -70,7 +129,14 @@ const WORKSPACE = new Set(['projects', 'ai']);
   `,
 })
 export class Topbar {
+  private readonly api = inject(ApiService);
   protected readonly toast = inject(ToastService);
+  protected readonly inviteOpen = signal(false);
+  protected readonly busy = signal(false);
+  protected readonly name = signal('');
+  protected readonly email = signal('');
+  protected readonly role = signal('Translator');
+  protected readonly roles = ['Translator', 'Proofreader', 'Admin'];
   protected readonly cmd = inject(CommandService);
   private readonly router = inject(Router);
   protected readonly project = inject(ProjectStateService).current;
@@ -91,4 +157,28 @@ export class Topbar {
   protected readonly crumbRoot = computed(() =>
     WORKSPACE.has(this.segment()) ? 'Workspace' : (this.project()?.name ?? ''),
   );
+
+  protected openInvite(): void {
+    this.name.set('');
+    this.email.set('');
+    this.role.set('Translator');
+    this.inviteOpen.set(true);
+  }
+
+  protected sendInvite(): void {
+    const pid = this.project()?.id;
+    if (!pid || !this.name() || !this.email()) return;
+    this.busy.set(true);
+    this.api.invite(pid, { name: this.name(), email: this.email(), role: this.role() }).subscribe({
+      next: (c) => {
+        this.busy.set(false);
+        this.inviteOpen.set(false);
+        this.toast.show(`Invited ${c.name} as ${c.role.toLowerCase()}`);
+      },
+      error: () => {
+        this.busy.set(false);
+        this.toast.show('Invalid email, or that person is already a contributor');
+      },
+    });
+  }
 }

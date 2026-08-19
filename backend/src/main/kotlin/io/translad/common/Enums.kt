@@ -10,11 +10,15 @@ enum class TranslationStatus {
 }
 
 enum class ContributorRole {
-    ADMIN, TRANSLATOR, PROOFREADER;
+    OWNER, ADMIN, TRANSLATOR, PROOFREADER;
 
     companion object {
-        fun from(raw: String): ContributorRole =
-            entries.firstOrNull { it.name.equals(raw, ignoreCase = true) } ?: TRANSLATOR
+        /** Lenient parse for seeding and invites; unknown input becomes a translator. */
+        fun from(raw: String): ContributorRole = parse(raw) ?: TRANSLATOR
+
+        /** Strict parse: null when the caller sent something that is not a role. */
+        fun parse(raw: String): ContributorRole? =
+            entries.firstOrNull { it.name.equals(raw, ignoreCase = true) }
     }
 }
 

@@ -114,6 +114,8 @@ test.describe('editor — language switch + AI suggestion', () => {
     await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(1);
     await expect(page.locator('th', { hasText: 'Translation' })).toContainText('nl');
 
+    // Wait for the Dutch column to render before counting its empty cells.
+    await expect(page.locator('.trow .tgt.empty').first()).toBeVisible();
     const before = await page.locator('.trow .tgt.empty').count();
     expect(before).toBeGreaterThan(0);
 

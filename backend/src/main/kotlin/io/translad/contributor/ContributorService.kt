@@ -30,6 +30,19 @@ class ContributorService(private val contributors: ContributorRepository) {
     }
 
     @Transactional
+    fun update(projectId: UUID, id: UUID, req: UpdateContributorRequest): ContributorView {
+        val c = contributors.findById(id)
+            .filter { it.projectId == projectId }
+            .orElseThrow { ContributorNotFoundException(id.toString()) }
+        req.role?.let {
+            c.role = ContributorRole.parse(it)
+                ?: throw IllegalArgumentException("'$it' is not a contributor role.")
+        }
+        req.langs?.let { c.languages = it.joinToString(",") }
+        return toView(contributors.save(c))
+    }
+
+    @Transactional
     fun remove(projectId: UUID, id: UUID) {
         contributors.findById(id).ifPresent {
             if (it.projectId == projectId) contributors.delete(it)
@@ -46,3 +59,5 @@ class ContributorService(private val contributors: ContributorRepository) {
         active = c.lastActive,
     )
 }
+
+class ContributorNotFoundException(id: String) : RuntimeException("Contributor '$id' is not in this project.")

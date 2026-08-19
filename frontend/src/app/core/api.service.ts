@@ -174,6 +174,13 @@ export class ApiService {
   ): Observable<ContributorView> {
     return this.http.post<ContributorView>(`${BASE}/projects/${projectId}/contributors`, body);
   }
+  updateContributor(
+    projectId: string,
+    id: string,
+    body: { role?: string; langs?: string[] },
+  ): Observable<ContributorView> {
+    return this.http.patch<ContributorView>(`${BASE}/projects/${projectId}/contributors/${id}`, body);
+  }
   deleteContributor(projectId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${BASE}/projects/${projectId}/contributors/${id}`);
   }

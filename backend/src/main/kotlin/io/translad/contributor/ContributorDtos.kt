@@ -14,6 +14,11 @@ data class ContributorView(
     val active: String,
 )
 
+data class UpdateContributorRequest(
+    val role: String?,
+    val langs: List<String>?,
+)
+
 data class InviteContributorRequest(
     @field:NotBlank val name: String,
     @field:Email @field:NotBlank val email: String,

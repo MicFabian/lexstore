@@ -27,3 +27,4 @@ frontend/e2e/.auth/
 .env
 .env.local
 design-baseline/
+test-results/

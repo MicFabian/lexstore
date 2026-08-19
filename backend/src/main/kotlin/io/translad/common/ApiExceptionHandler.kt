@@ -1,6 +1,7 @@
 package io.translad.common
 
 import io.translad.ai.AiTranslationException
+import io.translad.contributor.ContributorNotFoundException
 import io.translad.io.PoeditorException
 import io.translad.io.PoeditorRateLimitException
 import io.translad.apikey.*
@@ -19,7 +20,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class ApiExceptionHandler {
 
-    @ExceptionHandler(ProjectNotFoundException::class, TermNotFoundException::class)
+    @ExceptionHandler(
+        ProjectNotFoundException::class,
+        TermNotFoundException::class,
+        ContributorNotFoundException::class,
+    )
     fun notFound(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.NOT_FOUND, "Not found", ex.message)
 
