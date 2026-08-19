@@ -68,6 +68,15 @@ export class ApiService {
   ): Observable<PoeditorImportResult> {
     return this.http.post<PoeditorImportResult>(`${BASE}/poeditor/projects/${projectId}/import`, body);
   }
+  /** Import a whole POEditor project into a new TransLad project. */
+  poeditorImportAsProject(body: {
+    apiToken: string;
+    poeditorProjectId: number;
+    languages: string[];
+    name?: string;
+  }): Observable<PoeditorImportResult> {
+    return this.http.post<PoeditorImportResult>(`${BASE}/poeditor/import`, body);
+  }
 
   // ---- Languages ----
   listLanguages(projectId: string): Observable<LanguageView[]> {

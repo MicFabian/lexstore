@@ -1,11 +1,14 @@
 package io.translad.io
 
 import tools.jackson.databind.JsonNode
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestClient
+import java.util.concurrent.locks.ReentrantLock
 
 data class PoeditorProject(val id: Long, val name: String, val terms: Int?)
 
@@ -27,8 +30,16 @@ data class PoeditorTerm(
 @Component
 class PoeditorClient(
     @Value("\${poeditor.base-url:https://api.poeditor.com}") baseUrl: String,
+    /** POEditor allows a limited number of calls per period; keep well under it. */
+    @Value("\${poeditor.min-interval-ms:1200}") private val minIntervalMs: Long,
+    @Value("\${poeditor.max-retries:3}") private val maxRetries: Int,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
     private val client = RestClient.builder().baseUrl(baseUrl).build()
+
+    /** Serializes calls across all imports so one account never bursts. */
+    private val throttle = ReentrantLock()
+    private var lastCallAt = 0L
 
     fun projects(token: String): List<PoeditorProject> =
         post(token, "/v2/projects/list").path("projects").map {
@@ -68,19 +79,63 @@ class PoeditorClient(
         form.add("api_token", token)
         params.forEach { (k, v) -> form.add(k, v) }
 
-        val res: JsonNode = client.post()
-            .uri(path)
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .body(form)
-            .retrieve()
-            .body(JsonNode::class.java) ?: throw PoeditorException("POEditor returned an empty response.")
+        var attempt = 0
+        while (true) {
+            attempt++
+            val res = exchange(path, form)
+            if (res.rateLimited) {
+                if (attempt > maxRetries) {
+                    throw PoeditorRateLimitException(
+                        "POEditor rate limit reached. Wait a minute and import fewer languages at a time.",
+                    )
+                }
+                val backoff = minIntervalMs * (1L shl (attempt - 1))
+                log.info("POEditor rate limited on {}; retrying in {}ms (attempt {})", path, backoff, attempt)
+                Thread.sleep(backoff)
+                continue
+            }
 
-        val status = res.path("response").path("status").asText()
-        if (status != "success") {
-            throw PoeditorException(res.path("response").path("message").asText("POEditor request failed"))
+            val body = res.body ?: throw PoeditorException("POEditor returned an empty response.")
+            val status = body.path("response").path("status").asText()
+            if (status != "success") {
+                val message = body.path("response").path("message").asText("POEditor request failed")
+                if (message.contains("limit", ignoreCase = true) && attempt <= maxRetries) {
+                    Thread.sleep(minIntervalMs * (1L shl (attempt - 1)))
+                    continue
+                }
+                throw PoeditorException(message)
+            }
+            return body.path("result")
         }
-        return res.path("result")
+    }
+
+    private data class Response(val body: JsonNode?, val rateLimited: Boolean)
+
+    /** One throttled call: never faster than [minIntervalMs] since the previous one. */
+    private fun exchange(path: String, form: LinkedMultiValueMap<String, String>): Response {
+        throttle.lock()
+        try {
+            val since = System.currentTimeMillis() - lastCallAt
+            if (since < minIntervalMs) Thread.sleep(minIntervalMs - since)
+
+            var limited = false
+            val body = client.post()
+                .uri(path)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(form)
+                .exchange { _, response ->
+                    val code: HttpStatusCode = response.statusCode
+                    limited = code.value() == 429
+                    if (limited || code.isError) null else response.bodyTo(JsonNode::class.java)
+                }
+            lastCallAt = System.currentTimeMillis()
+            return Response(body, limited)
+        } finally {
+            throttle.unlock()
+        }
     }
 }
+
+class PoeditorRateLimitException(message: String) : RuntimeException(message)
 
 class PoeditorException(message: String) : RuntimeException(message)

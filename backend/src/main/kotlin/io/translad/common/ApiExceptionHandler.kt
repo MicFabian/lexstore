@@ -2,6 +2,7 @@ package io.translad.common
 
 import io.translad.ai.AiTranslationException
 import io.translad.io.PoeditorException
+import io.translad.io.PoeditorRateLimitException
 import io.translad.apikey.*
 import io.translad.language.DuplicateLanguageException
 import io.translad.project.DuplicateProjectCodeException
@@ -41,6 +42,10 @@ class ApiExceptionHandler {
     @ExceptionHandler(PoeditorException::class)
     fun poeditorFailure(ex: PoeditorException): ProblemDetail =
         problem(HttpStatus.BAD_GATEWAY, "POEditor error", ex.message)
+
+    @ExceptionHandler(PoeditorRateLimitException::class)
+    fun poeditorRateLimited(ex: PoeditorRateLimitException): ProblemDetail =
+        problem(HttpStatus.TOO_MANY_REQUESTS, "POEditor rate limit", ex.message)
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun validation(ex: MethodArgumentNotValidException): ProblemDetail {

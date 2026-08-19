@@ -221,6 +221,8 @@ export interface PoeditorLanguage {
 }
 
 export interface PoeditorImportResult {
+  projectId: string;
+  projectName: string;
   languages: { code: string; name: string; imported: number }[];
   termsCreated: number;
   translationsImported: number;

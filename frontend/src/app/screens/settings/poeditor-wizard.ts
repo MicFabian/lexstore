@@ -6,7 +6,8 @@ import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
 import { PoeditorLanguage, PoeditorProject } from '../../core/models';
 
-type Step = 'token' | 'project' | 'languages' | 'done';
+type Step = 'token' | 'project' | 'target' | 'languages' | 'done';
+type Target = 'existing' | 'new';
 
 /**
  * Import wizard for POEditor. The API token stays in this component and is sent
@@ -24,7 +25,7 @@ type Step = 'token' | 'project' | 'languages' | 'done';
           <div class="wiz__title">Import from POEditor</div>
           <div class="wiz__sub">Pull terms and translations straight from a POEditor project.</div>
         </div>
-        <span class="cap wiz__step">Step {{ stepIndex() }} of 3</span>
+        <span class="cap wiz__step">Step {{ stepIndex() }} of 4</span>
       </div>
 
       @switch (step()) {
@@ -72,9 +73,38 @@ type Step = 'token' | 'project' | 'languages' | 'done';
           </div>
         }
 
+        @case ('target') {
+          <div class="wiz__body">
+            <div class="eyebrow">Where should “{{ target()?.name }}” land?</div>
+            <div class="wiz__list">
+              <button class="wiz__row" (click)="pickTarget('existing')">
+                <span class="wiz__row-name">
+                  Import into {{ currentProject()?.name }}
+                  <span class="wiz__row-note">Adds languages and terms to the project you are in.</span>
+                </span>
+                <tl-icon name="ChevronRight" [size]="15" color="var(--tl-muted)" />
+              </button>
+              <button class="wiz__row" (click)="pickTarget('new')">
+                <span class="wiz__row-name">
+                  Import as a new project
+                  <span class="wiz__row-note">Creates “{{ target()?.name }}” in TransLad and imports everything into it.</span>
+                </span>
+                <tl-icon name="ChevronRight" [size]="15" color="var(--tl-muted)" />
+              </button>
+            </div>
+            <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('project')">Back</tl-btn>
+          </div>
+        }
+
         @case ('languages') {
           <div class="wiz__body">
-            <div class="eyebrow">Languages to import into {{ target()?.name }}</div>
+            <div class="eyebrow">
+              {{ mode() === 'new' ? 'Languages for the new project' : 'Languages to import into ' + (currentProject()?.name ?? 'this project') }}
+            </div>
+            <p class="wiz__hint" style="margin:0">
+              POEditor limits how often its API may be called, so each language is fetched one at a time —
+              importing many at once takes a moment.
+            </p>
             <div class="wiz__list">
               @for (l of languages(); track l.code) {
                 <label class="wiz__row wiz__row--check">
@@ -94,7 +124,7 @@ type Step = 'token' | 'project' | 'languages' | 'done';
               <tl-btn variant="primary" [sm]="true" [disabled]="selected().size === 0 || busy()" (clicked)="runImport()">
                 {{ busy() ? 'Importing…' : 'Import ' + selected().size + ' language' + (selected().size === 1 ? '' : 's') }}
               </tl-btn>
-              <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('project')">Back</tl-btn>
+              <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('target')">Back</tl-btn>
             </div>
           </div>
         }
@@ -177,6 +207,13 @@ type Step = 'token' | 'project' | 'languages' | 'done';
       color: var(--tl-ink);
       flex: 1;
     }
+    .wiz__row-note {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 400;
+      color: var(--tl-slate);
+      margin-top: 3px;
+    }
     .wiz__row-meta {
       font-size: 12px;
       color: var(--tl-slate);
@@ -205,6 +242,8 @@ export class PoeditorWizard {
   protected readonly projects = signal<PoeditorProject[]>([]);
   protected readonly languages = signal<PoeditorLanguage[]>([]);
   protected readonly target = signal<PoeditorProject | null>(null);
+  protected readonly mode = signal<Target>('existing');
+  protected readonly currentProject = this.state.current;
   protected readonly selected = signal<Set<string>>(new Set());
   protected readonly summary = signal('');
 
@@ -214,8 +253,10 @@ export class PoeditorWizard {
         return 1;
       case 'project':
         return 2;
-      default:
+      case 'target':
         return 3;
+      default:
+        return 4;
     }
   });
 
@@ -241,7 +282,7 @@ export class PoeditorWizard {
       next: (list) => {
         this.languages.set(list);
         this.selected.set(new Set());
-        this.step.set('languages');
+        this.step.set('target');
         this.busy.set(false);
       },
       error: () => {
@@ -249,6 +290,11 @@ export class PoeditorWizard {
         this.toast.show('Could not read that project');
       },
     });
+  }
+
+  protected pickTarget(mode: Target): void {
+    this.mode.set(mode);
+    this.step.set('languages');
   }
 
   protected toggle(code: string): void {
@@ -260,36 +306,49 @@ export class PoeditorWizard {
   }
 
   protected runImport(): void {
-    const pid = this.state.current()?.id;
     const target = this.target();
-    if (!pid || !target) return;
+    if (!target) return;
+    const body = {
+      apiToken: this.token(),
+      poeditorProjectId: target.id,
+      languages: [...this.selected()],
+    };
+
+    const pid = this.state.current()?.id;
+    if (this.mode() === 'existing' && !pid) return;
+
     this.busy.set(true);
-    this.api
-      .poeditorImport(pid, {
-        apiToken: this.token(),
-        poeditorProjectId: target.id,
-        languages: [...this.selected()],
-      })
-      .subscribe({
-        next: (r) => {
-          this.busy.set(false);
-          this.summary.set(
-            `Imported ${r.translationsImported} translations into ${r.languages.length} language${r.languages.length === 1 ? '' : 's'}` +
-              (r.termsCreated > 0 ? `, creating ${r.termsCreated} terms.` : '.'),
-          );
-          this.step.set('done');
-          this.state.load();
-          this.imported.emit();
-        },
-        error: () => {
-          this.busy.set(false);
-          this.toast.show('Import failed');
-        },
-      });
+    const request =
+      this.mode() === 'new'
+        ? this.api.poeditorImportAsProject({ ...body, name: target.name })
+        : this.api.poeditorImport(pid!, body);
+
+    request.subscribe({
+      next: (r) => {
+        this.busy.set(false);
+        this.summary.set(
+          `Imported ${r.translationsImported} translations into ${r.languages.length} language${r.languages.length === 1 ? '' : 's'} ` +
+            `of ${r.projectName}` +
+            (r.termsCreated > 0 ? `, creating ${r.termsCreated} terms.` : '.'),
+        );
+        this.step.set('done');
+        this.state.load();
+        this.imported.emit();
+      },
+      error: (e: { status?: number }) => {
+        this.busy.set(false);
+        this.toast.show(
+          e?.status === 429
+            ? 'POEditor rate limit reached — wait a minute, then import fewer languages'
+            : 'Import failed',
+        );
+      },
+    });
   }
 
   protected restart(): void {
     this.step.set('project');
+    this.mode.set('existing');
     this.summary.set('');
   }
 }

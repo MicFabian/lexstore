@@ -29,9 +29,16 @@ class PoeditorController(private val service: PoeditorImportService) {
     fun languages(@RequestBody req: PoeditorLanguagesRequest): List<PoeditorLanguage> =
         service.languages(req.apiToken, req.poeditorProjectId)
 
+    /** Import into an existing project. */
     @PostMapping("/projects/{projectId}/import")
     fun import(
         @PathVariable projectId: UUID,
         @RequestBody req: PoeditorImportRequest,
     ): PoeditorImportResult = service.import(projectId, req)
+
+    /** Import a whole POEditor project into a newly created one. */
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    fun importAsNewProject(@RequestBody req: PoeditorImportAsProjectRequest): PoeditorImportResult =
+        service.importAsNewProject(req)
 }

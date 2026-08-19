@@ -229,6 +229,12 @@
   box-shadow: none;
 }
 
+/* Buttons do not inherit color, so an unstyled one renders black on any
+   theme. Every bare button in the shell speaks the theme's ink. */
+button {
+  color: inherit;
+}
+
 /* The rail carries names, not captions: identity and navigation read at
    body size, and only the counters and group labels stay small. */
 .rail__proj .pname,
