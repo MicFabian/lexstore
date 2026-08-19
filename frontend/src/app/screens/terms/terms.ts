@@ -207,8 +207,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       justify-content: flex-end;
     }
     .covnum {
-      font: 500 12px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--tl-mono);
+      color: var(--tl-slate);
       width: 34px;
       text-align: right;
     }
@@ -239,11 +239,11 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       border-bottom: none;
     }
     .tr-name {
-      font-size: 12px;
-      color: var(--tl-muted);
+      font-size: 12.5px;
+      color: var(--tl-slate);
     }
     .tr-value {
-      font-size: 13.5px;
+      font-size: 14px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -260,14 +260,14 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       min-width: 0;
     }
     .tr-author-name {
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .tr-author-at {
-      font-size: 11px;
+      font-size: 12px;
     }
   `,
 })

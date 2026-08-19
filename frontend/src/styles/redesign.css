@@ -41,11 +41,30 @@
 }
 
 /* ---------- Page scaffolding ---------- */
-.well {
+/* Routed screens are inline hosts by default, which collapses their height and
+   stops .well from scrolling; each screen fills the main column instead. */
+.main > tl-ai-overview,
+.main > tl-projects-dashboard,
+.main > tl-terms-screen,
+.main > tl-languages-screen,
+.main > tl-contributors-screen,
+.main > tl-settings-screen,
+.main > tl-editor-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.well,
+.editor {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
   background: var(--tl-paper);
+}
+/* The editor scrolls in its table, not as a whole. */
+.editor {
+  overflow: hidden;
 }
 .pad {
   padding: 36px 44px 64px;
@@ -210,8 +229,39 @@
   box-shadow: none;
 }
 
+/* The rail carries names, not captions: identity and navigation read at
+   body size, and only the counters and group labels stay small. */
+.rail__proj .pname,
+.proj-menu .pm-name {
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.rail__proj .psub,
+.proj-menu .pm-code {
+  font-size: 12.5px;
+  color: var(--tl-slate);
+}
+.navitem {
+  font-size: 14.5px;
+}
+.navitem .count,
+.proj-menu .pm-prog {
+  font-size: 12.5px;
+}
+.rail__foot .foot-name {
+  font-size: 14px;
+}
+.rail__foot .foot-role {
+  font-size: 12.5px;
+  color: var(--tl-slate);
+}
+.topbar .crumb {
+  font-size: 14px;
+}
 .rail__group {
   padding-top: 22px;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
 }
 /* Nav takes the slack so the user footer sits at the bottom of the rail. */
 .rail__nav {
@@ -267,6 +317,15 @@
 :root[data-density='cozy'] .trow td {
   padding-top: 16px;
   padding-bottom: 16px;
+}
+
+/* Keys are content, not chrome — they carry the same weight as the strings. */
+.keytag {
+  font-size: 13.5px;
+}
+.trow .keysub {
+  font-size: 12.5px;
+  color: var(--tl-slate);
 }
 
 /* An empty translation is an invitation, not a whisper: readable at rest,

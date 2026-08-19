@@ -82,13 +82,13 @@ import { ContributorView } from '../../core/models';
       background: transparent;
     }
     .cmail {
-      font: 500 11.5px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--tl-mono);
+      color: var(--tl-slate);
       margin-top: 2px;
     }
     .cwhen {
-      font: 500 11.5px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--tl-mono);
+      color: var(--tl-slate);
     }
   `,
 })

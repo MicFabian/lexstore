@@ -64,8 +64,8 @@ import { LanguageView } from '../../core/models';
       border-bottom: 1px solid var(--tl-line-2);
     }
     .lmeta {
-      font: 500 11px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--tl-mono);
+      color: var(--tl-slate);
       margin-top: 3px;
     }
   `,

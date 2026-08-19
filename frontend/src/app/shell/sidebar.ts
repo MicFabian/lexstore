@@ -165,15 +165,15 @@ interface QuickItem {
       background: var(--tl-fill);
     }
     .foot-name {
-      font-size: 12.5px;
+      font-size: 14px;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .foot-role {
-      font-size: 11px;
-      color: var(--tl-muted);
+      font-size: 12.5px;
+      color: var(--tl-slate);
       text-transform: capitalize;
     }
   `,

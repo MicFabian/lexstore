@@ -139,7 +139,7 @@ import { ProjectSummary } from '../../core/models';
       color: var(--tl-ink);
     }
     .pcode {
-      font: 500 12px var(--tl-mono);
+      font: 500 12.5px var(--tl-mono);
       color: var(--tl-muted);
     }
     .pprog {
@@ -156,7 +156,7 @@ import { ProjectSummary } from '../../core/models';
       gap: 16px;
     }
     .pmeta {
-      font: 500 11.5px var(--tl-mono);
+      font: 500 12.5px var(--tl-mono);
       color: var(--tl-muted);
       white-space: nowrap;
     }
@@ -169,8 +169,8 @@ import { ProjectSummary } from '../../core/models';
       gap: 5px;
     }
     .pupd {
-      font: 500 11px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12px var(--tl-mono);
+      color: var(--tl-slate);
     }
   `,
 })
