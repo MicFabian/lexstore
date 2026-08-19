@@ -220,6 +220,12 @@ export interface PoeditorLanguage {
   percentage: number;
 }
 
+export interface PoeditorPreview {
+  languages: { code: string; name: string; imported: number }[];
+  rows: { key: string; context: string | null; translations: Record<string, string | null> }[];
+  totalTerms: number;
+}
+
 export interface PoeditorImportResult {
   projectId: string;
   projectName: string;

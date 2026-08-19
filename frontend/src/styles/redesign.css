@@ -229,6 +229,12 @@
   box-shadow: none;
 }
 
+/* The toast is an overlay: as a plain grid child it claimed a second row of
+   the app grid and cut the rail short of the viewport. */
+tl-toast {
+  display: contents;
+}
+
 /* Buttons do not inherit color, so an unstyled one renders black on any
    theme. Every bare button in the shell speaks the theme's ink. */
 button {

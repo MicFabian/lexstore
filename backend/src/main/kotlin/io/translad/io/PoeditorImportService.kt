@@ -37,6 +37,19 @@ data class PoeditorImportResult(
 
 data class PoeditorLanguageImport(val code: String, val name: String, val imported: Int)
 
+/** One row of the pre-import preview: the key and what each language holds. */
+data class PoeditorPreviewRow(
+    val key: String,
+    val context: String?,
+    val translations: Map<String, String?>,
+)
+
+data class PoeditorPreview(
+    val languages: List<PoeditorLanguageImport>,
+    val rows: List<PoeditorPreviewRow>,
+    val totalTerms: Int,
+)
+
 /**
  * Pulls terms and translations from a POEditor project into a TransLad project.
  * The POEditor term itself is the key; its translation becomes the value.
@@ -53,6 +66,35 @@ class PoeditorImportService(
 
     fun languages(token: String, poeditorProjectId: Long): List<PoeditorLanguage> =
         client.languages(token, poeditorProjectId)
+
+    /**
+     * Reads the first [limit] terms of the chosen languages so the wizard can
+     * show what an import would bring in. Costs one API call per language.
+     */
+    fun preview(token: String, poeditorProjectId: Long, codes: List<String>, limit: Int = 25): PoeditorPreview {
+        val available = client.languages(token, poeditorProjectId).associateBy { it.code }
+        val perLanguage = mutableListOf<PoeditorLanguageImport>()
+        val byKey = LinkedHashMap<String, MutableMap<String, String?>>()
+        val contexts = mutableMapOf<String, String?>()
+        var total = 0
+
+        for (code in codes) {
+            val remote = available[code] ?: throw PoeditorException("Language '$code' is not in that POEditor project.")
+            val terms = client.terms(token, poeditorProjectId, code)
+            total = maxOf(total, terms.size)
+            perLanguage += PoeditorLanguageImport(code, remote.name, terms.count { it.translation != null })
+
+            for (t in terms.take(limit)) {
+                contexts.putIfAbsent(t.term, t.context)
+                byKey.getOrPut(t.term) { mutableMapOf() }[code] = t.translation
+            }
+        }
+
+        val rows = byKey.entries.take(limit).map { (key, translations) ->
+            PoeditorPreviewRow(key, contexts[key], translations)
+        }
+        return PoeditorPreview(perLanguage, rows, total)
+    }
 
     /** Import into an existing TransLad project. */
     @Transactional

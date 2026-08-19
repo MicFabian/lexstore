@@ -4,9 +4,9 @@ import { Btn } from '../../shared/primitives';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
-import { PoeditorLanguage, PoeditorProject } from '../../core/models';
+import { PoeditorLanguage, PoeditorPreview, PoeditorProject } from '../../core/models';
 
-type Step = 'token' | 'project' | 'target' | 'languages' | 'done';
+type Step = 'token' | 'project' | 'target' | 'languages' | 'preview' | 'done';
 type Target = 'existing' | 'new';
 
 /**
@@ -25,7 +25,7 @@ type Target = 'existing' | 'new';
           <div class="wiz__title">Import from POEditor</div>
           <div class="wiz__sub">Pull terms and translations straight from a POEditor project.</div>
         </div>
-        <span class="cap wiz__step">Step {{ stepIndex() }} of 4</span>
+        <span class="cap wiz__step">Step {{ stepIndex() }} of 5</span>
       </div>
 
       @switch (step()) {
@@ -121,10 +121,56 @@ type Target = 'existing' | 'new';
               }
             </div>
             <div class="row" style="gap:8px">
-              <tl-btn variant="primary" [sm]="true" [disabled]="selected().size === 0 || busy()" (clicked)="runImport()">
-                {{ busy() ? 'Importing…' : 'Import ' + selected().size + ' language' + (selected().size === 1 ? '' : 's') }}
+              <tl-btn variant="primary" [sm]="true" [disabled]="selected().size === 0 || busy()" (clicked)="loadPreview()">
+                {{ busy() ? 'Reading…' : 'Preview ' + selected().size + ' language' + (selected().size === 1 ? '' : 's') }}
               </tl-btn>
               <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('target')">Back</tl-btn>
+            </div>
+          </div>
+        }
+
+        @case ('preview') {
+          <div class="wiz__body">
+            <div class="eyebrow">
+              {{ preview()?.totalTerms }} terms · showing the first {{ preview()?.rows?.length }}
+            </div>
+            <div class="wiz__table">
+              <table class="ttable">
+                <thead>
+                  <tr>
+                    <th>Key</th>
+                    @for (l of preview()?.languages ?? []; track l.code) {
+                      <th>{{ l.name }} · <span class="locale">{{ l.code }}</span></th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of preview()?.rows ?? []; track r.key) {
+                    <tr class="trow" style="cursor:default">
+                      <td class="keycell">
+                        <div class="keytag">{{ r.key }}</div>
+                        @if (r.context) {
+                          <div class="keysub">{{ r.context }}</div>
+                        }
+                      </td>
+                      @for (l of preview()?.languages ?? []; track l.code) {
+                        <td class="tgt" [class.empty]="!r.translations[l.code]">
+                          {{ r.translations[l.code] || 'Not translated' }}
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="wiz__hint" style="margin:0">
+              {{ importTargetLabel() }}
+            </p>
+            <div class="row" style="gap:8px">
+              <tl-btn variant="primary" [sm]="true" [disabled]="busy()" (clicked)="runImport()">
+                {{ busy() ? 'Importing…' : 'Import these' }}
+              </tl-btn>
+              <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('languages')">Back</tl-btn>
             </div>
           </div>
         }
@@ -219,6 +265,16 @@ type Target = 'existing' | 'new';
       color: var(--tl-slate);
       font-variant-numeric: tabular-nums;
     }
+    .wiz__table {
+      width: 100%;
+      max-height: 320px;
+      overflow: auto;
+      border: 1px solid var(--tl-line);
+      border-radius: var(--tl-r-lg);
+    }
+    .wiz__table .ttable {
+      background: transparent;
+    }
     .wiz__done {
       display: flex;
       align-items: center;
@@ -246,6 +302,7 @@ export class PoeditorWizard {
   protected readonly currentProject = this.state.current;
   protected readonly selected = signal<Set<string>>(new Set());
   protected readonly summary = signal('');
+  protected readonly preview = signal<PoeditorPreview | null>(null);
 
   protected readonly stepIndex = computed(() => {
     switch (this.step()) {
@@ -255,8 +312,10 @@ export class PoeditorWizard {
         return 2;
       case 'target':
         return 3;
-      default:
+      case 'languages':
         return 4;
+      default:
+        return 5;
     }
   });
 
@@ -295,6 +354,40 @@ export class PoeditorWizard {
   protected pickTarget(mode: Target): void {
     this.mode.set(mode);
     this.step.set('languages');
+  }
+
+  /** Where the confirmed import will land, spelled out before committing. */
+  protected importTargetLabel(): string {
+    return this.mode() === 'new'
+      ? `Creates “${this.target()?.name}” as a new project and imports every term, not only the rows above.`
+      : `Imports every term into ${this.currentProject()?.name ?? 'this project'}, not only the rows above.`;
+  }
+
+  protected loadPreview(): void {
+    const target = this.target();
+    if (!target) return;
+    this.busy.set(true);
+    this.api
+      .poeditorPreview({
+        apiToken: this.token(),
+        poeditorProjectId: target.id,
+        languages: [...this.selected()],
+      })
+      .subscribe({
+        next: (p) => {
+          this.preview.set(p);
+          this.step.set('preview');
+          this.busy.set(false);
+        },
+        error: (e: { status?: number }) => {
+          this.busy.set(false);
+          this.toast.show(
+            e?.status === 429
+              ? 'POEditor rate limit reached — wait a minute, then preview fewer languages'
+              : 'Could not read that project',
+          );
+        },
+      });
   }
 
   protected toggle(code: string): void {
@@ -350,5 +443,6 @@ export class PoeditorWizard {
     this.step.set('project');
     this.mode.set('existing');
     this.summary.set('');
+    this.preview.set(null);
   }
 }

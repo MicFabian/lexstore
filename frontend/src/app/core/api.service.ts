@@ -23,6 +23,7 @@ import {
   PoeditorProject,
   PoeditorLanguage,
   PoeditorImportResult,
+  PoeditorPreview,
 } from './models';
 
 const BASE = '/api';
@@ -67,6 +68,14 @@ export class ApiService {
     body: { apiToken: string; poeditorProjectId: number; languages: string[] },
   ): Observable<PoeditorImportResult> {
     return this.http.post<PoeditorImportResult>(`${BASE}/poeditor/projects/${projectId}/import`, body);
+  }
+  /** What the selected languages would bring in, before importing. */
+  poeditorPreview(body: {
+    apiToken: string;
+    poeditorProjectId: number;
+    languages: string[];
+  }): Observable<PoeditorPreview> {
+    return this.http.post<PoeditorPreview>(`${BASE}/poeditor/preview`, body);
   }
   /** Import a whole POEditor project into a new TransLad project. */
   poeditorImportAsProject(body: {

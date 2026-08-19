@@ -12,6 +12,12 @@ data class PoeditorTokenRequest(val apiToken: String)
 
 data class PoeditorLanguagesRequest(val apiToken: String, val poeditorProjectId: Long)
 
+data class PoeditorPreviewRequest(
+    val apiToken: String,
+    val poeditorProjectId: Long,
+    val languages: List<String>,
+)
+
 /**
  * Import wizard endpoints. The POEditor token is supplied per request and only
  * used to call POEditor — it is never persisted or logged.
@@ -28,6 +34,11 @@ class PoeditorController(private val service: PoeditorImportService) {
     @PostMapping("/languages")
     fun languages(@RequestBody req: PoeditorLanguagesRequest): List<PoeditorLanguage> =
         service.languages(req.apiToken, req.poeditorProjectId)
+
+    /** What the selected languages would bring in, before importing. */
+    @PostMapping("/preview")
+    fun preview(@RequestBody req: PoeditorPreviewRequest): PoeditorPreview =
+        service.preview(req.apiToken, req.poeditorProjectId, req.languages)
 
     /** Import into an existing project. */
     @PostMapping("/projects/{projectId}/import")
