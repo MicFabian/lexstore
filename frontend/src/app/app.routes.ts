@@ -24,6 +24,10 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/editor/editor').then((m) => m.EditorScreen),
       },
       {
+        path: 'features',
+        loadComponent: () => import('./screens/features/features').then((m) => m.FeaturesScreen),
+      },
+      {
         path: 'terms',
         loadComponent: () => import('./screens/terms/terms').then((m) => m.TermsScreen),
       },

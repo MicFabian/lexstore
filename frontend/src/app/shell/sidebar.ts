@@ -203,6 +203,7 @@ export class Sidebar {
     return [
       { path: 'editor', icon: 'Languages', label: 'Translations', count: c?.terms },
       { path: 'terms', icon: 'FileText', label: 'Terms', count: c?.terms },
+      { path: 'features', icon: 'LayoutGrid', label: 'Features' },
       { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },
       { path: 'contributors', icon: 'Users', label: 'Contributors' },
       { path: 'settings', icon: 'Settings', label: 'Settings' },

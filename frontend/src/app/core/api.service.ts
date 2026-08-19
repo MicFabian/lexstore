@@ -24,6 +24,8 @@ import {
   PoeditorLanguage,
   PoeditorImportResult,
   PoeditorPreview,
+  FeatureView,
+  OpenTranslationView,
 } from './models';
 
 const BASE = '/api';
@@ -54,6 +56,30 @@ export class ApiService {
     body: { name?: string; mark?: string; sourceLang?: string; image?: string; translationContext?: string },
   ): Observable<ProjectDetail> {
     return this.http.patch<ProjectDetail>(`${BASE}/projects/${projectId}`, body);
+  }
+
+  // ---- Features (a project's terms grouped by what ships together) ----
+  listFeatures(projectId: string): Observable<FeatureView[]> {
+    return this.http.get<FeatureView[]>(`${BASE}/projects/${projectId}/features`);
+  }
+  createFeature(
+    projectId: string,
+    body: { name: string; key?: string; description?: string },
+  ): Observable<FeatureView> {
+    return this.http.post<FeatureView>(`${BASE}/projects/${projectId}/features`, body);
+  }
+  deleteFeature(projectId: string, featureId: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/features/${featureId}`);
+  }
+  /** Translation slots of one feature that still need work. */
+  openTranslations(projectId: string, featureId: string, lang?: string): Observable<OpenTranslationView[]> {
+    return this.http.get<OpenTranslationView[]>(
+      `${BASE}/projects/${projectId}/features/${featureId}/open`,
+      { params: lang ? { lang } : {} },
+    );
+  }
+  assignTerms(projectId: string, featureId: string, termIds: string[]): Observable<FeatureView> {
+    return this.http.post<FeatureView>(`${BASE}/projects/${projectId}/features/${featureId}/terms`, { termIds });
   }
 
   // ---- POEditor import wizard (the token is per request, never stored) ----

@@ -12,6 +12,7 @@ import { CommandService } from '../core/command.service';
 const LABELS: Record<string, string> = {
   editor: 'Translations',
   terms: 'Terms',
+  features: 'Features',
   languages: 'Languages',
   contributors: 'Contributors',
   settings: 'Settings',

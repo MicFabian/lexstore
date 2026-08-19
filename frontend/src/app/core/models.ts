@@ -220,6 +220,38 @@ export interface PoeditorLanguage {
   percentage: number;
 }
 
+export interface FeatureLanguageCoverage {
+  code: string;
+  name: string;
+  translated: number;
+  fuzzy: number;
+  untranslated: number;
+  percent: number;
+}
+
+export interface FeatureView {
+  id: string;
+  name: string;
+  key: string;
+  description: string | null;
+  terms: number;
+  translated: number;
+  fuzzy: number;
+  untranslated: number;
+  percent: number;
+  languages: FeatureLanguageCoverage[];
+}
+
+export interface OpenTranslationView {
+  termId: string;
+  key: string;
+  sourceText: string;
+  languageCode: string;
+  languageName: string;
+  status: string;
+  value: string | null;
+}
+
 export interface PoeditorPreview {
   languages: { code: string; name: string; imported: number }[];
   rows: { key: string; context: string | null; translations: Record<string, string | null> }[];

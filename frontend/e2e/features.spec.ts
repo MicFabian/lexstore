@@ -40,6 +40,32 @@ test.describe('sidebar quick filters', () => {
 });
 
 // ----------------------------------------------------------------------------
+test.describe('features — coverage and open translations', () => {
+  test('list features, expand one, and read its open strings', async ({ page }) => {
+    await page.goto('/features');
+    await waitShell(page);
+
+    // Features are seeded from the key prefixes of the project's terms.
+    const rows = page.locator('.ttable tbody tr.trow');
+    await expect(rows.first()).toBeVisible();
+    const checkout = rows.filter({ hasText: 'Checkout' });
+    await expect(checkout).toContainText('44%');
+
+    // Expanding shows coverage per language.
+    await checkout.click();
+    const expanded = page.locator('.trow-expand');
+    await expect(expanded.locator('.cov-row')).toHaveCount(6);
+    await expect(expanded.locator('.cov-row', { hasText: 'German' })).toContainText('complete');
+
+    // Picking a language lists exactly what is still open in it.
+    await expanded.locator('.cov-row', { hasText: 'French' }).click();
+    await expect(expanded.locator('.open-row')).toHaveCount(1);
+    await expect(expanded.locator('.open-row')).toContainText('checkout.tax_note');
+    await expect(expanded.locator('.open-row')).toContainText('Needs review');
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('editor — language switch + AI suggestion', () => {
 
   test('language picker adds and removes translation columns', async ({ page }) => {

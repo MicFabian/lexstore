@@ -2,6 +2,8 @@ package io.translad.common
 
 import io.translad.ai.AiTranslationException
 import io.translad.contributor.ContributorNotFoundException
+import io.translad.feature.DuplicateFeatureKeyException
+import io.translad.feature.FeatureNotFoundException
 import io.translad.io.PoeditorException
 import io.translad.io.PoeditorRateLimitException
 import io.translad.apikey.*
@@ -24,6 +26,7 @@ class ApiExceptionHandler {
         ProjectNotFoundException::class,
         TermNotFoundException::class,
         ContributorNotFoundException::class,
+        FeatureNotFoundException::class,
     )
     fun notFound(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.NOT_FOUND, "Not found", ex.message)
@@ -32,6 +35,7 @@ class ApiExceptionHandler {
         DuplicateProjectCodeException::class,
         DuplicateTermKeyException::class,
         DuplicateLanguageException::class,
+        DuplicateFeatureKeyException::class,
     )
     fun conflict(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.CONFLICT, "Conflict", ex.message)

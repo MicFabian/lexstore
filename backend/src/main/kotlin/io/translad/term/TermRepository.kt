@@ -10,4 +10,6 @@ interface TermRepository : JpaRepository<Term, UUID> {
     fun findByProjectIdAndKey(projectId: UUID, key: String): Term?
     fun existsByProjectIdAndKey(projectId: UUID, key: String): Boolean
     fun countByProjectId(projectId: UUID): Long
+    fun findByFeatureId(featureId: UUID): List<Term>
+    fun countByFeatureId(featureId: UUID): Long
 }

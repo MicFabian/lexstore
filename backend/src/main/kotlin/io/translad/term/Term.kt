@@ -39,6 +39,10 @@ class Term(
     @Column(name = "tags")
     var tags: String = "",
 
+    /** The feature this string belongs to; null means unassigned. */
+    @Column(name = "feature_id")
+    var featureId: UUID? = null,
+
     @Column(name = "is_new", nullable = false)
     var isNew: Boolean = false,
 
