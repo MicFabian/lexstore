@@ -65,8 +65,37 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
         </div>
 
         <div class="field">
-          <label>Translation — <span class="locale">{{ lang() }}</span></label>
+          <div class="tfield__head">
+            <label for="tl-translation">Translation</label>
+            <span style="position:relative;margin-left:auto">
+              <button
+                class="btn btn--subtle btn--sm lang-pick"
+                [attr.aria-expanded]="langMenuOpen()"
+                (click)="langMenuOpen.set(!langMenuOpen())"
+              >
+                <span class="locale">{{ lang() }}</span>
+                {{ langName() }}
+                <tl-icon name="ChevronDown" [size]="13" color="var(--tl-muted)" />
+              </button>
+              @if (langMenuOpen()) {
+                <span class="menu-backdrop" (click)="langMenuOpen.set(false)"></span>
+                <span class="menu" style="top:calc(100% + 4px);right:0;min-width:190px">
+                  <span class="menu__label">Edit language</span>
+                  @for (l of languages(); track l.code) {
+                    <button class="menu__item" [class.on]="l.code === lang()" (click)="pickLang(l.code)">
+                      <span class="locale">{{ l.code }}</span>
+                      <span>{{ l.name }}</span>
+                      @if (l.code === lang()) {
+                        <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                      }
+                    </button>
+                  }
+                </span>
+              }
+            </span>
+          </div>
           <textarea
+            id="tl-translation"
             class="textarea"
             rows="3"
             [value]="value()"
@@ -74,25 +103,6 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
             placeholder="Type the translation…"
           ></textarea>
         </div>
-
-        @if (suggestion(); as s) {
-          <button class="card suggestion" (click)="value.set(s)">
-            <tl-icon name="WandSparkles" [size]="16" color="var(--tl-st-fuzzy)" style="margin-top:1px" />
-            <div>
-              <div class="suggestion-label">
-                Machine suggestion
-                @if (suggestionMeta(); as m) {
-                  <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.7"> · {{ m }}</span>
-                }
-              </div>
-              <div style="font-size:13.5px;color:var(--tl-ink)">{{ s }}</div>
-            </div>
-          </button>
-        } @else if (!row().target) {
-          <button class="btn btn--subtle btn--sm" [disabled]="suggestBusy()" (click)="fetchSuggestion()" style="align-self:flex-start">
-            <tl-icon name="WandSparkles" [size]="14" />{{ suggestBusy() ? 'Thinking…' : 'Suggest translation' }}
-          </button>
-        }
 
         <div class="row" style="gap:8px">
           <tl-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
@@ -104,6 +114,33 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           <tl-btn variant="subtle" [sm]="true" icon="Flag" [disabled]="!value()" (clicked)="save('fuzzy')">
             Flag
           </tl-btn>
+        </div>
+
+        <div class="helper" aria-live="polite">
+          <div class="helper__head">
+            <tl-icon name="WandSparkles" [size]="14" color="var(--tl-slate)" />
+            <span class="helper__title">Translation helper</span>
+            <div class="spacer"></div>
+            <button class="btn btn--subtle btn--sm" [disabled]="suggestBusy()" (click)="fetchSuggestion()">
+              {{ suggestBusy() ? 'Thinking…' : suggestion() ? 'Regenerate' : 'Suggest' }}
+            </button>
+          </div>
+          @if (suggestion(); as s) {
+            <div class="helper__body">
+              <div class="helper__text">{{ s }}</div>
+              @if (suggestionMeta(); as m) {
+                <div class="helper__meta">{{ m }}</div>
+              }
+              <div class="row" style="gap:8px;margin-top:10px">
+                <tl-btn variant="ghost" [sm]="true" icon="Check" (clicked)="applySuggestion(s)">Use it</tl-btn>
+                <tl-btn variant="subtle" [sm]="true" icon="Plus" (clicked)="appendSuggestion(s)">Append</tl-btn>
+              </div>
+            </div>
+          } @else {
+            <div class="helper__hint">
+              Machine-translate <span class="locale">{{ lang() }}</span> from the English source, then edit before saving.
+            </div>
+          }
         </div>
 
         <div class="lastedit">
@@ -139,7 +176,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
                     <b style="font-weight:600">{{ c.authorName }}</b>
                     <span class="muted" style="font-size:11.5px">{{ c.time }}</span>
                     <div class="spacer"></div>
-                    <button class="btn btn--subtle btn--sm btn--icon" style="height:20px;width:20px" aria-label="Delete comment" (click)="deleteComment(c)">
+                    <button class="btn btn--subtle btn--sm btn--icon" style="height:24px;width:24px" aria-label="Delete comment" (click)="deleteComment(c)">
                       <tl-icon name="Trash2" [size]="12" color="var(--tl-muted)" />
                     </button>
                   </div>
@@ -214,7 +251,11 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       background: none;
       padding: 0;
       cursor: pointer;
-      display: flex;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      margin: -2px -6px -2px 0;
       color: var(--tl-muted);
     }
     .tag-x:hover {
@@ -233,23 +274,54 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       color: var(--tl-ink);
       font-weight: 600;
     }
-    .suggestion {
-      padding: 11px 13px;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      background: var(--tl-st-fuzzy-bg);
-      border-color: transparent;
+    .lang-pick {
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
     }
-    .suggestion-label {
+    .helper {
+      border: 1px solid var(--tl-line);
+      border-radius: var(--tl-r-lg);
+      background: var(--tl-paper);
+      padding: 11px 13px;
+    }
+    .tfield__head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .tfield__head label {
+      margin: 0;
+    }
+    .helper__head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .helper__title {
       font-size: 11px;
       font-weight: 700;
-      color: var(--tl-st-fuzzy);
+      color: var(--tl-slate);
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      margin-bottom: 3px;
+    }
+    .helper__body {
+      margin-top: 10px;
+    }
+    .helper__text {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--tl-ink);
+    }
+    .helper__meta,
+    .helper__hint {
+      font-size: 11.5px;
+      color: var(--tl-slate);
+      margin-top: 4px;
+    }
+    .helper__hint {
+      margin-top: 8px;
     }
   `,
 })
@@ -258,9 +330,17 @@ export class Inspector {
   private readonly state = inject(ProjectStateService);
 
   readonly row = input.required<EditorRow>();
+  /** The language column this inspector opened on — editable via the picker. */
   readonly lang = input.required<string>();
+  readonly languages = input<{ code: string; name: string }[]>([]);
+  readonly langChanged = output<string>();
   readonly closed = output<void>();
   readonly saved = output<EditorRow>();
+
+  protected readonly langMenuOpen = signal(false);
+  protected readonly langName = computed(
+    () => this.languages().find((l) => l.code === this.lang())?.name ?? this.lang(),
+  );
 
   protected readonly value = signal('');
   protected readonly draft = signal('');
@@ -275,10 +355,12 @@ export class Inspector {
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
 
   constructor() {
-    // Reset editable state whenever the selected row changes.
+    // Reset editable state whenever the selected row or language changes.
     effect(() => {
       const r = this.row();
+      this.lang();
       this.value.set(r.target ?? '');
+      this.langMenuOpen.set(false);
       this.draft.set('');
       this.comments.set(r.comments);
       this.ctx.set(r.ctx);
@@ -323,6 +405,20 @@ export class Inspector {
       next: () => this.comments.update((list) => list.filter((x) => x.id !== c.id)),
       error: () => {},
     });
+  }
+
+  protected pickLang(code: string): void {
+    this.langMenuOpen.set(false);
+    if (code !== this.lang()) this.langChanged.emit(code);
+  }
+
+  protected applySuggestion(text: string): void {
+    this.value.set(text);
+  }
+
+  protected appendSuggestion(text: string): void {
+    const current = this.value().trim();
+    this.value.set(current ? `${current} ${text}` : text);
   }
 
   protected fetchSuggestion(): void {

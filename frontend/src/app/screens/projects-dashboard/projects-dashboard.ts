@@ -47,7 +47,13 @@ import { ProjectSummary } from '../../core/models';
         <div>
           @for (p of filtered(); track p.id) {
             <button class="lrow proj-row" (click)="open(p)">
-              <span class="pmark" [style.background]="p.mark"><tl-icon name="ArrowRightLeft" [size]="17" color="#fff" /></span>
+              <span class="pmark" [style.background]="p.image ? 'none' : p.mark">
+                @if (p.image; as img) {
+                  <img class="pimg" [src]="img" alt="" />
+                } @else {
+                  <tl-icon name="ArrowRightLeft" [size]="17" color="#fff" />
+                }
+              </span>
               <span class="pid">
                 <span class="pname">{{ p.name }}</span>
                 <span class="pcode">{{ p.code }}</span>
@@ -113,6 +119,13 @@ import { ProjectSummary } from '../../core/models';
       display: grid;
       place-items: center;
       flex: none;
+    }
+    .pimg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      display: block;
     }
     .pid {
       width: 240px;

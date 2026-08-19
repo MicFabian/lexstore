@@ -124,7 +124,7 @@ class EditorService(
         require(term.projectId == projectId) { "Term does not belong to this project." }
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
-        val res = ai.translate(TranslateRequest(term.sourceText, project.sourceLang, languageCode))
+        val res = ai.translate(TranslateRequest(term.sourceText, project.sourceLang, languageCode, projectContext = project.translationContext))
         return SuggestionResponse(res.text, res.provider, res.model, res.cacheHit)
     }
 
@@ -146,7 +146,7 @@ class EditorService(
         var translated = 0
         for (t in projTerms) {
             if (!existing[t.id]?.value.isNullOrBlank()) continue // already translated
-            val res = ai.translate(TranslateRequest(t.sourceText, project.sourceLang, languageCode))
+            val res = ai.translate(TranslateRequest(t.sourceText, project.sourceLang, languageCode, projectContext = project.translationContext))
             save(projectId, t.id, languageCode, SaveTranslationRequest(res.text, null, targetStatus, author, 0))
             translated++
         }

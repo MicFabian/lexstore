@@ -11,6 +11,7 @@ data class ProjectSummary(
     val code: String,
     val sourceLang: String,
     val mark: String,
+    val image: String?,
     val terms: Long,
     val langs: Int,
     val progress: Int,
@@ -26,6 +27,8 @@ data class ProjectDetail(
     val code: String,
     val sourceLang: String,
     val mark: String,
+    val image: String?,
+    val translationContext: String?,
     val terms: Long,
 )
 
@@ -42,4 +45,7 @@ data class UpdateProjectRequest(
     val name: String?,
     val mark: String?,
     val sourceLang: String?,
+    /** Data URI of the uploaded image; blank clears it back to the color mark. */
+    val image: String?,
+    val translationContext: String?,
 )

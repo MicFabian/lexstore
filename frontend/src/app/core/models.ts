@@ -8,6 +8,7 @@ export interface ProjectSummary {
   code: string;
   sourceLang: string;
   mark: string;
+  image: string | null;
   terms: number;
   langs: number;
   progress: number;
@@ -23,6 +24,8 @@ export interface ProjectDetail {
   code: string;
   sourceLang: string;
   mark: string;
+  image: string | null;
+  translationContext: string | null;
   terms: number;
 }
 
@@ -201,6 +204,26 @@ export interface AiSettings {
   autoFlagFuzzy: boolean;
   cacheTtlHours: number;
   claudeAvailable: boolean;
+  geminiAvailable: boolean;
+}
+
+export interface PoeditorProject {
+  id: number;
+  name: string;
+  terms: number | null;
+}
+
+export interface PoeditorLanguage {
+  code: string;
+  name: string;
+  translations: number;
+  percentage: number;
+}
+
+export interface PoeditorImportResult {
+  languages: { code: string; name: string; imported: number }[];
+  termsCreated: number;
+  translationsImported: number;
 }
 
 export const STATUS_LABEL: Record<TranslationStatus, string> = {

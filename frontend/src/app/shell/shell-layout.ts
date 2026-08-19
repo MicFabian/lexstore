@@ -3,13 +3,12 @@ import { RouterOutlet } from '@angular/router';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 import { Toast } from './toast';
-import { TweaksPanel } from './tweaks-panel';
 import { ProjectStateService } from '../core/project-state.service';
 
 @Component({
   selector: 'tl-shell-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, Sidebar, Topbar, Toast, TweaksPanel],
+  imports: [RouterOutlet, Sidebar, Topbar, Toast],
   template: `
     <div class="app">
       <tl-sidebar />
@@ -18,7 +17,6 @@ import { ProjectStateService } from '../core/project-state.service';
         <router-outlet />
       </div>
       <tl-toast />
-      <tl-tweaks-panel />
     </div>
   `,
 })

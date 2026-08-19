@@ -24,6 +24,14 @@ class Project(
     @Column(nullable = false)
     var mark: String = "#3a5bff",
 
+    /** Uploaded project image as a data URI; falls back to [mark] when absent. */
+    @Column(name = "image", columnDefinition = "text")
+    var image: String? = null,
+
+    /** Domain and glossary guidance handed to the machine translator. */
+    @Column(name = "translation_context", length = 4000)
+    var translationContext: String? = null,
+
     @Column(name = "updated_label")
     var updatedLabel: String? = null,
 )

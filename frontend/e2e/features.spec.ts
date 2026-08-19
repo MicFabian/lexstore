@@ -42,37 +42,64 @@ test.describe('sidebar quick filters', () => {
 // ----------------------------------------------------------------------------
 test.describe('editor — language switch + AI suggestion', () => {
 
-  test('language dropdown switches the translation column', async ({ page }) => {
+  test('language picker adds and removes translation columns', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);
-    // Default fr.
+    // Default: French only.
     await expect(page.locator('.ed-head .btn--ghost').first()).toContainText('French');
+    await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(1);
     await expect(page.locator('th', { hasText: 'Translation' })).toContainText('fr');
 
+    // Adding German gives a second column, side by side with French.
     await page.locator('.ed-head .btn--ghost').first().click();
     await page.locator('.menu__item', { hasText: 'German' }).click();
+    await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(2);
 
-    await expect(page.locator('.ed-head .btn--ghost').first()).toContainText('German');
+    const row = page.locator('.trow', { hasText: 'nav.dashboard' });
+    await expect(row.locator('.tgt').nth(0)).toContainText('Tableau de bord');
+    await expect(row.locator('.tgt').nth(1)).toContainText('Übersicht');
+
+    // Deselecting French leaves German alone.
+    await page.locator('.menu__item', { hasText: 'French' }).click();
+    await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(1);
     await expect(page.locator('th', { hasText: 'Translation' })).toContainText('de');
-    // German values are loaded.
-    await expect(page.locator('.trow', { hasText: 'nav.dashboard' }).locator('.tgt')).toContainText('Übersicht');
   });
 
-  test('inspector fetches and applies an AI suggestion', async ({ page }) => {
+  test('inspector opens on the clicked column and switches language', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);
-    // Open an untranslated row.
-    const row = page.locator('.trow', { has: page.locator('.tgt.empty') }).first();
-    await row.click();
+    // Compare French and German.
+    await page.locator('.ed-head .btn--ghost').first().click();
+    await page.locator('.menu__item', { hasText: 'German' }).click();
+    await page.locator('.menu-backdrop').click();
+
+    // Clicking the German cell opens the inspector on German.
+    const row = page.locator('.trow', { hasText: 'nav.dashboard' });
+    await row.locator('.tgt').nth(1).click();
+    const inspector = page.locator('.inspector');
+    await expect(inspector.locator('.lang-pick')).toContainText('German');
+    await expect(inspector.locator('textarea').first()).toHaveValue('Übersicht');
+
+    // The inspector's own picker reaches languages that have no column.
+    await inspector.locator('.lang-pick').click();
+    await inspector.locator('.menu__item', { hasText: 'Japanese' }).click();
+    await expect(inspector.locator('.lang-pick')).toContainText('Japanese');
+  });
+
+  test('translation helper suggests and applies a translation', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    await page.locator('.trow', { has: page.locator('.tgt.empty') }).first().locator('.tgt').first().click();
     const inspector = page.locator('.inspector');
     await expect(inspector).toBeVisible();
 
-    await inspector.locator('button', { hasText: 'Suggest translation' }).click();
-    const suggestion = inspector.locator('.suggestion');
-    await expect(suggestion).toBeVisible();
-    await expect(suggestion).toContainText('Machine suggestion');
-    // Applying it fills the textarea.
-    await suggestion.click();
+    const helper = inspector.locator('.helper');
+    await expect(helper).toContainText('Translation helper');
+    await helper.locator('button', { hasText: 'Suggest' }).click();
+    await expect(helper.locator('.helper__text')).toBeVisible();
+
+    // "Use it" fills the textarea with the suggestion.
+    await helper.locator('button', { hasText: 'Use it' }).click();
     await expect(inspector.locator('textarea').first()).not.toHaveValue('');
   });
 
@@ -82,12 +109,15 @@ test.describe('editor — language switch + AI suggestion', () => {
     // Switch to Dutch (0% translated) so there is work to do.
     await page.locator('.ed-head .btn--ghost').first().click();
     await page.locator('.menu__item', { hasText: 'Dutch' }).click();
+    await page.locator('.menu__item', { hasText: 'French' }).click();
+    await page.locator('.menu-backdrop').click();
+    await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(1);
     await expect(page.locator('th', { hasText: 'Translation' })).toContainText('nl');
 
     const before = await page.locator('.trow .tgt.empty').count();
     expect(before).toBeGreaterThan(0);
 
-    await page.locator('.ed-head button', { hasText: 'Auto-translate' }).click();
+    await page.locator('.ed-tabs button', { hasText: 'Auto-translate' }).click();
     await expect(page.locator('.toast')).toContainText('Auto-translated', { timeout: 15000 });
     // Fewer empty targets afterwards.
     await expect(page.locator('.trow .tgt.empty')).toHaveCount(0);
@@ -131,6 +161,8 @@ test.describe('live actions — create term / language / contributor', () => {
     answerPrompts(page, ['QA CI key', null]);
     await page.goto('/settings');
     await waitShell(page);
+    // Wait for the seeded keys to load, or the generate response races the list load.
+    await expect(page.locator('.keyrow').first()).toBeVisible();
     const before = await page.locator('.keyrow').count();
     await page.locator('button', { hasText: 'Generate key' }).click();
     await expect(page.locator('.keyrow').filter({ hasText: 'QA CI key' })).toBeVisible();
@@ -248,15 +280,15 @@ test.describe('search + theming', () => {
   });
 
   test('density tweak changes the html attribute and persists', async ({ page }) => {
-    await page.goto('/editor');
+    await page.goto('/settings');
     await waitShell(page);
-    await page.locator('button[aria-label="Appearance"]').click();
+    await page.locator('.subnav button', { hasText: 'Appearance' }).click();
     await page.locator('.tweaks-seg button', { hasText: 'compact' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
     // Reset to cozy.
-    await page.locator('button[aria-label="Appearance"]').click();
+    await page.locator('.subnav button', { hasText: 'Appearance' }).click();
     await page.locator('.tweaks-seg button', { hasText: 'cozy' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-density', 'cozy');
   });

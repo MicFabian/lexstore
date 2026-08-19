@@ -269,11 +269,31 @@
   padding-bottom: 16px;
 }
 
+/* An empty translation is an invitation, not a whisper: readable at rest,
+   clearly editable on hover and focus. */
+.trow .tgt.empty {
+  color: var(--tl-slate);
+  font-style: normal;
+}
+.trow:hover .tgt.empty,
+.trow .tgt.empty:focus-visible {
+  color: var(--tl-accent-text);
+}
+
 /* Status as a small colored caption, not a filled pill. */
 .stcap {
-  font: 600 10px var(--tl-mono);
-  letter-spacing: 0.1em;
+  font: 600 12px var(--tl-mono);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* Numbers in tables and chrome stay column-aligned without a mono family. */
+.tnum,
+.count,
+.ftab .n,
+.covnum,
+.serif {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Shared page-header helpers (legacy) ---------- */

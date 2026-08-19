@@ -25,7 +25,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
     <div class="editor" style="position:relative">
       <div class="ed-head">
         <div>
-          <div class="eyebrow">Editing · {{ langName() }} <span style="color:var(--tl-slate)">{{ lang() }}</span></div>
+          <div class="eyebrow">Editing · {{ langsLabel() }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;margin-top:12px">
             <span class="serif" style="font-size:52px;line-height:1">{{ pct().done }}%</span>
             <span class="serif" style="font-size:22px;color:var(--tl-slate);font-style:italic">translated</span>
@@ -48,19 +48,26 @@ import { EditorRow, TranslationStatus } from '../../core/models';
               [attr.aria-expanded]="langMenuOpen()"
               (click)="langMenuOpen.set(!langMenuOpen())"
             >
-              <span class="locale">{{ lang() }}</span>
-              {{ langName() }}
+              @for (c of langs(); track c) {
+                <span class="locale">{{ c }}</span>
+              }
+              {{ langsLabel() }}
               <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
             </button>
             @if (langMenuOpen()) {
               <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
-              <div class="menu" style="top:calc(100% + 4px);right:0;min-width:200px">
-                <div class="menu__label">Translate into</div>
+              <div class="menu" style="top:calc(100% + 4px);right:0;min-width:230px">
+                <div class="menu__label">Compare languages</div>
                 @for (l of languages(); track l.code) {
-                  <button class="menu__item" [class.on]="l.code === lang()" (click)="selectLang(l.code)">
+                  <button
+                    class="menu__item"
+                    [class.on]="langs().includes(l.code)"
+                    [attr.aria-pressed]="langs().includes(l.code)"
+                    (click)="toggleLang(l.code)"
+                  >
                     <span class="locale">{{ l.code }}</span>
                     <span>{{ l.name }}</span>
-                    @if (l.code === lang()) {
+                    @if (langs().includes(l.code)) {
                       <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
                     }
                   </button>
@@ -68,9 +75,6 @@ import { EditorRow, TranslationStatus } from '../../core/models';
               </div>
             }
           </div>
-          <tl-btn variant="ghost" [sm]="true" icon="WandSparkles" [disabled]="autoBusy()" (clicked)="autoTranslate()">
-            {{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
-          </tl-btn>
           <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="addTerm()">Add term</tl-btn>
         </div>
       </div>
@@ -83,38 +87,49 @@ import { EditorRow, TranslationStatus } from '../../core/models';
         }
         <div class="spacer"></div>
         <tl-search placeholder="Search keys or text" [value]="query()" [width]="200" (changed)="query.set($event)" />
+        <button class="btn btn--subtle btn--sm" [disabled]="autoBusy()" (click)="autoTranslate()">
+          <tl-icon name="WandSparkles" [size]="14" />{{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
+        </button>
       </div>
 
       <div class="editor__scroll">
         <table class="ttable">
           <thead>
             <tr>
-              <th class="keycell" style="width:280px">Key</th>
-              <th>Source · <span class="locale">en</span></th>
-              <th>Translation · <span class="locale">{{ lang() }}</span></th>
+              <th class="keycell">Key</th>
+              <th class="src-col">Source · <span class="locale">en</span></th>
+              @for (c of langs(); track c) {
+                <th class="tgt-col">Translation · <span class="locale">{{ c }}</span></th>
+              }
             </tr>
           </thead>
           <tbody>
             @for (r of filtered(); track r.id) {
-              <tr
-                class="trow"
-                [class.sel]="sel() === r.id"
-                [class.cell-saved]="savedId() === r.id"
-                (click)="select(r.id)"
-              >
-                <td class="keycell">
+              <tr class="trow" [class.sel]="sel()?.termId === r.id" [class.cell-saved]="savedId() === r.id">
+                <td class="keycell" (click)="select(r.id, langs()[0])">
                   <div class="keytag">{{ r.key }}</div>
                   <div class="stcap" style="margin-top:7px" [style.color]="'var(--tl-st-' + r.status + ')'">
                     {{ statusLabel(r.status) }}{{ r.isNew ? ' · New' : '' }}
                   </div>
                 </td>
-                <td class="src">{{ r.plural ? r.plural.one + ' / ' + r.plural.other : r.source }}</td>
-                <td class="tgt" [class.empty]="!r.target">{{ r.target || 'Add translation…' }}</td>
+                <td class="src" (click)="select(r.id, langs()[0])">
+                  {{ r.plural ? r.plural.one + ' / ' + r.plural.other : r.source }}
+                </td>
+                @for (c of langs(); track c) {
+                  <td
+                    class="tgt"
+                    [class.empty]="!cell(r.id, c)?.target"
+                    [class.cell-sel]="sel()?.termId === r.id && sel()?.lang === c"
+                    (click)="select(r.id, c)"
+                  >
+                    {{ cell(r.id, c)?.target || 'Add translation…' }}
+                  </td>
+                }
               </tr>
             }
             @if (filtered().length === 0) {
               <tr>
-                <td colspan="3" style="padding:56px 16px;text-align:center">
+                <td [attr.colspan]="langs().length + 2" style="padding:56px 16px;text-align:center">
                   <div class="serif" style="font-size:26px;margin-bottom:6px">Nothing here</div>
                   <div class="muted" style="font-size:13.5px">No terms match this filter — try another.</div>
                 </td>
@@ -127,7 +142,9 @@ import { EditorRow, TranslationStatus } from '../../core/models';
       @if (selectedRow(); as row) {
         <tl-inspector
           [row]="row"
-          [lang]="lang()"
+          [lang]="sel()!.lang"
+          [languages]="languages()"
+          (langChanged)="selectLangInInspector($event)"
           (closed)="sel.set(null)"
           (saved)="onSaved($event)"
         />
@@ -155,6 +172,54 @@ import { EditorRow, TranslationStatus } from '../../core/models';
       border-bottom: 1px solid var(--tl-line);
       flex: none;
     }
+    /* The open cell is the edited one — mark it, not just its row. */
+    .tgt.cell-sel {
+      box-shadow: inset 2px 0 0 var(--tl-accent);
+      background: var(--tl-accent-soft);
+    }
+
+    /* Comparing many languages scrolls sideways; the key and source stay put. */
+    .editor__scroll {
+      overflow: auto;
+    }
+    .ttable th.keycell,
+    .ttable td.keycell {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: var(--tl-card);
+      min-width: 240px;
+    }
+    .ttable th.src-col,
+    .ttable td.src {
+      position: sticky;
+      left: 240px;
+      z-index: 2;
+      background: var(--tl-card);
+      min-width: 260px;
+    }
+    .ttable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: var(--tl-card);
+    }
+    .ttable thead th.keycell,
+    .ttable thead th.src-col {
+      z-index: 4;
+    }
+    .trow:hover .keycell,
+    .trow:hover .src {
+      background: var(--tl-row-hover);
+    }
+    .trow.sel .keycell,
+    .trow.sel .src {
+      background: var(--tl-accent-soft);
+    }
+    .ttable td.tgt,
+    .ttable th.tgt-col {
+      min-width: 240px;
+    }
   `,
 })
 export class EditorScreen implements OnInit {
@@ -162,8 +227,10 @@ export class EditorScreen implements OnInit {
   private readonly state = inject(ProjectStateService);
   protected readonly toast = inject(ToastService);
 
-  protected readonly rows = signal<EditorRow[]>([]);
-  protected readonly lang = signal('fr');
+  /** Rows per language code; the first selected language drives key/source/status. */
+  protected readonly byLang = signal<Record<string, EditorRow[]>>({});
+  /** Selected target languages, in display order — one table column each. */
+  protected readonly langs = signal<string[]>(['fr']);
   protected readonly filter = signal('all');
 
   /** Optional ?filter= deep link (sidebar quick filters); bound by the router. */
@@ -176,16 +243,23 @@ export class EditorScreen implements OnInit {
     }
   });
   protected readonly query = signal('');
-  protected readonly sel = signal<string | null>(null);
+  /** The open cell: which term, in which language column. */
+  protected readonly sel = signal<{ termId: string; lang: string } | null>(null);
   protected readonly savedId = signal<string | null>(null);
   protected readonly langMenuOpen = signal(false);
   protected readonly autoBusy = signal(false);
 
   /** Target languages available for this project (from the API). */
   protected readonly languages = signal<{ code: string; name: string }[]>([]);
-  protected readonly langName = computed(
-    () => this.languages().find((l) => l.code === this.lang())?.name ?? this.lang(),
-  );
+  protected readonly langsLabel = computed(() => {
+    const names = this.langs().map(
+      (c) => this.languages().find((l) => l.code === c)?.name ?? c,
+    );
+    return names.length <= 2 ? names.join(' · ') : `${names.length} languages`;
+  });
+
+  /** Rows of the leading language carry key, source, and status for the table. */
+  protected readonly rows = computed(() => this.byLang()[this.langs()[0]] ?? []);
 
   protected readonly counts = computed(() => {
     const r = this.rows();
@@ -235,54 +309,85 @@ export class EditorScreen implements OnInit {
     });
   });
 
-  protected readonly selectedRow = computed(() =>
-    this.rows().find((r) => r.id === this.sel()) ?? null,
-  );
+  protected readonly selectedRow = computed(() => {
+    const s = this.sel();
+    if (!s) return null;
+    return this.byLang()[s.lang]?.find((r) => r.id === s.termId) ?? null;
+  });
+
+  /** The row of one term in one language column. */
+  protected cell(termId: string, lang: string): EditorRow | undefined {
+    return this.byLang()[lang]?.find((r) => r.id === termId);
+  }
 
   ngOnInit(): void {
     this.state.whenReady((pid) => {
       this.api.listLanguages(pid).subscribe((langs) => {
-        // Only languages with at least one term make sense; backend returns all.
         this.languages.set(langs.map((l) => ({ code: l.code, name: l.name })));
-        // Default to the first language if the current one isn't in the project.
-        if (langs.length && !langs.some((l) => l.code === this.lang())) {
-          this.lang.set(langs[0].code);
+        // Fall back to the project's first language if the default isn't in it.
+        if (langs.length && !langs.some((l) => l.code === this.langs()[0])) {
+          this.langs.set([langs[0].code]);
         }
+        this.loadEditor(pid);
       });
-      this.loadEditor(pid);
     });
   }
 
-  private loadEditor(pid: string): void {
-    this.api.editor(pid, this.lang()).subscribe((res) => this.rows.set(res.rows));
+  private loadEditor(pid: string, codes = this.langs()): void {
+    for (const code of codes) {
+      this.api
+        .editor(pid, code)
+        .subscribe((res) => this.byLang.update((m) => ({ ...m, [code]: res.rows })));
+    }
   }
 
-  protected selectLang(code: string): void {
-    this.langMenuOpen.set(false);
-    if (code === this.lang()) return;
-    this.lang.set(code);
-    this.sel.set(null);
+  protected toggleLang(code: string): void {
+    const current = this.langs();
+    if (current.includes(code)) {
+      // Keep at least one column.
+      if (current.length === 1) return;
+      this.langs.set(current.filter((c) => c !== code));
+      if (this.sel()?.lang === code) this.sel.set(null);
+      return;
+    }
+    this.langs.set([...current, code]);
     const pid = this.state.current()?.id;
-    if (pid) this.loadEditor(pid);
+    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code]);
+  }
+
+  protected selectLangInInspector(code: string): void {
+    const s = this.sel();
+    if (!s) return;
+    const pid = this.state.current()?.id;
+    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code]);
+    this.sel.set({ termId: s.termId, lang: code });
   }
 
   protected autoTranslate(): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.autoBusy.set(true);
-    this.api.autoTranslate(pid, this.lang()).subscribe({
-      next: (r) => {
-        this.autoBusy.set(false);
-        this.loadEditor(pid);
-        this.toast.show(
-          r.translated === 0 ? 'Nothing left to translate' : `Auto-translated ${r.translated} terms (${r.status})`,
-        );
-      },
-      error: () => {
-        this.autoBusy.set(false);
-        this.toast.show('Auto-translate failed');
-      },
-    });
+    const codes = this.langs();
+    let done = 0;
+    let total = 0;
+    for (const code of codes) {
+      this.api.autoTranslate(pid, code).subscribe({
+        next: (r) => {
+          total += r.translated;
+          this.loadEditor(pid, [code]);
+          if (++done === codes.length) {
+            this.autoBusy.set(false);
+            this.toast.show(
+              total === 0 ? 'Nothing left to translate' : `Auto-translated ${total} translations`,
+            );
+          }
+        },
+        error: () => {
+          this.autoBusy.set(false);
+          this.toast.show('Auto-translate failed');
+        },
+      });
+    }
   }
 
   protected addTerm(): void {
@@ -301,12 +406,17 @@ export class EditorScreen implements OnInit {
     });
   }
 
-  protected select(id: string): void {
-    this.sel.set(id);
+  protected select(termId: string, lang: string): void {
+    this.sel.set({ termId, lang });
   }
 
   protected onSaved(updated: EditorRow): void {
-    this.rows.update((rs) => rs.map((r) => (r.id === updated.id ? updated : r)));
+    const lang = this.sel()?.lang;
+    if (!lang) return;
+    this.byLang.update((m) => ({
+      ...m,
+      [lang]: (m[lang] ?? []).map((r) => (r.id === updated.id ? updated : r)),
+    }));
     this.savedId.set(updated.id);
     setTimeout(() => this.savedId.update((s) => (s === updated.id ? null : s)), 700);
     this.toast.show('Translation saved');

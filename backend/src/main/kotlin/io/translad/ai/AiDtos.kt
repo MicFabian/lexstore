@@ -12,6 +12,8 @@ data class TranslateRequest(
     val temperature: Double? = null,
     val tone: String? = null,
     val formality: String? = null,
+    /** Domain and glossary guidance, usually the calling project's context. */
+    val projectContext: String? = null,
     /** Skip the cache and force a fresh translation. */
     val noCache: Boolean = false,
 )
@@ -73,6 +75,7 @@ data class AiSettingsView(
     val autoFlagFuzzy: Boolean,
     val cacheTtlHours: Int,
     val claudeAvailable: Boolean,
+    val geminiAvailable: Boolean,
 )
 
 data class UpdateAiSettings(

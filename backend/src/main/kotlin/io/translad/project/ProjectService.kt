@@ -32,7 +32,7 @@ class ProjectService(
 
     fun detail(id: UUID): ProjectDetail {
         val p = get(id)
-        return ProjectDetail(p.id, p.name, p.code, p.sourceLang, p.mark, terms.countByProjectId(p.id))
+        return detailOf(p)
     }
 
     @Transactional
@@ -47,7 +47,7 @@ class ProjectService(
                 updatedLabel = "just now",
             ),
         )
-        return ProjectDetail(saved.id, saved.name, saved.code, saved.sourceLang, saved.mark, 0)
+        return detailOf(saved)
     }
 
     @Transactional
@@ -56,8 +56,21 @@ class ProjectService(
         req.name?.let { p.name = it }
         req.mark?.let { p.mark = it }
         req.sourceLang?.let { p.sourceLang = it }
-        return ProjectDetail(p.id, p.name, p.code, p.sourceLang, p.mark, terms.countByProjectId(p.id))
+        req.image?.let { p.image = it.ifBlank { null } }
+        req.translationContext?.let { p.translationContext = it.ifBlank { null } }
+        return detailOf(p)
     }
+
+    private fun detailOf(p: Project) = ProjectDetail(
+        id = p.id,
+        name = p.name,
+        code = p.code,
+        sourceLang = p.sourceLang,
+        mark = p.mark,
+        image = p.image,
+        translationContext = p.translationContext,
+        terms = terms.countByProjectId(p.id),
+    )
 
     private fun summarize(p: Project): ProjectSummary {
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(p.id)
@@ -83,6 +96,7 @@ class ProjectService(
             code = p.code,
             sourceLang = p.sourceLang,
             mark = p.mark,
+            image = p.image,
             terms = projTerms.size.toLong(),
             langs = langs.size,
             progress = progress,

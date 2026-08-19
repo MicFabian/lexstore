@@ -195,13 +195,15 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                             [class]="'btn btn--sm ' + (draft().provider === p.key ? 'btn--ghost' : 'btn--subtle')"
                             [style.border-color]="draft().provider === p.key ? 'var(--tl-accent)' : null"
                             [style.color]="draft().provider === p.key ? 'var(--tl-accent-text)' : null"
-                            [disabled]="p.key === 'claude' && !s.claudeAvailable"
+                            [disabled]="unavailable(p.key, s)"
                             (click)="patch({ provider: p.key })"
                           >{{ p.label }}</button>
                         }
                       </div>
-                      @if (!s.claudeAvailable) {
-                        <div class="muted" style="font-size:11.5px;margin-top:4px">Claude needs ANTHROPIC_API_KEY on the server; mock is used until then.</div>
+                      @if (!s.claudeAvailable || !s.geminiAvailable) {
+                        <div class="muted" style="font-size:11.5px;margin-top:4px">
+                          {{ missingKeysHint(s) }}
+                        </div>
                       }
                     </div>
                     <div class="field"><label>Model</label><input class="input" [value]="draft().model" (input)="patch({ model: $any($event.target).value })" /></div>
@@ -271,12 +273,25 @@ export class AiOverview implements OnInit {
   protected readonly settings = signal<AiSettings | null>(null);
   protected readonly draft = signal<AiSettings>({
     provider: 'mock', model: '', temperature: 0.2, formality: 'neutral', tone: null,
-    autoFlagFuzzy: true, cacheTtlHours: 720, claudeAvailable: false,
+    autoFlagFuzzy: true, cacheTtlHours: 720, claudeAvailable: false, geminiAvailable: false,
   });
+
+  protected unavailable(key: string, s: AiSettings): boolean {
+    return (key === 'claude' && !s.claudeAvailable) || (key === 'gemini' && !s.geminiAvailable);
+  }
+
+  /** Names the providers whose server-side API key is missing. */
+  protected missingKeysHint(s: AiSettings): string {
+    const missing: string[] = [];
+    if (!s.claudeAvailable) missing.push('Claude needs ANTHROPIC_API_KEY');
+    if (!s.geminiAvailable) missing.push('Gemini needs GEMINI_API_KEY');
+    return `${missing.join(', ')} on the server; mock is used until then.`;
+  }
 
   protected readonly providers = [
     { key: 'mock', label: 'Mock' },
     { key: 'claude', label: 'Claude' },
+    { key: 'gemini', label: 'Gemini' },
   ];
 
   // Playground

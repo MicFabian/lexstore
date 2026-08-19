@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Icon, IconName } from '../../shared/icon';
 import { Btn, Toggle } from '../../shared/primitives';
+import { AppearanceControls } from '../../shell/appearance-controls';
+import { PoeditorWizard } from './poeditor-wizard';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -16,7 +18,7 @@ interface IntegrationItem {
 @Component({
   selector: 'tl-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, Toggle],
+  imports: [Icon, Btn, Toggle, AppearanceControls, PoeditorWizard],
   template: `
     <div class="well">
       <div class="pad">
@@ -87,24 +89,84 @@ interface IntegrationItem {
                 </div>
               </div>
             }
+            @case ('appearance') {
+              <div class="panel" style="max-width:520px">
+                <div class="panel__head"><h2>Appearance</h2></div>
+                <div style="padding:18px">
+                  <p style="margin:0 0 16px;font-size:13.5px;color:var(--tl-slate);line-height:1.55">
+                    Theme, accent, and row density. Saved in this browser, for you only.
+                  </p>
+                  <tl-appearance-controls />
+                </div>
+              </div>
+            }
             @case ('general') {
-              <div class="panel">
-                <div class="panel__head"><h2>Project</h2></div>
-                <div style="padding:18px;display:flex;flex-direction:column;gap:16px;max-width:460px">
-                  <div class="field"><label>Project name</label><input class="input" [value]="project()?.name ?? ''" /></div>
-                  <div class="field"><label>Project slug</label><input class="input" style="font-family:var(--tl-mono);font-size:13px" [value]="project()?.code ?? ''" /></div>
-                  <div class="field">
-                    <label>Default source language</label>
-                    <div class="row"><span class="locale" style="font-size:12px;padding:4px 8px">en</span><span style="font-size:13.5px">English</span></div>
+              <div style="display:flex;flex-direction:column;gap:18px">
+                <div class="panel">
+                  <div class="panel__head"><h2>Project</h2></div>
+                  <div style="padding:18px;display:flex;flex-direction:column;gap:16px;max-width:520px">
+                    <div class="field">
+                      <label>Project image</label>
+                      <div class="row" style="gap:14px">
+                        <span class="proj-image" [style.background]="draftImage() ? 'none' : (project()?.mark ?? '')">
+                          @if (draftImage(); as img) {
+                            <img [src]="img" alt="" />
+                          } @else {
+                            <tl-icon name="ArrowRightLeft" [size]="18" color="#fff" />
+                          }
+                        </span>
+                        <input
+                          #imageInput
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          style="display:none"
+                          (change)="onImageFile($event)"
+                        />
+                        <tl-btn variant="ghost" [sm]="true" icon="Upload" (clicked)="imageInput.click()">Upload image</tl-btn>
+                        @if (draftImage()) {
+                          <button class="btn btn--subtle btn--sm" (click)="clearImage()">Remove</button>
+                        }
+                      </div>
+                      <p class="hint">PNG, JPG, SVG, or WebP up to 512 KB. Replaces the color mark everywhere.</p>
+                    </div>
+                    <div class="field"><label>Project name</label><input class="input" [value]="draftName()" (input)="draftName.set($any($event.target).value)" /></div>
+                    <div class="field"><label>Project slug</label><input class="input" style="font-size:13px" [value]="project()?.code ?? ''" disabled /></div>
+                    <div class="field">
+                      <label>Default source language</label>
+                      <div class="row"><span class="locale" style="font-size:12px;padding:4px 8px">en</span><span style="font-size:13.5px">English</span></div>
+                    </div>
+                    <div class="row">
+                      <tl-toggle [on]="autoFlag()" (toggled)="autoFlag.set(!autoFlag())" />
+                      <div>
+                        <div style="font-size:13.5px;font-weight:600">Auto-flag machine translations as fuzzy</div>
+                        <div class="muted" style="font-size:12px">Require a human to confirm before they count as done.</div>
+                      </div>
+                    </div>
+                    <div><tl-btn variant="primary" [disabled]="saving()" (clicked)="saveProject()">{{ saving() ? 'Saving…' : 'Save changes' }}</tl-btn></div>
                   </div>
-                  <div class="row">
-                    <tl-toggle [on]="autoFlag()" (toggled)="autoFlag.set(!autoFlag())" />
+                </div>
+
+                <div class="panel">
+                  <div class="panel__head">
+                    <tl-icon name="WandSparkles" [size]="17" color="var(--tl-accent-hi)" />
+                    <h2>Translation context</h2>
+                  </div>
+                  <div style="padding:18px;display:flex;flex-direction:column;gap:12px;max-width:640px">
+                    <p class="hint" style="margin:0">
+                      Domain and glossary rules handed to the machine translator with every suggestion and
+                      auto-translation of this project. Changing it invalidates cached suggestions.
+                    </p>
+                    <textarea
+                      class="textarea"
+                      rows="5"
+                      [value]="draftContext()"
+                      (input)="draftContext.set($any($event.target).value)"
+                      placeholder="e.g. Agricultural software. Translate &quot;Schlag&quot; as &quot;field&quot;, never &quot;hit&quot;. Keep product names untranslated."
+                    ></textarea>
                     <div>
-                      <div style="font-size:13.5px;font-weight:600">Auto-flag machine translations as fuzzy</div>
-                      <div class="muted" style="font-size:12px">Require a human to confirm before they count as done.</div>
+                      <tl-btn variant="primary" [sm]="true" [disabled]="saving()" (clicked)="saveContext()">Save context</tl-btn>
                     </div>
                   </div>
-                  <div><tl-btn variant="primary" (clicked)="toast.show('Settings saved')">Save changes</tl-btn></div>
                 </div>
               </div>
             }
@@ -128,6 +190,8 @@ interface IntegrationItem {
               </div>
             }
             @case ('export') {
+              <div style="display:flex;flex-direction:column;gap:18px">
+              <tl-poeditor-wizard />
               <div class="two-col">
                 <div class="card" style="padding:18px">
                   <tl-icon name="FileUp" [size]="20" color="var(--tl-accent-hi)" />
@@ -154,6 +218,7 @@ interface IntegrationItem {
                   </div>
                 </div>
               </div>
+              </div>
             }
           }
         </div>
@@ -161,6 +226,27 @@ interface IntegrationItem {
     </div>
   `,
   styles: `
+    .proj-image {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      flex: none;
+    }
+    .proj-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--tl-slate);
+      line-height: 1.5;
+      margin: 6px 0 0;
+    }
     .keyrow {
       display: flex;
       align-items: flex-start;
@@ -204,13 +290,18 @@ export class SettingsScreen implements OnInit {
   protected readonly toast = inject(ToastService);
   protected readonly project = this.state.current;
 
-  protected readonly tab = signal<'general' | 'api' | 'integrations' | 'export'>('api');
+  protected readonly tab = signal<'general' | 'appearance' | 'api' | 'integrations' | 'export'>('api');
   protected readonly keys = signal<ApiKeyView[]>([]);
   protected readonly revealed = signal<Record<string, boolean>>({});
   protected readonly autoFlag = signal(true);
+  protected readonly saving = signal(false);
+  protected readonly draftName = signal('');
+  protected readonly draftImage = signal<string | null>(null);
+  protected readonly draftContext = signal('');
 
-  protected readonly tabs: { id: 'general' | 'api' | 'integrations' | 'export'; icon: IconName; label: string }[] = [
+  protected readonly tabs: { id: 'general' | 'appearance' | 'api' | 'integrations' | 'export'; icon: IconName; label: string }[] = [
     { id: 'general', icon: 'Settings2', label: 'General' },
+    { id: 'appearance', icon: 'Settings2', label: 'Appearance' },
     { id: 'api', icon: 'KeyRound', label: 'API keys' },
     { id: 'integrations', icon: 'GitBranch', label: 'Integrations' },
     { id: 'export', icon: 'FileUp', label: 'Import / Export' },
@@ -224,7 +315,67 @@ export class SettingsScreen implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.state.whenReady((pid) => this.api.listApiKeys(pid).subscribe((k) => this.keys.set(k)));
+    this.state.whenReady((pid) => {
+      this.api.listApiKeys(pid).subscribe((k) => this.keys.set(k));
+      this.api.getProject(pid).subscribe((p) => {
+        this.draftName.set(p.name);
+        this.draftImage.set(p.image);
+        this.draftContext.set(p.translationContext ?? '');
+      });
+    });
+  }
+
+  protected onImageFile(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 512 * 1024) {
+      this.toast.show('That image is larger than 512 KB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => this.draftImage.set(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  protected clearImage(): void {
+    this.draftImage.set(null);
+  }
+
+  protected saveProject(): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.saving.set(true);
+    this.api
+      .updateProject(pid, { name: this.draftName(), image: this.draftImage() ?? '' })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.state.load();
+          this.toast.show('Project saved');
+        },
+        error: () => {
+          this.saving.set(false);
+          this.toast.show('Not allowed (needs admin)');
+        },
+      });
+  }
+
+  protected saveContext(): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.saving.set(true);
+    this.api.updateProject(pid, { translationContext: this.draftContext() }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.toast.show('Translation context saved');
+      },
+      error: () => {
+        this.saving.set(false);
+        this.toast.show('Not allowed (needs admin)');
+      },
+    });
   }
 
   protected toggleReveal(id: string): void {

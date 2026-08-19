@@ -1,6 +1,6 @@
 package io.translad.ai
 
-import com.fasterxml.jackson.databind.JsonNode
+import tools.jackson.databind.JsonNode
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
@@ -24,14 +24,7 @@ class ClaudeTranslator(
     override fun translate(input: TranslateInput): TranslateOutput {
         require(available) { "Anthropic API key is not configured." }
 
-        val system = buildString {
-            append("You are a professional software localizer. Translate the user's UI string ")
-            append("from ${input.sourceLang} into ${input.targetLang}. ")
-            append("Preserve placeholders (e.g. {count}, #, %s), punctuation, and capitalization style. ")
-            input.formality?.let { append("Use a $it register. ") }
-            input.tone?.let { append("Style guidance: $it. ") }
-            append("Reply with ONLY the translation, no quotes, no explanation.")
-        }
+        val system = TranslationPrompt.system(input)
 
         val body = mapOf(
             "model" to input.model,

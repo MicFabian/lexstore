@@ -1,6 +1,7 @@
 package io.translad.common
 
 import io.translad.ai.AiTranslationException
+import io.translad.io.PoeditorException
 import io.translad.apikey.*
 import io.translad.language.DuplicateLanguageException
 import io.translad.project.DuplicateProjectCodeException
@@ -36,6 +37,10 @@ class ApiExceptionHandler {
     @ExceptionHandler(AiTranslationException::class)
     fun aiFailure(ex: AiTranslationException): ProblemDetail =
         problem(HttpStatus.BAD_GATEWAY, "Translation provider error", ex.message)
+
+    @ExceptionHandler(PoeditorException::class)
+    fun poeditorFailure(ex: PoeditorException): ProblemDetail =
+        problem(HttpStatus.BAD_GATEWAY, "POEditor error", ex.message)
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun validation(ex: MethodArgumentNotValidException): ProblemDetail {

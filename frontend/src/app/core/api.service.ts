@@ -20,6 +20,9 @@ import {
   CacheEntryView,
   CacheStats,
   AiSettings,
+  PoeditorProject,
+  PoeditorLanguage,
+  PoeditorImportResult,
 } from './models';
 
 const BASE = '/api';
@@ -44,6 +47,26 @@ export class ApiService {
   }
   createProject(body: { name: string; code: string; mark?: string }): Observable<ProjectDetail> {
     return this.http.post<ProjectDetail>(`${BASE}/projects`, body);
+  }
+  updateProject(
+    projectId: string,
+    body: { name?: string; mark?: string; sourceLang?: string; image?: string; translationContext?: string },
+  ): Observable<ProjectDetail> {
+    return this.http.patch<ProjectDetail>(`${BASE}/projects/${projectId}`, body);
+  }
+
+  // ---- POEditor import wizard (the token is per request, never stored) ----
+  poeditorProjects(apiToken: string): Observable<PoeditorProject[]> {
+    return this.http.post<PoeditorProject[]>(`${BASE}/poeditor/projects`, { apiToken });
+  }
+  poeditorLanguages(apiToken: string, poeditorProjectId: number): Observable<PoeditorLanguage[]> {
+    return this.http.post<PoeditorLanguage[]>(`${BASE}/poeditor/languages`, { apiToken, poeditorProjectId });
+  }
+  poeditorImport(
+    projectId: string,
+    body: { apiToken: string; poeditorProjectId: number; languages: string[] },
+  ): Observable<PoeditorImportResult> {
+    return this.http.post<PoeditorImportResult>(`${BASE}/poeditor/projects/${projectId}/import`, body);
   }
 
   // ---- Languages ----

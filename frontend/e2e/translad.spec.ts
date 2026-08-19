@@ -215,26 +215,26 @@ test.describe('projects dashboard + theming', () => {
   });
 
   test('theme toggle switches and persists', async ({ page }) => {
-    await page.goto('/editor');
+    await page.goto('/settings');
     await waitShell(page);
+    await page.locator('.subnav button', { hasText: 'Appearance' }).click();
     // The redesign is light-first.
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await page.locator('button[aria-label="Appearance"]').click();
     await page.locator('.tweaks-seg button', { hasText: 'dark' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     // Persists across reload.
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     // Reset to light for other runs.
-    await page.locator('button[aria-label="Appearance"]').click();
+    await page.locator('.subnav button', { hasText: 'Appearance' }).click();
     await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   });
 
   test('accent change updates the document attribute', async ({ page }) => {
-    await page.goto('/editor');
+    await page.goto('/settings');
     await waitShell(page);
-    await page.locator('button[aria-label="Appearance"]').click();
+    await page.locator('.subnav button', { hasText: 'Appearance' }).click();
     await page.locator('.swatch[aria-label="emerald"]').click();
     await expect(page.locator('html')).toHaveAttribute('data-accent', 'emerald');
     await page.locator('.swatch[aria-label="cobalt"]').click();

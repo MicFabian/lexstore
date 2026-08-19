@@ -46,11 +46,21 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.inspector')).toBeVisible();
   await shot(page, '05-editor-inspector');
 
-  // Inspector AI suggestion on an untranslated row
-  await page.locator('.trow', { has: page.locator('.tgt.empty') }).first().click();
-  await page.locator('.inspector button', { hasText: 'Suggest translation' }).click();
-  await expect(page.locator('.inspector .suggestion')).toBeVisible();
-  await shot(page, '06-editor-inspector-suggestion');
+  // Inspector translation helper on an untranslated row
+  await page.locator('.inspector button[aria-label="Close"]').click();
+  await page.locator('.trow', { has: page.locator('.tgt.empty') }).first().locator('.tgt').first().click();
+  await page.locator('.inspector .helper button', { hasText: 'Suggest' }).click();
+  await expect(page.locator('.inspector .helper__text')).toBeVisible();
+  await shot(page, '06-editor-inspector-helper');
+
+  // Several languages compared side by side
+  await page.locator('.inspector button[aria-label="Close"]').click();
+  await page.locator('.ed-head .btn--ghost').first().click();
+  await page.locator('.menu__item', { hasText: 'German' }).click();
+  await page.locator('.menu__item', { hasText: 'Spanish' }).click();
+  await page.locator('.menu-backdrop').click();
+  await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(3);
+  await shot(page, '06b-editor-multi-language');
 
   // --- Terms ----------------------------------------------------------------
   await page.goto('/terms');
@@ -143,20 +153,23 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await shot(page, '24-user-menu');
   await page.locator('.menu-backdrop').click({ force: true });
 
-  await page.locator('button[aria-label="Appearance"]').click();
+  await page.goto('/settings');
+  await page.locator('.subnav button', { hasText: 'Appearance' }).click();
   await expect(page.locator('.tweaks-seg').first()).toBeVisible();
-  await shot(page, '25-tweaks-panel');
+  await shot(page, '25-appearance-settings');
 
   // --- Dark theme --------------------------------------------------------------
   await page.locator('.tweaks-seg button', { hasText: 'dark' }).click();
-  await page.locator('button[aria-label="Appearance"]').click(); // close panel
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.goto('/editor');
+  await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
   await shot(page, '26-editor-dark');
   await page.goto('/projects');
   await expect(page.locator('.proj-row').first()).toBeVisible();
   await shot(page, '27-projects-dark', true);
 
   // Restore the light default for whoever uses the browser next.
-  await page.locator('button[aria-label="Appearance"]').click();
+  await page.goto('/settings');
+  await page.locator('.subnav button', { hasText: 'Appearance' }).click();
   await page.locator('.tweaks-seg button', { hasText: 'light' }).click();
 });
