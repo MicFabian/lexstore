@@ -401,7 +401,7 @@ export class EditorScreen implements OnInit {
         },
         error: () => {
           this.autoBusy.set(false);
-          this.toast.show('Auto-translate failed');
+          this.toast.show({ message: 'Auto-translate failed', tone: 'error' });
         },
       });
     }
@@ -416,7 +416,7 @@ export class EditorScreen implements OnInit {
         this.loadEditor(pid);
         this.toast.show('Term added');
       },
-      error: () => this.toast.show('That key already exists'),
+      error: () => this.toast.show({ message: 'That key already exists', tone: 'error' }),
     });
   }
 

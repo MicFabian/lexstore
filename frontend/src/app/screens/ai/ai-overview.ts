@@ -327,7 +327,7 @@ export class AiOverview implements OnInit {
       .aiTranslate({ sourceText: this.srcText(), sourceLang: this.srcLang(), targetLang: this.tgtLang(), noCache })
       .subscribe({
         next: (r) => { this.result.set(r); this.loadStats(); },
-        error: () => this.toast.show('Translation failed'),
+        error: () => this.toast.show({ message: 'Translation failed', tone: 'error' }),
       });
   }
 

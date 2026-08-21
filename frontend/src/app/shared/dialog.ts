@@ -22,7 +22,9 @@ const FOCUSABLE =
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   host: {
-    '(keydown.escape)': 'closed.emit()',
+    // Capture on the host: focus usually sits in a projected field, whose
+    // keydown would otherwise never reach this element.
+    '(document:keydown.escape)': 'closed.emit()',
     '(keydown.tab)': 'trapFocus($any($event))',
   },
   template: `

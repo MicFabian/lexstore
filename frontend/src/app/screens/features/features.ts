@@ -346,7 +346,7 @@ export class FeaturesScreen implements OnInit {
         this.features.update((list) => [...list, f].sort((a, b) => a.name.localeCompare(b.name)));
         this.toast.show(`Created ${f.name}`);
       },
-      error: () => this.toast.show('That feature already exists'),
+      error: () => this.toast.show({ message: 'That feature already exists', tone: 'error' }),
     });
   }
 
@@ -359,7 +359,7 @@ export class FeaturesScreen implements OnInit {
         this.features.update((list) => list.filter((x) => x.id !== f.id));
         this.toast.show(`Deleted ${f.name}`);
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 }

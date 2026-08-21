@@ -200,7 +200,7 @@ export class ContributorsScreen implements OnInit {
         this.people.update((list) => list.map((x) => (x.id === c.id ? updated : x)));
         this.toast.show(`${c.name} is now ${role.toLowerCase()}`);
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 
@@ -215,7 +215,7 @@ export class ContributorsScreen implements OnInit {
         this.api.listContributors(pid).subscribe((c) => this.people.set(c));
         this.toast.show(`Invited ${name}`);
       },
-      error: () => this.toast.show('Invalid email or duplicate'),
+      error: () => this.toast.show({ message: 'Invalid email or duplicate', tone: 'error' }),
     });
   }
 
@@ -228,7 +228,7 @@ export class ContributorsScreen implements OnInit {
         this.people.update((list) => list.filter((x) => x.id !== c.id));
         this.toast.show(`Removed ${c.name}`);
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 }

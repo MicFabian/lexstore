@@ -371,7 +371,7 @@ export class TermsScreen implements OnInit {
         this.api.listTerms(pid).subscribe((t) => this.rows.set(t));
         this.toast.show('Term added');
       },
-      error: () => this.toast.show('That key already exists'),
+      error: () => this.toast.show({ message: 'That key already exists', tone: 'error' }),
     });
   }
 
@@ -409,16 +409,38 @@ export class TermsScreen implements OnInit {
   }
 
   // ---- delete ----
+  /**
+   * Deleting cascades in the database, so Undo cannot restore a term. Instead
+   * the row leaves at once and the request is held back until the offer to undo
+   * expires — the only way an Undo here can be honest.
+   */
   protected confirmDelete(r: TermView): void {
     this.pendingDelete.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
-    this.api.deleteTerm(pid, r.id).subscribe({
-      next: () => {
-        this.rows.update((list) => list.filter((x) => x.id !== r.id));
-        this.toast.show('Term deleted');
+
+    const before = this.rows();
+    this.rows.update((list) => list.filter((x) => x.id !== r.id));
+
+    let undone = false;
+    const timer = setTimeout(() => {
+      if (undone) return;
+      this.api.deleteTerm(pid, r.id).subscribe({
+        error: () => {
+          this.rows.set(before);
+          this.toast.show({ message: 'Could not delete that term', tone: 'error' });
+        },
+      });
+    }, 8000);
+
+    this.toast.show({
+      message: `Deleted ${r.key}`,
+      actionLabel: 'Undo',
+      action: () => {
+        undone = true;
+        clearTimeout(timer);
+        this.rows.set(before);
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
     });
   }
 
@@ -428,18 +450,43 @@ export class TermsScreen implements OnInit {
     if (ids.length === 0) return;
     const pid = this.state.current()?.id;
     if (!pid) return;
-    let done = 0;
-    for (const id of ids) {
-      this.api.deleteTerm(pid, id).subscribe({
-        next: () => {
-          this.rows.update((list) => list.filter((x) => x.id !== id));
-          if (++done === ids.length) {
-            this.clearSelection();
-            this.toast.show(`Deleted ${ids.length} terms`);
-          }
-        },
-        error: () => this.toast.show('Not allowed (needs admin)'),
+
+    const before = this.rows();
+    this.rows.update((list) => list.filter((x) => !ids.includes(x.id)));
+    this.clearSelection();
+
+    let undone = false;
+    const timer = setTimeout(() => {
+      if (undone) return;
+      // Every id is attempted; the ones that fail come back and stay selected.
+      Promise.allSettled(
+        ids.map(
+          (id) =>
+            new Promise<string>((resolve, reject) =>
+              this.api.deleteTerm(pid, id).subscribe({ next: () => resolve(id), error: reject }),
+            ),
+        ),
+      ).then((results) => {
+        const failed = ids.filter((_, i) => results[i].status === 'rejected');
+        if (failed.length === 0) return;
+        this.rows.set(before.filter((r) => !ids.includes(r.id) || failed.includes(r.id)));
+        this.selected.set(new Set(failed));
+        this.toast.show({
+          message: `${failed.length} of ${ids.length} terms could not be deleted`,
+          tone: 'error',
+        });
       });
-    }
+    }, 8000);
+
+    this.toast.show({
+      message: `Deleted ${ids.length} terms`,
+      actionLabel: 'Undo',
+      action: () => {
+        undone = true;
+        clearTimeout(timer);
+        this.rows.set(before);
+        this.selected.set(new Set(ids));
+      },
+    });
   }
 }

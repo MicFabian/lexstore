@@ -255,7 +255,7 @@ export class LanguagesScreen implements OnInit {
         this.langs.update((list) => list.filter((x) => x.code !== l.code));
         this.toast.show(`Removed ${l.name}`);
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 }

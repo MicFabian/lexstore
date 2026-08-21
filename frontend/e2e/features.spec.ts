@@ -79,6 +79,45 @@ test.describe('dialogs', () => {
 });
 
 // ----------------------------------------------------------------------------
+test.describe('undo', () => {
+  test('undoing a delete keeps the term, in the list and on the server', async ({ page }) => {
+    await page.goto('/terms');
+    await waitShell(page);
+    const rows = page.locator('.ttable tbody tr.trow');
+    await expect(rows).toHaveCount(14);
+
+    await page.locator('.trow', { hasText: 'nav.dashboard' })
+      .locator('button[aria-label="Delete term"]').click();
+    await page.locator('.dlg button', { hasText: 'Delete term' }).click();
+
+    // The row leaves at once, and the toast offers the way back.
+    await expect(rows).toHaveCount(13);
+    const toast = page.locator('.toast', { hasText: 'Deleted nav.dashboard' });
+    await expect(toast).toBeVisible();
+    await toast.locator('button', { hasText: 'Undo' }).click();
+    await expect(rows).toHaveCount(14);
+
+    // The request was never sent, so a reload still shows the term.
+    await page.reload();
+    await expect(page.locator('.trow', { hasText: 'nav.dashboard' })).toBeVisible();
+  });
+
+  test('letting the undo window pass really deletes', async ({ page }) => {
+    await page.goto('/terms');
+    await waitShell(page);
+    await page.locator('.trow', { hasText: 'nav.dashboard' })
+      .locator('button[aria-label="Delete term"]').click();
+    await page.locator('.dlg button', { hasText: 'Delete term' }).click();
+    await expect(page.locator('.toast', { hasText: 'Deleted nav.dashboard' })).toBeVisible();
+
+    // The delete is held for 8s; wait it out, then confirm it stuck.
+    await page.waitForTimeout(9000);
+    await page.reload();
+    await expect(page.locator('.ttable tbody tr.trow')).toHaveCount(13);
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('features — coverage and open translations', () => {
   test('list features, expand one, and read its open strings', async ({ page }) => {
     await page.goto('/features');

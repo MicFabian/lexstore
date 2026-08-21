@@ -178,7 +178,7 @@ export class Topbar {
       },
       error: () => {
         this.busy.set(false);
-        this.toast.show('Invalid email, or that person is already a contributor');
+        this.toast.show({ message: 'Invalid email, or that person is already a contributor', tone: 'error' });
       },
     });
   }

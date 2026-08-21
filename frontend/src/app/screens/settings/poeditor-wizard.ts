@@ -329,7 +329,7 @@ export class PoeditorWizard {
       },
       error: () => {
         this.busy.set(false);
-        this.toast.show('POEditor rejected that token');
+        this.toast.show({ message: 'POEditor rejected that token', tone: 'error' });
       },
     });
   }
@@ -346,7 +346,7 @@ export class PoeditorWizard {
       },
       error: () => {
         this.busy.set(false);
-        this.toast.show('Could not read that project');
+        this.toast.show({ message: 'Could not read that project', tone: 'error' });
       },
     });
   }

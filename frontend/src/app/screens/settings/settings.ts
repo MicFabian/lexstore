@@ -359,7 +359,7 @@ export class SettingsScreen implements OnInit {
     input.value = '';
     if (!file) return;
     if (file.size > 512 * 1024) {
-      this.toast.show('That image is larger than 512 KB');
+      this.toast.show({ message: 'That image is larger than 512 KB', tone: 'error' });
       return;
     }
     const reader = new FileReader();
@@ -385,7 +385,7 @@ export class SettingsScreen implements OnInit {
         },
         error: () => {
           this.saving.set(false);
-          this.toast.show('Not allowed (needs admin)');
+          this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' });
         },
       });
   }
@@ -401,7 +401,7 @@ export class SettingsScreen implements OnInit {
       },
       error: () => {
         this.saving.set(false);
-        this.toast.show('Not allowed (needs admin)');
+        this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' });
       },
     });
   }
@@ -421,7 +421,7 @@ export class SettingsScreen implements OnInit {
         window.alert(`Copy your key now — it won't be shown again:\n\n${k.secret}`);
         this.api.listApiKeys(pid).subscribe((list) => this.keys.set(list));
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 
@@ -442,7 +442,7 @@ export class SettingsScreen implements OnInit {
           error: () => this.toast.show('Import failed (check the language and file)'),
         });
       } catch {
-        this.toast.show('Not valid JSON');
+        this.toast.show({ message: 'Not valid JSON', tone: 'error' });
       }
       input.value = '';
     };
@@ -462,7 +462,7 @@ export class SettingsScreen implements OnInit {
         URL.revokeObjectURL(url);
         this.toast.show(`Exported ${this.ioLang()}.${format}`);
       },
-      error: () => this.toast.show('Export failed'),
+      error: () => this.toast.show({ message: 'Export failed', tone: 'error' }),
     });
   }
 
@@ -475,7 +475,7 @@ export class SettingsScreen implements OnInit {
         this.keys.update((list) => list.filter((x) => x.id !== k.id));
         this.toast.show('Key revoked');
       },
-      error: () => this.toast.show('Not allowed (needs admin)'),
+      error: () => this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' }),
     });
   }
 }

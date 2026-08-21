@@ -235,7 +235,7 @@ export class ProjectsDashboard implements OnInit {
         this.state.load();
         this.toast.show(`Created ${p.name}`);
       },
-      error: () => this.toast.show('That slug already exists or is invalid'),
+      error: () => this.toast.show({ message: 'That slug already exists or is invalid', tone: 'error' }),
     });
   }
 }
