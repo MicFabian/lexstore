@@ -91,6 +91,17 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.ttable tbody .chip--new').first()).toBeVisible();
   await shot(page, '11-terms-new-only');
 
+  // --- Features --------------------------------------------------------------
+  await page.goto('/features');
+  await waitShell(page);
+  await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
+  await shot(page, '11b-features', true);
+
+  await page.locator('.trow', { hasText: 'Checkout' }).click();
+  await page.locator('.cov-row', { hasText: 'French' }).click();
+  await expect(page.locator('.open-row').first()).toBeVisible();
+  await shot(page, '11c-features-open');
+
   // --- Languages / Contributors ---------------------------------------------
   await page.goto('/languages');
   await waitShell(page);
