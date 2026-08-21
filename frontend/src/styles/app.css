@@ -19,6 +19,7 @@
   --tl-fill:   #1c1f2b;
   --tl-line:   #262a37;
   --tl-line-2: #1c1f2a;
+  --tl-line-strong: #4a5164;
   --tl-ink:    #e9ebf2;
   --tl-ink-80: #c5cbda;
   --tl-slate:  #939ab1;
@@ -60,28 +61,31 @@
 
 /* ---- LIGHT theme ---- */
 :root[data-theme="light"] {
-  --tl-paper:  #f6f7fa;
-  --tl-paper-2:#eef0f5;
+  --tl-paper:  #f5f6f8;
+  --tl-paper-2:#eceff4;
   --tl-card:   #ffffff;
   --tl-elev:   #ffffff;
-  --tl-fill:   #eff1f6;
-  --tl-line:   #d5d8e1;
-  --tl-line-2: #e4e7ee;
+  --tl-fill:   #eef0f5;
+  --tl-line:   #c9ced8;
+  --tl-line-2: #dfe3ea;
+  /* Boundaries of interactive controls need 3:1, not a hairline. */
+  --tl-line-strong: #858d9d;
   --tl-ink:    #151723;
   --tl-ink-80: #2d3142;
   --tl-slate:  #5a6072;
-  --tl-muted:  #6b7280;
+  --tl-muted:  #646b7c;
   --tl-accent-text: color-mix(in srgb, var(--tl-accent) 82%, #000000 18%);
   --tl-glass:    color-mix(in srgb, var(--tl-paper) 80%, transparent);
   --tl-row-hover:#fbfbfd;
   --tl-grid-dot: rgba(21,23,35,.04);
   --tl-toast-bg: #151723;
   --tl-toast-fg: #ffffff;
-  --tl-st-untranslated: #a35f00; --tl-st-untranslated-bg: #fbf0dc;
-  --tl-st-translated:   #127a41; --tl-st-translated-bg:   #e7f6ee;
-  --tl-st-fuzzy:        #6438c4; --tl-st-fuzzy-bg:        #efe9fb;
-  --tl-st-proofread:    #0a6b7d; --tl-st-proofread-bg:    #e2f4f7;
-  --tl-success: #127a41; --tl-warning: #a35f00; --tl-danger: #c22f2f;
+  --tl-st-untranslated: #8a4b00; --tl-st-untranslated-bg: #fbf0dc;
+  --tl-st-translated:   #146c3a; --tl-st-translated-bg:   #e7f6ee;
+  --tl-st-fuzzy:        #5f35b5; --tl-st-fuzzy-bg:        #efe9fb;
+  --tl-st-proofread:    #087084; --tl-st-proofread-bg:    #e2f4f7;
+  --tl-st-new:          #2a44e6; --tl-st-new-bg:          #eef2ff;
+  --tl-success: #146c3a; --tl-warning: #8a4b00; --tl-danger: #a82222;
   --tl-shadow-xs: 0 1px 2px rgba(21,23,35,.06);
   --tl-shadow-sm: 0 1px 2px rgba(21,23,35,.05), 0 1px 1px rgba(21,23,35,.04);
   --tl-shadow-md: 0 4px 12px rgba(21,23,35,.08), 0 1px 3px rgba(21,23,35,.05);

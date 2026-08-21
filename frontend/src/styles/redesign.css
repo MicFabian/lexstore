@@ -327,8 +327,9 @@ button {
   border-right: none;
 }
 .ttable thead th {
-  letter-spacing: 0.11em;
-  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-size: 11.5px;
+  color: var(--tl-slate);
   border-bottom-color: var(--tl-line);
   padding-top: 13px;
   padding-bottom: 13px;
@@ -389,11 +390,22 @@ button {
   line-height: 1.5;
 }
 
+/* Progress bars carry status, so they get a readable height. */
+.progress {
+  height: 8px;
+}
+
 /* ---------- Accessibility ---------- */
+
+/* A solid cobalt outline reads on every surface; the old translucent ring
+   dissolved against fills and table rows. */
 :focus-visible {
-  outline: 2px solid var(--tl-accent);
+  outline: 2px solid #2a44e6;
   outline-offset: 2px;
   border-radius: 4px;
+}
+:root[data-theme='dark'] :focus-visible {
+  outline-color: var(--tl-accent-hi);
 }
 .btn:focus-visible,
 .navitem:focus-visible,
@@ -403,7 +415,29 @@ button {
 }
 input:focus-visible,
 textarea:focus-visible {
-  outline: none;
+  outline: 2px solid #2a44e6;
+  outline-offset: 1px;
+}
+
+/* Icon-only controls carry real actions and need a real target. */
+.btn--icon {
+  min-width: 40px;
+  min-height: 40px;
+}
+@media (pointer: coarse) {
+  .btn--icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Inputs and other interactive boundaries need 3:1, unlike decorative rules. */
+.input,
+.textarea,
+.searchbox,
+.cmdk,
+input[type='checkbox'] {
+  border-color: var(--tl-line-strong);
 }
 @media (prefers-reduced-motion: reduce) {
   *,
