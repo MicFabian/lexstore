@@ -79,6 +79,49 @@ test.describe('dialogs', () => {
 });
 
 // ----------------------------------------------------------------------------
+test.describe('editor keyboard', () => {
+  test('arrows walk rows, Enter opens, Escape closes', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    const rows = page.locator('.ttable tbody tr.trow');
+    await expect(rows.first()).toBeVisible();
+
+    await rows.first().focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(rows.nth(1)).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    const inspector = page.locator('.inspector');
+    await expect(inspector).toBeVisible();
+    await expect(inspector.locator('.keytag')).toContainText('nav.projects');
+
+    // The inspector docks beside the table rather than covering it.
+    await expect(page.locator('.editor--split')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(inspector).toBeHidden();
+  });
+
+  test('save and next moves to the next open row', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+
+    // Open the first untranslated cell, fill it, and save-and-next.
+    const firstEmpty = page.locator('.trow', { has: page.locator('.tgt.empty') }).first();
+    const key = await firstEmpty.locator('.keytag').textContent();
+    await firstEmpty.locator('.tgt').first().click();
+
+    const inspector = page.locator('.inspector');
+    await inspector.locator('textarea').first().fill('Une traduction');
+    await inspector.locator('button', { hasText: 'Save & next' }).click();
+
+    // It saved, and moved on to a different term.
+    await expect(page.locator('.toast', { hasText: 'Translation saved' })).toBeVisible();
+    await expect(inspector.locator('.keytag')).not.toHaveText(key ?? '');
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('undo', () => {
   test('undoing a delete keeps the term, in the list and on the server', async ({ page }) => {
     await page.goto('/terms');

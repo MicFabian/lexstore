@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
 import { Dialog } from './dialog';
 import { Btn } from './primitives';
 
@@ -68,15 +68,12 @@ export class PromptDialog {
   readonly submitted = output<Record<string, string>>();
   readonly cancelled = output<void>();
 
-  protected readonly values = signal<Record<string, string>>({});
-
-  constructor() {
-    queueMicrotask(() => {
-      const seed: Record<string, string> = {};
-      for (const f of this.fields()) seed[f.name] = f.value ?? '';
-      this.values.set(seed);
-    });
-  }
+  /** Seeded from the fields on first read, so typing is never overwritten. */
+  protected readonly values = linkedSignal<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const f of this.fields()) seed[f.name] = f.value ?? '';
+    return seed;
+  });
 
   protected set(name: string, value: string): void {
     this.values.update((v) => ({ ...v, [name]: value }));

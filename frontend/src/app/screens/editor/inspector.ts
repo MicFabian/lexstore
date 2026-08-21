@@ -99,6 +99,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
             id="tl-translation"
             class="textarea"
             rows="3"
+            (keydown)="onTranslationKey($event)"
             [value]="value()"
             (input)="value.set($any($event.target).value)"
             placeholder="Type the translation…"
@@ -108,6 +109,9 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
         <div class="row" style="gap:8px">
           <tl-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
             Save
+          </tl-btn>
+          <tl-btn variant="ghost" [sm]="true" icon="ArrowRight" [disabled]="!value()" (clicked)="saveAndNext()">
+            Save &amp; next
           </tl-btn>
           <tl-btn variant="ghost" [sm]="true" icon="CheckCheck" [disabled]="!value()" (clicked)="save('proofread')">
             Proofread
@@ -346,6 +350,8 @@ export class Inspector {
   readonly lang = input.required<string>();
   readonly languages = input<{ code: string; name: string }[]>([]);
   readonly langChanged = output<string>();
+  /** Asks the editor to move on to the next row that still needs work. */
+  readonly savedAndNext = output<void>();
   readonly closed = output<void>();
   readonly saved = output<EditorRow>();
 
@@ -450,6 +456,20 @@ export class Inspector {
         this.suggestBusy.set(false);
       },
     });
+  }
+
+  /** Cmd/Ctrl+Enter saves and moves on — the translator's main loop. */
+  protected onTranslationKey(e: KeyboardEvent): void {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      this.saveAndNext();
+    }
+  }
+
+  protected saveAndNext(): void {
+    if (!this.value()) return;
+    this.save('translated');
+    this.savedAndNext.emit();
   }
 
   protected save(status: TranslationStatus): void {

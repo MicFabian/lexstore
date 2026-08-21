@@ -23,7 +23,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, SearchBox, Inspector, PromptDialog],
   template: `
-    <div class="editor" style="position:relative">
+    <div class="editor" [class.editor--split]="!!selectedRow()" style="position:relative">
       <div class="ed-head">
         <div>
           <div class="eyebrow">Editing · {{ langsLabel() }}</div>
@@ -106,7 +106,15 @@ import { EditorRow, TranslationStatus } from '../../core/models';
           </thead>
           <tbody>
             @for (r of filtered(); track r.id) {
-              <tr class="trow" [class.sel]="sel()?.termId === r.id" [class.cell-saved]="savedId() === r.id">
+              <tr
+                class="trow"
+                [class.sel]="sel()?.termId === r.id"
+                [class.cell-saved]="savedId() === r.id"
+                [attr.tabindex]="isCursor($index) ? 0 : -1"
+                [attr.aria-selected]="sel()?.termId === r.id"
+                (keydown)="onRowKey($event, $index, r)"
+                (focus)="cursor.set($index)"
+              >
                 <td class="keycell" (click)="select(r.id, langs()[0])">
                   <div class="keytag">{{ r.key }}</div>
                   <div class="stcap" style="margin-top:7px" [style.color]="'var(--tl-st-' + r.status + ')'">
@@ -148,6 +156,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
           (langChanged)="selectLangInInspector($event)"
           (closed)="sel.set(null)"
           (saved)="onSaved($event)"
+          (savedAndNext)="advanceAfterSave()"
         />
       }
 
@@ -261,6 +270,8 @@ export class EditorScreen implements OnInit {
   protected readonly langMenuOpen = signal(false);
   protected readonly autoBusy = signal(false);
   protected readonly adding = signal(false);
+  /** Row the keyboard is on; Enter opens it in the inspector. */
+  protected readonly cursor = signal(0);
   protected readonly addTermFields = [
     { name: 'key', label: 'Key', placeholder: 'checkout.button.confirm', mono: true },
     { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
@@ -418,6 +429,53 @@ export class EditorScreen implements OnInit {
       },
       error: () => this.toast.show({ message: 'That key already exists', tone: 'error' }),
     });
+  }
+
+  protected isCursor(index: number): boolean {
+    return this.cursor() === index;
+  }
+
+  /** Arrow keys walk the list, Enter edits, Escape closes the inspector. */
+  protected onRowKey(e: KeyboardEvent, index: number, row: EditorRow): void {
+    const rows = this.filtered();
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const next = e.key === 'ArrowDown'
+        ? Math.min(index + 1, rows.length - 1)
+        : Math.max(index - 1, 0);
+      this.focusRow(next);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      this.select(row.id, this.sel()?.lang ?? this.langs()[0]);
+    } else if (e.key === 'Escape') {
+      this.sel.set(null);
+      this.focusRow(index);
+    }
+  }
+
+  /** Moves to a row and takes the caret with it. */
+  private focusRow(index: number): void {
+    this.cursor.set(index);
+    queueMicrotask(() => {
+      const rows = document.querySelectorAll<HTMLElement>('.editor .trow');
+      rows[index]?.focus();
+      rows[index]?.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  /** Saving from the inspector moves to the next row that still needs work. */
+  protected advanceAfterSave(): void {
+    const rows = this.filtered();
+    const current = rows.findIndex((r) => r.id === this.sel()?.termId);
+    const lang = this.sel()?.lang ?? this.langs()[0];
+    const nextOpen = rows.findIndex((r, i) => i > current && !this.cell(r.id, lang)?.target);
+    const target = nextOpen === -1 ? current + 1 : nextOpen;
+    if (target >= rows.length) {
+      this.sel.set(null);
+      return;
+    }
+    this.cursor.set(target);
+    this.select(rows[target].id, lang);
   }
 
   protected select(termId: string, lang: string): void {

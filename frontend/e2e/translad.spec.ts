@@ -91,7 +91,7 @@ test.describe('translation editor', () => {
 
     const value = 'Payer maintenant E2E';
     await inspector.locator('textarea').first().fill(value);
-    await inspector.locator('button', { hasText: 'Save' }).click();
+    await inspector.getByRole('button', { name: 'Save', exact: true }).click();
 
     await expect(page.locator('.toast')).toContainText('Translation saved');
     await expect(page.locator('.trow', { hasText: 'checkout.button.pay' }).locator('.tgt')).toContainText(
