@@ -390,6 +390,17 @@ button {
   line-height: 1.5;
 }
 
+/* Destructive confirmation reads as destructive. */
+.btn--danger {
+  background: var(--tl-danger);
+  border-color: var(--tl-danger);
+  color: #fff;
+  font-weight: 600;
+}
+.btn--danger:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
 /* Progress bars carry status, so they get a readable height. */
 .progress {
   height: 8px;

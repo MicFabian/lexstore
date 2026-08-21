@@ -3,6 +3,8 @@ import { Icon, IconName } from '../../shared/icon';
 import { Btn, Toggle } from '../../shared/primitives';
 import { AppearanceControls } from '../../shell/appearance-controls';
 import { PoeditorWizard } from './poeditor-wizard';
+import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -18,7 +20,7 @@ interface IntegrationItem {
 @Component({
   selector: 'tl-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, Toggle, AppearanceControls, PoeditorWizard],
+  imports: [Icon, Btn, Toggle, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -45,7 +47,7 @@ interface IntegrationItem {
                     <tl-icon name="KeyRound" [size]="17" color="var(--tl-accent-hi)" />
                     <h2>API keys</h2>
                     <div class="spacer"></div>
-                    <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="generate()">Generate key</tl-btn>
+                    <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="generating.set(true)">Generate key</tl-btn>
                   </div>
                   <div style="padding:6px 0">
                     @for (k of keys(); track k.id; let last = $last) {
@@ -71,7 +73,7 @@ interface IntegrationItem {
                         <div style="text-align:right;flex:none;min-width:150px">
                           <div class="muted" style="font-size:12px">Last used {{ k.used }}</div>
                           <div class="muted" style="font-size:11.5px;margin-top:2px">Created {{ k.created }}</div>
-                          <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger);margin-top:4px" (click)="revoke(k)">
+                          <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger);margin-top:4px" (click)="pendingRevoke.set(k)">
                             <tl-icon name="Trash2" [size]="14" />Revoke
                           </button>
                         </div>
@@ -224,6 +226,27 @@ interface IntegrationItem {
         </div>
       </div>
     </div>
+
+    @if (generating()) {
+      <tl-prompt-dialog
+        title="Generate an API key"
+        description="The secret is shown once, right after it is created."
+        [fields]="keyFields"
+        submitLabel="Generate key"
+        (submitted)="createKey($event)"
+        (cancelled)="generating.set(false)"
+      />
+    }
+
+    @if (pendingRevoke(); as k) {
+      <tl-confirm-dialog
+        title="Revoke this key?"
+        [description]="'“' + k.label + '” stops working immediately. Anything using it — CI, the CLI, your apps — loses access until it is replaced.'"
+        confirmLabel="Revoke key"
+        (confirmed)="confirmRevoke(k)"
+        (cancelled)="pendingRevoke.set(null)"
+      />
+    }
   `,
   styles: `
     .proj-image {
@@ -298,6 +321,11 @@ export class SettingsScreen implements OnInit {
   protected readonly draftName = signal('');
   protected readonly draftImage = signal<string | null>(null);
   protected readonly draftContext = signal('');
+  protected readonly generating = signal(false);
+  protected readonly pendingRevoke = signal<ApiKeyView | null>(null);
+  protected readonly keyFields = [
+    { name: 'label', label: 'Key label', placeholder: 'CI / GitHub Actions', hint: 'Name it after where it will be used.' },
+  ];
 
   protected readonly tabs: { id: 'general' | 'appearance' | 'api' | 'integrations' | 'export'; icon: IconName; label: string }[] = [
     { id: 'general', icon: 'Settings2', label: 'General' },
@@ -382,11 +410,11 @@ export class SettingsScreen implements OnInit {
     this.revealed.update((r) => ({ ...r, [id]: !r[id] }));
   }
 
-  protected generate(): void {
+  protected createKey(values: Record<string, string>): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
-    const label = window.prompt('Key label', 'New key');
-    if (!label) return;
+    const label = values['label'];
+    this.generating.set(false);
     this.api.generateApiKey(pid, { label }).subscribe({
       next: (k) => {
         this.toast.show('New API key generated');
@@ -438,8 +466,8 @@ export class SettingsScreen implements OnInit {
     });
   }
 
-  protected revoke(k: ApiKeyView): void {
-    if (!window.confirm(`Revoke "${k.label}"? Apps using it will stop working.`)) return;
+  protected confirmRevoke(k: ApiKeyView): void {
+    this.pendingRevoke.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.api.revokeApiKey(pid, k.id).subscribe({

@@ -7,7 +7,7 @@ async function waitShell(page: Page) {
   await expect(page.locator('.rail__brand')).toBeVisible();
 }
 
-/** Answer a sequence of window.prompt() dialogs in order. */
+/** Answer a sequence of native dialogs (only window.alert remains). */
 function answerPrompts(page: Page, answers: (string | null)[]) {
   let i = 0;
   page.on('dialog', async (d) => {
@@ -15,6 +15,16 @@ function answerPrompts(page: Page, answers: (string | null)[]) {
     if (a === null) await d.dismiss();
     else await d.accept(a);
   });
+}
+
+/** Fill the shared prompt dialog by field name and submit it. */
+async function fillDialog(page: Page, values: Record<string, string>, submitLabel: string) {
+  const dialog = page.locator('.dlg');
+  await expect(dialog).toBeVisible();
+  for (const [name, value] of Object.entries(values)) {
+    await dialog.locator(`#prompt-${name}`).fill(value);
+  }
+  await dialog.locator('button', { hasText: submitLabel }).click();
 }
 
 // ----------------------------------------------------------------------------
@@ -36,6 +46,35 @@ test.describe('sidebar quick filters', () => {
 
     // Counts come from the project, not hardcoded placeholders.
     await expect(page.locator('a.navitem', { hasText: 'Untranslated' }).locator('.count')).toContainText('47');
+  });
+});
+
+// ----------------------------------------------------------------------------
+test.describe('dialogs', () => {
+  test('a destructive action explains itself and can be escaped', async ({ page }) => {
+    await page.goto('/languages');
+    await waitShell(page);
+    await expect(page.locator('.lang-row').first()).toBeVisible();
+
+    // Removing a language is irreversible, so it asks first and says why.
+    await page.locator('.lang-row', { hasText: 'French' })
+      .locator('button[aria-label="Remove language"]').click();
+    const dialog = page.locator('.dlg');
+    await expect(dialog).toContainText('Every translation in French is deleted');
+    await expect(dialog.locator('button', { hasText: 'Remove language' })).toBeVisible();
+
+    // Escape closes it and the language survives.
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(page.locator('.lang-row', { hasText: 'French' })).toBeVisible();
+  });
+
+  test('a form dialog focuses its first field', async ({ page }) => {
+    await page.goto('/languages');
+    await waitShell(page);
+    await expect(page.locator('.lang-row').first()).toBeVisible();
+    await page.locator('button', { hasText: 'Add language' }).click();
+    await expect(page.locator('#prompt-code')).toBeFocused();
   });
 });
 
@@ -157,42 +196,43 @@ test.describe('live actions — create term / language / contributor', () => {
 
   // Assert on durable state (a new row/card), not the ephemeral toast.
   test('add term appears in the editor', async ({ page }) => {
-    answerPrompts(page, ['qa.new.term', 'A brand new string']);
     await page.goto('/editor');
     await waitShell(page);
     await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
     await page.locator('.ed-head button', { hasText: 'Add term' }).click();
+    await fillDialog(page, { key: 'qa.new.term', source: 'A brand new string' }, 'Add term');
     await expect(page.locator('.trow', { hasText: 'qa.new.term' })).toBeVisible();
   });
 
   test('add language shows a new card', async ({ page }) => {
-    answerPrompts(page, ['it', 'Italian']);
     await page.goto('/languages');
     await waitShell(page);
     // Wait until the existing languages have loaded (project is ready) before adding.
     await expect(page.locator('.lang-row').first()).toBeVisible();
     await page.locator('button', { hasText: 'Add language' }).click();
+    await fillDialog(page, { code: 'it', name: 'Italian' }, 'Add language');
     await expect(page.locator('.lang-row', { hasText: 'Italian' })).toBeVisible();
   });
 
   test('invite contributor adds a team row', async ({ page }) => {
-    answerPrompts(page, ['QA Tester', 'qa@translad.io']);
     await page.goto('/contributors');
     await waitShell(page);
     await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
     await page.locator('button', { hasText: 'Invite contributor' }).click();
+    await fillDialog(page, { name: 'QA Tester', email: 'qa@translad.io' }, 'Send invite');
     await expect(page.locator('.ttable', { hasText: 'qa@translad.io' })).toBeVisible();
   });
 
   test('generate API key adds a key row', async ({ page }) => {
-    // Generate prompts for a label, then alerts the one-time secret.
-    answerPrompts(page, ['QA CI key', null]);
+    // The secret is still shown in a native alert after creation.
+    answerPrompts(page, [null]);
     await page.goto('/settings');
     await waitShell(page);
     // Wait for the seeded keys to load, or the generate response races the list load.
     await expect(page.locator('.keyrow').first()).toBeVisible();
     const before = await page.locator('.keyrow').count();
     await page.locator('button', { hasText: 'Generate key' }).click();
+    await fillDialog(page, { label: 'QA CI key' }, 'Generate key');
     await expect(page.locator('.keyrow').filter({ hasText: 'QA CI key' })).toBeVisible();
     expect(await page.locator('.keyrow').count()).toBeGreaterThan(before);
   });

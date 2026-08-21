@@ -11,6 +11,7 @@ import {
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, StatusChip } from '../../shared/primitives';
 import { HistoryModal } from '../../shared/history-modal';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
@@ -18,7 +19,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 @Component({
   selector: 'tl-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, StatusChip, Avatar, HistoryModal],
+  imports: [Icon, Btn, StatusChip, Avatar, HistoryModal, PromptDialog],
   template: `
     <div class="inspector">
       <div class="inspector__head">
@@ -51,7 +52,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
                 <button class="tag-x" aria-label="Remove tag" (click)="removeTag(t)"><tl-icon name="X" [size]="11" /></button>
               </span>
             }
-            <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" (click)="addTag()">
+            <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" (click)="addingTag.set(true)">
               <tl-icon name="Plus" [size]="12" />
             </button>
           </div>
@@ -206,6 +207,17 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       </div>
     </div>
 
+    @if (addingTag()) {
+      <tl-prompt-dialog
+        title="Add a tag"
+        description="Tags group terms across features — checkout, billing, legal."
+        [fields]="tagFields"
+        submitLabel="Add tag"
+        (submitted)="createTag($event)"
+        (cancelled)="addingTag.set(false)"
+      />
+    }
+
     @if (showHistory()) {
       <tl-history-modal
         [projectId]="projectId()!"
@@ -351,6 +363,8 @@ export class Inspector {
   protected readonly suggestBusy = signal(false);
   protected readonly ctx = signal('');
   protected readonly tags = signal<string[]>([]);
+  protected readonly addingTag = signal(false);
+  protected readonly tagFields = [{ name: 'tag', label: 'Tag', placeholder: 'checkout' }];
 
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
 
@@ -384,8 +398,9 @@ export class Inspector {
     if (this.ctx() !== this.row().ctx) this.patchTerm({ ctx: this.ctx() });
   }
 
-  protected addTag(): void {
-    const t = window.prompt('Tag name')?.trim().toLowerCase();
+  protected createTag(values: Record<string, string>): void {
+    this.addingTag.set(false);
+    const t = values['tag']?.trim().toLowerCase();
     if (!t || this.tags().includes(t)) return;
     const next = [...this.tags(), t];
     this.tags.set(next);

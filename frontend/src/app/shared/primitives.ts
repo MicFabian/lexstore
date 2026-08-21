@@ -31,7 +31,7 @@ export function avatarIndexFor(name: string): number {
   `,
 })
 export class Btn {
-  readonly variant = input<'primary' | 'ghost' | 'subtle'>('ghost');
+  readonly variant = input<'primary' | 'ghost' | 'subtle' | 'danger'>('ghost');
   readonly sm = input(false);
   readonly icon = input<IconName | null>(null);
   readonly iconOnly = input(false);

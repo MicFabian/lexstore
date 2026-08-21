@@ -12,6 +12,7 @@ import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
 import { SegmentOption } from '../../shared/segmented';
 import { Inspector } from './inspector';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -20,7 +21,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
 @Component({
   selector: 'tl-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, Inspector],
+  imports: [Icon, Btn, SearchBox, Inspector, PromptDialog],
   template: `
     <div class="editor" style="position:relative">
       <div class="ed-head">
@@ -75,7 +76,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
               </div>
             }
           </div>
-          <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="addTerm()">Add term</tl-btn>
+          <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="adding.set(true)">Add term</tl-btn>
         </div>
       </div>
 
@@ -147,6 +148,17 @@ import { EditorRow, TranslationStatus } from '../../core/models';
           (langChanged)="selectLangInInspector($event)"
           (closed)="sel.set(null)"
           (saved)="onSaved($event)"
+        />
+      }
+
+      @if (adding()) {
+        <tl-prompt-dialog
+          title="Add a term"
+          description="The key identifies this string in your code; the source text is what gets translated."
+          [fields]="addTermFields"
+          submitLabel="Add term"
+          (submitted)="createTerm($event)"
+          (cancelled)="adding.set(false)"
         />
       }
     </div>
@@ -248,6 +260,11 @@ export class EditorScreen implements OnInit {
   protected readonly savedId = signal<string | null>(null);
   protected readonly langMenuOpen = signal(false);
   protected readonly autoBusy = signal(false);
+  protected readonly adding = signal(false);
+  protected readonly addTermFields = [
+    { name: 'key', label: 'Key', placeholder: 'checkout.button.confirm', mono: true },
+    { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
+  ];
 
   /** Target languages available for this project (from the API). */
   protected readonly languages = signal<{ code: string; name: string }[]>([]);
@@ -390,14 +407,11 @@ export class EditorScreen implements OnInit {
     }
   }
 
-  protected addTerm(): void {
-    const key = window.prompt('New term key (e.g. checkout.button.confirm)');
-    if (!key) return;
-    const source = window.prompt('Source text (English)');
-    if (!source) return;
+  protected createTerm(values: Record<string, string>): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
-    this.api.createTerm(pid, { key, source }).subscribe({
+    this.adding.set(false);
+    this.api.createTerm(pid, { key: values['key'], source: values['source'] }).subscribe({
       next: () => {
         this.loadEditor(pid);
         this.toast.show('Term added');

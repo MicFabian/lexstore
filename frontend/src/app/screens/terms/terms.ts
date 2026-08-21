@@ -8,9 +8,12 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox, StatusChip, Tag } from '../../shared/primitives';
 import { HistoryModal } from '../../shared/history-modal';
+import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -21,7 +24,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
 @Component({
   selector: 'tl-terms-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal],
+  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -32,8 +35,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
           <div class="psub">{{ rows().length }} terms · manage the keys; translate them per language</div>
         </div>
         <div style="display:flex;gap:8px">
-          <tl-btn variant="ghost" icon="FileUp" (clicked)="toast.show('Import terms')">Import</tl-btn>
-          <tl-btn variant="primary" icon="Plus" (clicked)="toast.show('Add term')">Add term</tl-btn>
+          <tl-btn variant="ghost" icon="FileUp" (clicked)="goImport()">Import</tl-btn>
+          <tl-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add term</tl-btn>
         </div>
       </div>
 
@@ -75,7 +78,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
             <span style="font-size:13px;font-weight:600;color:var(--tl-accent-text)">{{ selectedCount() }} selected</span>
             <div class="spacer"></div>
             <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); clearSelection()">Clear</button>
-            <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger)" (click)="$event.stopPropagation(); deleteSelected()">
+            <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger)" (click)="$event.stopPropagation(); pendingBulkDelete.set(true)">
               <tl-icon name="Trash2" [size]="14" />Delete selected
             </button>
           </div>
@@ -128,7 +131,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                   </div>
                 </td>
                 <td (click)="$event.stopPropagation()">
-                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="deleteTerm(r)">
+                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="pendingDelete.set(r)">
                     <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
                   </button>
                 </td>
@@ -189,6 +192,37 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       </div>
       </div>
     </div>
+
+    @if (adding()) {
+      <tl-prompt-dialog
+        title="Add a term"
+        description="The key identifies this string in your code; the source text is what gets translated."
+        [fields]="addTermFields"
+        submitLabel="Add term"
+        (submitted)="createTerm($event)"
+        (cancelled)="adding.set(false)"
+      />
+    }
+
+    @if (pendingDelete(); as r) {
+      <tl-confirm-dialog
+        title="Delete this term?"
+        [description]="'“' + r.key + '” and its translations in every language are deleted. This cannot be undone.'"
+        confirmLabel="Delete term"
+        (confirmed)="confirmDelete(r)"
+        (cancelled)="pendingDelete.set(null)"
+      />
+    }
+
+    @if (pendingBulkDelete()) {
+      <tl-confirm-dialog
+        title="Delete selected terms?"
+        [description]="selectedCount() + ' terms and their translations in every language are deleted. This cannot be undone.'"
+        confirmLabel="Delete terms"
+        (confirmed)="confirmBulkDelete()"
+        (cancelled)="pendingBulkDelete.set(false)"
+      />
+    }
 
     @if (historyTerm(); as h) {
       <tl-history-modal
@@ -275,6 +309,7 @@ export class TermsScreen implements OnInit {
   private readonly api = inject(ApiService);
   private readonly state = inject(ProjectStateService);
   protected readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   protected readonly rows = signal<TermView[]>([]);
   protected readonly query = signal('');
@@ -289,6 +324,13 @@ export class TermsScreen implements OnInit {
   });
   protected readonly expanded = signal<string | null>(null);
   protected readonly historyTerm = signal<TermView | null>(null);
+  protected readonly pendingDelete = signal<TermView | null>(null);
+  protected readonly pendingBulkDelete = signal(false);
+  protected readonly adding = signal(false);
+  protected readonly addTermFields = [
+    { name: 'key', label: 'Key', placeholder: 'checkout.button.confirm', mono: true },
+    { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
+  ];
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
   protected readonly allTags = TAGS;
   protected readonly selected = signal<Set<string>>(new Set());
@@ -312,6 +354,25 @@ export class TermsScreen implements OnInit {
 
   ngOnInit(): void {
     this.state.whenReady((pid) => this.api.listTerms(pid).subscribe((t) => this.rows.set(t)));
+  }
+
+  /** Import lives in Settings, where the file and POEditor flows already are. */
+  protected goImport(): void {
+    this.router.navigate(['/', 'settings']);
+    this.toast.show('Import lives under Settings → Import / Export');
+  }
+
+  protected createTerm(values: Record<string, string>): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.adding.set(false);
+    this.api.createTerm(pid, { key: values['key'], source: values['source'] }).subscribe({
+      next: () => {
+        this.api.listTerms(pid).subscribe((t) => this.rows.set(t));
+        this.toast.show('Term added');
+      },
+      error: () => this.toast.show('That key already exists'),
+    });
   }
 
   protected toggle(id: string): void {
@@ -348,8 +409,8 @@ export class TermsScreen implements OnInit {
   }
 
   // ---- delete ----
-  protected deleteTerm(r: TermView): void {
-    if (!window.confirm(`Delete term "${r.key}" and all its translations?`)) return;
+  protected confirmDelete(r: TermView): void {
+    this.pendingDelete.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.api.deleteTerm(pid, r.id).subscribe({
@@ -361,10 +422,10 @@ export class TermsScreen implements OnInit {
     });
   }
 
-  protected deleteSelected(): void {
+  protected confirmBulkDelete(): void {
+    this.pendingBulkDelete.set(false);
     const ids = [...this.selected()];
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} terms?`)) return;
     const pid = this.state.current()?.id;
     if (!pid) return;
     let done = 0;

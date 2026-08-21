@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox } from '../../shared/primitives';
+import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -9,7 +11,7 @@ import { ContributorView } from '../../core/models';
 @Component({
   selector: 'tl-contributors-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox],
+  imports: [Icon, Avatar, Btn, SearchBox, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -21,7 +23,7 @@ import { ContributorView } from '../../core/models';
           </div>
           <div style="display:flex;gap:10px;align-items:center">
             <tl-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="UserPlus" (clicked)="invite()">Invite contributor</tl-btn>
+            <tl-btn variant="primary" icon="UserPlus" (clicked)="inviting.set(true)">Invite contributor</tl-btn>
           </div>
         </div>
 
@@ -90,7 +92,7 @@ import { ContributorView } from '../../core/models';
                   }
                 </td>
                 <td>
-                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove contributor" (click)="remove(c)">
+                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove contributor" (click)="pendingRemove.set(c)">
                     <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
                   </button>
                 </td>
@@ -100,6 +102,27 @@ import { ContributorView } from '../../core/models';
         </table>
       </div>
     </div>
+
+    @if (inviting()) {
+      <tl-prompt-dialog
+        title="Invite a contributor"
+        description="They join as a translator; change the role from the table afterwards."
+        [fields]="inviteFields"
+        submitLabel="Send invite"
+        (submitted)="sendInvite($event)"
+        (cancelled)="inviting.set(false)"
+      />
+    }
+
+    @if (pendingRemove(); as c) {
+      <tl-confirm-dialog
+        title="Remove this contributor?"
+        [description]="c.name + ' loses access to this project. Their past translations and history stay.'"
+        confirmLabel="Remove contributor"
+        (confirmed)="confirmRemove(c)"
+        (cancelled)="pendingRemove.set(null)"
+      />
+    }
   `,
   styles: `
     .role-btn {
@@ -140,6 +163,12 @@ export class ContributorsScreen implements OnInit {
   protected readonly query = signal('');
   protected readonly roleMenu = signal<string | null>(null);
   protected readonly roles = ['Owner', 'Admin', 'Proofreader', 'Translator'];
+  protected readonly inviting = signal(false);
+  protected readonly pendingRemove = signal<ContributorView | null>(null);
+  protected readonly inviteFields = [
+    { name: 'name', label: 'Name', placeholder: 'Jane Doe' },
+    { name: 'email', label: 'Email', placeholder: 'jane@example.com' },
+  ];
 
   ngOnInit(): void {
     this.state.whenReady((pid) =>
@@ -175,13 +204,12 @@ export class ContributorsScreen implements OnInit {
     });
   }
 
-  protected invite(): void {
-    const name = window.prompt('Contributor name');
-    if (!name) return;
-    const email = window.prompt('Email address');
-    if (!email) return;
+  protected sendInvite(values: Record<string, string>): void {
+    const name = values['name'];
+    const email = values['email'];
     const pid = this.state.current()?.id;
     if (!pid) return;
+    this.inviting.set(false);
     this.api.invite(pid, { name, email, role: 'Translator' }).subscribe({
       next: () => {
         this.api.listContributors(pid).subscribe((c) => this.people.set(c));
@@ -191,8 +219,8 @@ export class ContributorsScreen implements OnInit {
     });
   }
 
-  protected remove(c: ContributorView): void {
-    if (!window.confirm(`Remove ${c.name} from this project?`)) return;
+  protected confirmRemove(c: ContributorView): void {
+    this.pendingRemove.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.api.deleteContributor(pid, c.id).subscribe({

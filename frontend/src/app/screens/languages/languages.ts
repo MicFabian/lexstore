@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Btn } from '../../shared/primitives';
+import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -9,7 +11,7 @@ import { LanguageView } from '../../core/models';
 @Component({
   selector: 'tl-languages-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn],
+  imports: [Icon, Btn, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -65,7 +67,7 @@ import { LanguageView } from '../../core/models';
                 </div>
               }
             </div>
-            <tl-btn variant="primary" icon="Plus" (clicked)="addLanguage()">Add language</tl-btn>
+            <tl-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add language</tl-btn>
           </div>
         </div>
 
@@ -85,7 +87,7 @@ import { LanguageView } from '../../core/models';
                 <i class="seg-translated" [style.width.%]="l.translated"></i>
                 <i class="seg-fuzzy" [style.width.%]="l.fuzzy"></i>
               </span>
-              <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove language" (click)="removeLanguage(l)">
+              <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove language" (click)="pendingRemove.set(l)">
                 <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
               </button>
             </div>
@@ -93,6 +95,27 @@ import { LanguageView } from '../../core/models';
         </div>
       </div>
     </div>
+
+    @if (adding()) {
+      <tl-prompt-dialog
+        title="Add a language"
+        description="Its code is what the API, the CLI, and exported files use."
+        [fields]="addLanguageFields"
+        submitLabel="Add language"
+        (submitted)="createLanguage($event)"
+        (cancelled)="adding.set(false)"
+      />
+    }
+
+    @if (pendingRemove(); as l) {
+      <tl-confirm-dialog
+        title="Remove this language?"
+        [description]="'Every translation in ' + l.name + ' is deleted. This cannot be undone \u2014 export it first if you may need it.'"
+        confirmLabel="Remove language"
+        (confirmed)="confirmRemove(l)"
+        (cancelled)="pendingRemove.set(null)"
+      />
+    }
   `,
   styles: `
     .lang-grid {
@@ -142,6 +165,12 @@ export class LanguagesScreen implements OnInit {
   /** Empty means every language. */
   protected readonly exportLangs = signal<Set<string>>(new Set());
   protected readonly formats: ('json' | 'csv')[] = ['json', 'csv'];
+  protected readonly adding = signal(false);
+  protected readonly pendingRemove = signal<LanguageView | null>(null);
+  protected readonly addLanguageFields = [
+    { name: 'code', label: 'Language code', placeholder: 'it', hint: 'BCP 47, e.g. it, ko, pt-BR.', mono: true },
+    { name: 'name', label: 'Language name', placeholder: 'Italian' },
+  ];
 
   ngOnInit(): void {
     this.state.whenReady((pid) =>
@@ -149,13 +178,12 @@ export class LanguagesScreen implements OnInit {
     );
   }
 
-  protected addLanguage(): void {
-    const code = window.prompt('Language code (e.g. it, ko, pt-BR)');
-    if (!code) return;
-    const name = window.prompt('Language name (e.g. Italian)');
-    if (!name) return;
+  protected createLanguage(values: Record<string, string>): void {
+    const code = values['code'];
+    const name = values['name'];
     const pid = this.state.current()?.id;
-    if (!pid) return;
+    if (!pid || !code || !name) return;
+    this.adding.set(false);
     this.api.addLanguage(pid, { code, name }).subscribe({
       next: () => {
         this.api.listLanguages(pid).subscribe((l) => this.langs.set(l));
@@ -218,8 +246,8 @@ export class LanguagesScreen implements OnInit {
     }
   }
 
-  protected removeLanguage(l: LanguageView): void {
-    if (!window.confirm(`Remove ${l.name} and its translations?`)) return;
+  protected confirmRemove(l: LanguageView): void {
+    this.pendingRemove.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.api.deleteLanguage(pid, l.code).subscribe({

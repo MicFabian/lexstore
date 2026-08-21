@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -10,7 +11,7 @@ import { ProjectSummary } from '../../core/models';
 @Component({
   selector: 'tl-projects-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox],
+  imports: [Icon, Btn, SearchBox, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -24,7 +25,7 @@ import { ProjectSummary } from '../../core/models';
           </div>
           <div style="display:flex;gap:10px;align-items:center">
             <tl-search placeholder="Search projects" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="Plus" (clicked)="newProject()">New project</tl-btn>
+            <tl-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New project</tl-btn>
           </div>
         </div>
 
@@ -82,6 +83,17 @@ import { ProjectSummary } from '../../core/models';
         </div>
       </div>
     </div>
+
+    @if (creating()) {
+      <tl-prompt-dialog
+        title="New project"
+        description="The slug is what the CLI and API use; it cannot be changed later."
+        [fields]="newProjectFields"
+        submitLabel="Create project"
+        (submitted)="createProject($event)"
+        (cancelled)="creating.set(false)"
+      />
+    }
   `,
   styles: `
     .statstrip {
@@ -182,6 +194,11 @@ export class ProjectsDashboard implements OnInit {
 
   protected readonly projects = this.state.projects;
   protected readonly query = signal('');
+  protected readonly creating = signal(false);
+  protected readonly newProjectFields = [
+    { name: 'name', label: 'Project name', placeholder: 'Mosaic Web App' },
+    { name: 'code', label: 'Slug', placeholder: 'mosaic-web', hint: 'Lowercase letters, numbers, and hyphens.', mono: true },
+  ];
 
   protected readonly totalTerms = computed(() =>
     this.projects().reduce((a, p) => a + p.terms, 0),
@@ -209,12 +226,10 @@ export class ProjectsDashboard implements OnInit {
     this.router.navigate(['/', 'editor']);
   }
 
-  protected newProject(): void {
-    const name = window.prompt('Project name');
-    if (!name) return;
-    const suggested = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const code = window.prompt('Project slug (lowercase, hyphens)', suggested);
-    if (!code) return;
+  protected createProject(values: Record<string, string>): void {
+    const name = values['name'];
+    const code = values['code'];
+    this.creating.set(false);
     this.api.createProject({ name, code }).subscribe({
       next: (p) => {
         this.state.load();

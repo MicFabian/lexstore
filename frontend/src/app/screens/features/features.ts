@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
+import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -10,7 +12,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
 @Component({
   selector: 'tl-features-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox],
+  imports: [Icon, Btn, SearchBox, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -24,7 +26,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
           </div>
           <div style="display:flex;gap:10px;align-items:center">
             <tl-search placeholder="Search features" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="Plus" (clicked)="addFeature()">New feature</tl-btn>
+            <tl-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New feature</tl-btn>
           </div>
         </div>
 
@@ -78,7 +80,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                   </div>
                 </td>
                 <td (click)="$event.stopPropagation()">
-                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete feature" (click)="remove(f)">
+                  <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete feature" (click)="pendingDelete.set(f)">
                     <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
                   </button>
                 </td>
@@ -159,6 +161,27 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
         </table>
       </div>
     </div>
+
+    @if (creating()) {
+      <tl-prompt-dialog
+        title="New feature"
+        description="Group the terms that ship together, then track how far along they are."
+        [fields]="[{ name: 'name', label: 'Feature name', placeholder: 'Checkout' }]"
+        submitLabel="Create feature"
+        (submitted)="createFeature($event)"
+        (cancelled)="creating.set(false)"
+      />
+    }
+
+    @if (pendingDelete(); as f) {
+      <tl-confirm-dialog
+        title="Delete this feature?"
+        [description]="'“' + f.name + '” stops grouping its ' + f.terms + ' terms. The terms and their translations stay.'"
+        confirmLabel="Delete feature"
+        (confirmed)="confirmDelete(f)"
+        (cancelled)="pendingDelete.set(null)"
+      />
+    }
   `,
   styles: `
     .features {
@@ -257,6 +280,8 @@ export class FeaturesScreen implements OnInit {
   protected readonly expanded = signal<string | null>(null);
   protected readonly openLang = signal<string | null>(null);
   protected readonly openRows = signal<OpenTranslationView[]>([]);
+  protected readonly creating = signal(false);
+  protected readonly pendingDelete = signal<FeatureView | null>(null);
 
   protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
@@ -311,11 +336,11 @@ export class FeaturesScreen implements OnInit {
     this.router.navigate(['/', 'editor'], { queryParams: { feature: f.key } });
   }
 
-  protected addFeature(): void {
-    const name = window.prompt('Feature name (e.g. Checkout)');
-    if (!name) return;
+  protected createFeature(values: Record<string, string>): void {
+    const name = values['name'];
     const pid = this.state.current()?.id;
-    if (!pid) return;
+    if (!pid || !name) return;
+    this.creating.set(false);
     this.api.createFeature(pid, { name }).subscribe({
       next: (f) => {
         this.features.update((list) => [...list, f].sort((a, b) => a.name.localeCompare(b.name)));
@@ -325,8 +350,8 @@ export class FeaturesScreen implements OnInit {
     });
   }
 
-  protected remove(f: FeatureView): void {
-    if (!window.confirm(`Delete "${f.name}"? Its terms stay, but lose the grouping.`)) return;
+  protected confirmDelete(f: FeatureView): void {
+    this.pendingDelete.set(null);
     const pid = this.state.current()?.id;
     if (!pid) return;
     this.api.deleteFeature(pid, f.id).subscribe({
