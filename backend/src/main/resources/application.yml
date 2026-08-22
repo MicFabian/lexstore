@@ -10,9 +10,9 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/translad}
   datasource:
-    url: jdbc:postgresql://localhost:5442/translad
-    username: translad
-    password: translad
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5442/translad}
+    username: ${DATABASE_USER:translad}
+    password: ${DATABASE_PASSWORD:translad}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,13 +23,15 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    # Allow Flyway clean so the dev-reset endpoint can wipe + reseed. The endpoint
-    # itself is still gated by translad.dev-reset below, so prod stays safe.
-    clean-disabled: false
+    # Clean stays disabled unless a deployment explicitly opts in; the prod
+    # profile pins it shut so no configuration mistake can enable it.
+    clean-disabled: ${FLYWAY_CLEAN_DISABLED:false}
 
 # Local-dev convenience: gate POST /api/dev/reset (off by default).
 translad:
   dev-reset: ${TRANSLAD_DEV_RESET:false}
+  # Browser origins allowed to call this API. Localhost only by default.
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:[*],http://127.0.0.1:[*]}
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
@@ -47,3 +49,24 @@ management:
     web:
       exposure:
         include: health,info
+
+---
+# Production profile: every convenience that only makes sense on a laptop is
+# off, and anything environment-specific must be supplied explicitly.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  flyway:
+    clean-disabled: true
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+translad:
+  dev-reset: false
+
+logging:
+  level:
+    org.hibernate.SQL: warn

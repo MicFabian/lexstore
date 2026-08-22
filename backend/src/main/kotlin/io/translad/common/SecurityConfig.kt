@@ -1,5 +1,6 @@
 package io.translad.common
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -21,7 +22,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableMethodSecurity
 @org.springframework.context.annotation.Profile("!test")
-class SecurityConfig {
+class SecurityConfig(
+    /** Comma-separated origin patterns; local dev by default. */
+    @Value("\${translad.allowed-origins:http://localhost:[*],http://127.0.0.1:[*]}")
+    private val allowedOrigins: String,
+) {
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -58,8 +63,10 @@ class SecurityConfig {
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
+        // Deployments name their own origins; the default covers local dev only.
+        val patterns = allowedOrigins.split(",").map(String::trim).filter(String::isNotEmpty)
         val cfg = CorsConfiguration().apply {
-            allowedOriginPatterns = listOf("http://localhost:[*]", "http://127.0.0.1:[*]")
+            allowedOriginPatterns = patterns
             allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
             allowCredentials = true

@@ -1,0 +1,30 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+
+    # The API is proxied from the same origin, so no CORS in the browser.
+    location /api/ {
+        proxy_pass ${API_ORIGIN}/api/;
+        proxy_set_header Host ${DOLLAR}host;
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+    }
+
+    # Deployment settings must never be cached, or a redeploy keeps the old ones.
+    location = /config.json {
+        add_header Cache-Control "no-store";
+    }
+
+    # Hashed build assets are safe to cache for a long time.
+    location ~* \.(js|css|woff2?|png|jpg|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Angular owns routing; every unknown path is the app shell.
+    location / {
+        try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
+    }
+}

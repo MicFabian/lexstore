@@ -5,6 +5,7 @@ import { authInterceptor, provideAuth } from 'angular-auth-oidc-client';
 
 import { routes } from './app.routes';
 import { e2eTokenInterceptor } from './core/e2e-token.interceptor';
+import { runtimeConfig } from './core/runtime-config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,10 +14,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([e2eTokenInterceptor, authInterceptor()])),
     provideAuth({
       config: {
-        authority: 'http://localhost:8089/realms/translad',
+        authority: runtimeConfig().authority,
         redirectUrl: window.location.origin,
         postLogoutRedirectUri: window.location.origin,
-        clientId: 'translad-spa',
+        clientId: runtimeConfig().clientId,
         scope: 'openid profile email',
         responseType: 'code',
         silentRenew: true,
