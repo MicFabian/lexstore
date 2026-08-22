@@ -104,7 +104,7 @@ export class ApiService {
   }): Observable<PoeditorPreview> {
     return this.http.post<PoeditorPreview>(`${BASE}/poeditor/preview`, body);
   }
-  /** Import a whole POEditor project into a new TransLad project. */
+  /** Import a whole POEditor project into a new Lexstore project. */
   poeditorImportAsProject(body: {
     apiToken: string;
     poeditorProjectId: number;

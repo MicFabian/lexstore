@@ -16,11 +16,11 @@ export interface PromptField {
  * could not label its fields, validate, or be styled.
  */
 @Component({
-  selector: 'tl-prompt-dialog',
+  selector: 'lx-prompt-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Dialog, Btn],
   template: `
-    <tl-dialog [title]="title()" [description]="description()" [width]="440" (closed)="cancelled.emit()">
+    <lx-dialog [title]="title()" [description]="description()" [width]="440" (closed)="cancelled.emit()">
       @for (f of fields(); track f.name) {
         <div class="field">
           <label [for]="'prompt-' + f.name">{{ f.label }}</label>
@@ -39,22 +39,22 @@ export interface PromptField {
         </div>
       }
       <div dialogActions>
-        <tl-btn variant="primary" [sm]="true" [disabled]="!complete() || busy()" (clicked)="submit()">
+        <lx-btn variant="primary" [sm]="true" [disabled]="!complete() || busy()" (clicked)="submit()">
           {{ busy() ? 'Working…' : submitLabel() }}
-        </tl-btn>
-        <tl-btn variant="subtle" [sm]="true" (clicked)="cancelled.emit()">Cancel</tl-btn>
+        </lx-btn>
+        <lx-btn variant="subtle" [sm]="true" (clicked)="cancelled.emit()">Cancel</lx-btn>
       </div>
-    </tl-dialog>
+    </lx-dialog>
   `,
   styles: `
     .hint {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       line-height: 1.5;
       margin: 6px 0 0;
     }
     .mono {
-      font-family: var(--tl-mono);
+      font-family: var(--lx-mono);
       font-size: 13px;
     }
   `,

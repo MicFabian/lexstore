@@ -3,7 +3,7 @@ import { Icon } from '../shared/icon';
 import { ToastItem, ToastService } from '../core/toast.service';
 
 @Component({
-  selector: 'tl-toast',
+  selector: 'lx-toast',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   template: `
@@ -18,13 +18,13 @@ import { ToastItem, ToastService } from '../core/toast.service';
           (focusin)="toast.hold(t.id)"
           (focusout)="toast.resume(t.id)"
         >
-          <tl-icon [name]="icon(t)" [size]="16" />
+          <lx-icon [name]="icon(t)" [size]="16" />
           <span class="toast__text">{{ t.message }}</span>
           @if (t.actionLabel) {
             <button class="toast__action" (click)="toast.run(t.id)">{{ t.actionLabel }}</button>
           }
           <button class="toast__close" aria-label="Dismiss" (click)="toast.dismiss(t.id)">
-            <tl-icon name="X" [size]="14" />
+            <lx-icon name="X" [size]="14" />
           </button>
         </div>
       }
@@ -51,7 +51,7 @@ import { ToastItem, ToastService } from '../core/toast.service';
       pointer-events: auto;
     }
     .toast--error {
-      border-color: var(--tl-danger);
+      border-color: var(--lx-danger);
     }
     .toast__text {
       flex: 1;
@@ -61,10 +61,10 @@ import { ToastItem, ToastService } from '../core/toast.service';
       background: none;
       padding: 2px 6px;
       margin-left: 2px;
-      font: 600 13px var(--tl-sans);
-      color: var(--tl-accent-hi);
+      font: 600 13px var(--lx-sans);
+      color: var(--lx-accent-hi);
       cursor: pointer;
-      border-radius: var(--tl-r-sm);
+      border-radius: var(--lx-r-sm);
     }
     .toast__action:hover {
       background: rgba(255, 255, 255, 0.12);

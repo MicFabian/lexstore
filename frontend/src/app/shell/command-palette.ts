@@ -20,7 +20,7 @@ interface Command {
 }
 
 @Component({
-  selector: 'tl-command-palette',
+  selector: 'lx-command-palette',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   template: `
@@ -28,7 +28,7 @@ interface Command {
       <div class="cmd-backdrop" (click)="close()"></div>
       <div class="cmd" role="dialog" aria-label="Command palette">
         <div class="cmd__input">
-          <tl-icon name="Search" [size]="17" color="var(--tl-muted)" />
+          <lx-icon name="Search" [size]="17" color="var(--lx-muted)" />
           <input
             #box
             autofocus
@@ -47,7 +47,7 @@ interface Command {
               (mouseenter)="active.set(i)"
               (click)="exec(c)"
             >
-              <tl-icon [name]="c.icon" [size]="16" color="var(--tl-slate)" />
+              <lx-icon [name]="c.icon" [size]="16" color="var(--lx-slate)" />
               <span class="cmd__label">{{ c.label }}</span>
               <span class="cmd__hint">{{ c.hint }}</span>
             </button>
@@ -69,7 +69,7 @@ interface Command {
     .cmd-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--tl-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
       backdrop-filter: blur(2px);
       pointer-events: auto;
     }
@@ -79,10 +79,10 @@ interface Command {
       left: 50%;
       transform: translateX(-50%);
       width: min(600px, calc(100vw - 32px));
-      background: var(--tl-elev, var(--tl-card));
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-xl);
-      box-shadow: var(--tl-shadow-pop);
+      background: var(--lx-elev, var(--lx-card));
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-xl);
+      box-shadow: var(--lx-shadow-pop);
       overflow: hidden;
       pointer-events: auto;
       animation: cmdIn 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -99,19 +99,19 @@ interface Command {
       align-items: center;
       gap: 10px;
       padding: 14px 16px;
-      border-bottom: 1px solid var(--tl-line);
+      border-bottom: 1px solid var(--lx-line);
     }
     .cmd__input input {
       flex: 1;
       border: none;
       background: none;
       outline: none;
-      font-family: var(--tl-sans);
+      font-family: var(--lx-sans);
       font-size: 15px;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .cmd__input input::placeholder {
-      color: var(--tl-muted);
+      color: var(--lx-muted);
     }
     .cmd__list {
       max-height: 50vh;
@@ -127,11 +127,11 @@ interface Command {
       background: none;
       text-align: left;
       padding: 9px 11px;
-      border-radius: var(--tl-r-sm);
-      color: var(--tl-ink);
+      border-radius: var(--lx-r-sm);
+      color: var(--lx-ink);
     }
     .cmd__item.active {
-      background: var(--tl-accent-soft);
+      background: var(--lx-accent-soft);
     }
     .cmd__label {
       font-size: 13.5px;
@@ -139,14 +139,14 @@ interface Command {
     }
     .cmd__hint {
       margin-left: auto;
-      font-family: var(--tl-mono);
+      font-family: var(--lx-mono);
       font-size: 11px;
-      color: var(--tl-muted);
+      color: var(--lx-muted);
     }
     .cmd__empty {
       padding: 24px;
       text-align: center;
-      color: var(--tl-muted);
+      color: var(--lx-muted);
       font-size: 13px;
     }
   `,

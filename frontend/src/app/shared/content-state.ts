@@ -17,20 +17,20 @@ const ICONS: Record<ContentStateKind, IconName> = {
  * differently, so none of them is left to a bare "Nothing here".
  */
 @Component({
-  selector: 'tl-content-state',
+  selector: 'lx-content-state',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn],
   template: `
     <div class="cstate" [class.cstate--compact]="compact()">
       <span class="cstate__icon" [class.cstate__icon--error]="kind() === 'error'">
-        <tl-icon [name]="icon()" [size]="compact() ? 16 : 20" />
+        <lx-icon [name]="icon()" [size]="compact() ? 16 : 20" />
       </span>
       <div class="cstate__title">{{ title() }}</div>
       @if (description(); as d) {
         <p class="cstate__desc">{{ d }}</p>
       }
       @if (actionLabel(); as label) {
-        <tl-btn variant="primary" [sm]="true" (clicked)="acted.emit()">{{ label }}</tl-btn>
+        <lx-btn variant="primary" [sm]="true" (clicked)="acted.emit()">{{ label }}</lx-btn>
       }
     </div>
   `,
@@ -52,21 +52,21 @@ const ICONS: Record<ContentStateKind, IconName> = {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: var(--tl-fill);
-      color: var(--tl-slate);
+      background: var(--lx-fill);
+      color: var(--lx-slate);
     }
     .cstate__icon--error {
-      background: var(--tl-danger-bg, var(--tl-fill));
-      color: var(--tl-danger);
+      background: var(--lx-danger-bg, var(--lx-fill));
+      color: var(--lx-danger);
     }
     .cstate__title {
       font-size: 17px;
       font-weight: 600;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .cstate__desc {
       font-size: 13.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       line-height: 1.55;
       max-width: 46ch;
       margin: 0;

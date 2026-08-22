@@ -5,7 +5,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  * of collapsing to an empty body that reads like "nothing here".
  */
 @Component({
-  selector: 'tl-table-skeleton',
+  selector: 'lx-table-skeleton',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="skel" [attr.aria-busy]="true" aria-label="Loading">
@@ -24,12 +24,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       align-items: center;
       gap: 24px;
       padding: 16px 16px;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .skel__cell {
       height: 12px;
       border-radius: 4px;
-      background: var(--tl-fill);
+      background: var(--lx-fill);
       animation: skelPulse 1.4s ease-in-out infinite;
     }
     @keyframes skelPulse {

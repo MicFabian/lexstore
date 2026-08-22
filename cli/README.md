@@ -1,4 +1,4 @@
-# translad CLI
+# lexstore CLI
 
 Pull and push translations from your terminal. Zero dependencies (Node ≥ 20, uses built-in `fetch`).
 
@@ -9,32 +9,32 @@ cd cli
 npm link        # or: npm install -g .
 ```
 
-Or run directly: `node cli/translad.mjs <command>`.
+Or run directly: `node cli/lexstore.mjs <command>`.
 
 ## Configure
 
 ```bash
-export TRANSLAD_API=http://localhost:8088/api          # default
-export TRANSLAD_KEYCLOAK=http://localhost:8089/realms/translad  # default
+export LEXSTORE_API=http://localhost:8088/api          # default
+export LEXSTORE_KEYCLOAK=http://localhost:8089/realms/lexstore  # default
 
 # Authenticate (the API requires a Keycloak token). Either:
-export TRANSLAD_USER=owner TRANSLAD_PASS=owner         # password grant, or
-export TRANSLAD_TOKEN=<access-token>                   # a pre-fetched token
+export LEXSTORE_USER=owner LEXSTORE_PASS=owner         # password grant, or
+export LEXSTORE_TOKEN=<access-token>                   # a pre-fetched token
 ```
 
 ## Commands
 
 ```bash
-translad projects                                   # list projects + progress
-translad languages --project mosaic-web             # per-language progress
-translad status    --project mosaic-web             # progress bars
+lexstore projects                                   # list projects + progress
+lexstore languages --project mosaic-web             # per-language progress
+lexstore status    --project mosaic-web             # progress bars
 
 # Export finished translations to a JSON key→value file
-translad pull --project mosaic-web --lang fr --out fr.json
-translad pull --project mosaic-web --lang fr --status proofread,translated
+lexstore pull --project mosaic-web --lang fr --out fr.json
+lexstore pull --project mosaic-web --lang fr --status proofread,translated
 
 # Import translations from a JSON file (key→value)
-translad push --project mosaic-web --lang fr --in fr.json --status translated
+lexstore push --project mosaic-web --lang fr --in fr.json --status translated
 ```
 
 `pull` writes a flat `{ "term.key": "translation" }` map — drop it straight into

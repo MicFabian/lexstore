@@ -395,8 +395,8 @@ test.describe('live actions — create term / language / contributor', () => {
     await waitShell(page);
     await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
     await page.locator('button', { hasText: 'Invite contributor' }).click();
-    await fillDialog(page, { name: 'QA Tester', email: 'qa@translad.io' }, 'Send invite');
-    await expect(page.locator('.ttable', { hasText: 'qa@translad.io' })).toBeVisible();
+    await fillDialog(page, { name: 'QA Tester', email: 'qa@lexstore.io' }, 'Send invite');
+    await expect(page.locator('.ttable', { hasText: 'qa@lexstore.io' })).toBeVisible();
   });
 
   test('generate API key adds a key row', async ({ page }) => {

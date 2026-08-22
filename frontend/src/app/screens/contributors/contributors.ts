@@ -9,7 +9,7 @@ import { ToastService } from '../../core/toast.service';
 import { ContributorView } from '../../core/models';
 
 @Component({
-  selector: 'tl-contributors-screen',
+  selector: 'lx-contributors-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Avatar, Btn, SearchBox, ConfirmDialog, PromptDialog],
   template: `
@@ -22,8 +22,8 @@ import { ContributorView } from '../../core/models';
             <div class="psub">{{ people().length }} people · scoped by language</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <tl-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="UserPlus" (clicked)="inviting.set(true)">Invite contributor</tl-btn>
+            <lx-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
+            <lx-btn variant="primary" icon="UserPlus" (clicked)="inviting.set(true)">Invite contributor</lx-btn>
           </div>
         </div>
 
@@ -42,9 +42,9 @@ import { ContributorView } from '../../core/models';
               <tr class="trow" style="cursor:default">
                 <td>
                   <div class="row">
-                    <tl-avatar [i]="c.avatar" [name]="c.name" />
+                    <lx-avatar [i]="c.avatar" [name]="c.name" />
                     <div>
-                      <div style="font-size:14px;font-weight:600;white-space:nowrap;color:var(--tl-ink)">{{ c.name }}</div>
+                      <div style="font-size:14px;font-weight:600;white-space:nowrap;color:var(--lx-ink)">{{ c.name }}</div>
                       <div class="cmail">{{ c.email }}</div>
                     </div>
                   </div>
@@ -57,7 +57,7 @@ import { ContributorView } from '../../core/models';
                     (click)="roleMenu.set(roleMenu() === c.id ? null : c.id)"
                   >
                     {{ c.role }}
-                    <tl-icon name="ChevronDown" [size]="13" color="var(--tl-muted)" />
+                    <lx-icon name="ChevronDown" [size]="13" color="var(--lx-muted)" />
                   </button>
                   @if (roleMenu() === c.id) {
                     <div class="menu-backdrop" (click)="roleMenu.set(null)"></div>
@@ -67,7 +67,7 @@ import { ContributorView } from '../../core/models';
                         <button class="menu__item" [class.on]="r === c.role" (click)="setRole(c, r)">
                           <span class="cap" [style.color]="roleColor(r)">{{ r }}</span>
                           @if (r === c.role) {
-                            <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                            <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
                           }
                         </button>
                       }
@@ -86,14 +86,14 @@ import { ContributorView } from '../../core/models';
                 </td>
                 <td style="text-align:right">
                   @if (c.active === 'Online') {
-                    <span style="color:var(--tl-st-translated);font-weight:600;font-size:12px">● Online</span>
+                    <span style="color:var(--lx-st-translated);font-weight:600;font-size:12px">● Online</span>
                   } @else {
                     <span class="cwhen">{{ c.active }}</span>
                   }
                 </td>
                 <td>
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove contributor" (click)="pendingRemove.set(c)">
-                    <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
                   </button>
                 </td>
               </tr>
@@ -104,7 +104,7 @@ import { ContributorView } from '../../core/models';
     </div>
 
     @if (inviting()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="Invite a contributor"
         description="They join as a translator; change the role from the table afterwards."
         [fields]="inviteFields"
@@ -115,7 +115,7 @@ import { ContributorView } from '../../core/models';
     }
 
     @if (pendingRemove(); as c) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Remove this contributor?"
         [description]="c.name + ' loses access to this project. Their past translations and history stay.'"
         confirmLabel="Remove contributor"
@@ -134,23 +134,23 @@ import { ContributorView } from '../../core/models';
       margin-left: -6px;
       border: none;
       background: none;
-      border-radius: var(--tl-r-sm);
+      border-radius: var(--lx-r-sm);
       cursor: pointer;
     }
     .role-btn:hover {
-      background: var(--tl-fill);
+      background: var(--lx-fill);
     }
     .people {
       background: transparent;
     }
     .cmail {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
       margin-top: 2px;
     }
     .cwhen {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
     }
   `,
 })
@@ -185,9 +185,9 @@ export class ContributorsScreen implements OnInit {
   });
 
   protected roleColor(role: string): string {
-    if (role === 'Owner' || role === 'Admin') return 'var(--tl-accent-text)';
-    if (role === 'Proofreader') return 'var(--tl-st-proofread)';
-    return 'var(--tl-st-translated)';
+    if (role === 'Owner' || role === 'Admin') return 'var(--lx-accent-text)';
+    if (role === 'Proofreader') return 'var(--lx-st-proofread)';
+    return 'var(--lx-st-translated)';
   }
 
   protected setRole(c: ContributorView, role: string): void {

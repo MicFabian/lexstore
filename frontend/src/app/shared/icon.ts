@@ -3,7 +3,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 /**
  * Lightweight Lucide-style icon. Renders inner SVG markup for the finite set of
- * glyphs the TransLad UI uses, at the brand's 1.75 stroke / rounded-line spec.
+ * glyphs the Lexstore UI uses, at the brand's 1.75 stroke / rounded-line spec.
  * (Vendored inline to avoid a CDN/font dependency — see design README iconography.)
  */
 export type IconName =
@@ -69,7 +69,7 @@ const P: Record<IconName, string> = {
 };
 
 @Component({
-  selector: 'tl-icon',
+  selector: 'lx-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<svg
     [attr.width]="size()"

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: translad
+    name: lexstore
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
@@ -8,11 +8,11 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/translad}
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/lexstore}
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5442/translad?socketTimeout=30&loginTimeout=10}
-    username: ${DATABASE_USER:translad}
-    password: ${DATABASE_PASSWORD:translad}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5442/lexstore?socketTimeout=30&loginTimeout=10}
+    username: ${DATABASE_USER:lexstore}
+    password: ${DATABASE_PASSWORD:lexstore}
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:20}
       minimum-idle: 5
@@ -45,8 +45,8 @@ spring:
     clean-disabled: ${FLYWAY_CLEAN_DISABLED:false}
 
 # Local-dev convenience: gate POST /api/dev/reset (off by default).
-translad:
-  dev-reset: ${TRANSLAD_DEV_RESET:false}
+lexstore:
+  dev-reset: ${LEXSTORE_DEV_RESET:false}
   # Browser origins allowed to call this API. Localhost only by default.
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:[*],http://127.0.0.1:[*]}
 
@@ -98,7 +98,7 @@ spring:
       hibernate:
         format_sql: false
 
-translad:
+lexstore:
   dev-reset: false
 
 logging:

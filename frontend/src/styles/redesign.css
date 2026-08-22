@@ -1,5 +1,5 @@
 /* ============================================================
-   TransLad — editorial redesign layer ("TransLad Redesign").
+   Lexstore — editorial redesign layer ("Lexstore Redesign").
    Loaded after app.css. Light-first, one type family, hairline
    structure instead of cards and chips, color reserved for
    meaning. Dark theme stays available via data-theme="dark".
@@ -7,9 +7,9 @@
 
 /* ---------- One family: Helvetica Neue everywhere ---------- */
 :root {
-  --tl-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --tl-serif: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --tl-mono: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --lx-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --lx-serif: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --lx-mono: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 ::selection {
@@ -17,25 +17,25 @@
   color: #151723;
 }
 :root[data-theme='dark'] ::selection {
-  background: var(--tl-accent-soft-2);
-  color: var(--tl-ink);
+  background: var(--lx-accent-soft-2);
+  color: var(--lx-ink);
 }
 
 /* ---------- Editorial type utilities ---------- */
 .eyebrow {
-  font: 600 11px var(--tl-mono);
+  font: 600 11px var(--lx-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--tl-muted);
+  color: var(--lx-muted);
 }
 .serif {
-  font-family: var(--tl-serif);
+  font-family: var(--lx-serif);
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--tl-ink);
+  color: var(--lx-ink);
 }
 .cap {
-  font: 600 10px var(--tl-mono);
+  font: 600 10px var(--lx-mono);
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
@@ -43,14 +43,14 @@
 /* ---------- Page scaffolding ---------- */
 /* Routed screens are inline hosts by default, which collapses their height and
    stops .well from scrolling; each screen fills the main column instead. */
-.main > tl-ai-overview,
-.main > tl-projects-dashboard,
-.main > tl-terms-screen,
-.main > tl-features-screen,
-.main > tl-languages-screen,
-.main > tl-contributors-screen,
-.main > tl-settings-screen,
-.main > tl-editor-screen {
+.main > lx-ai-overview,
+.main > lx-projects-dashboard,
+.main > lx-terms-screen,
+.main > lx-features-screen,
+.main > lx-languages-screen,
+.main > lx-contributors-screen,
+.main > lx-settings-screen,
+.main > lx-editor-screen {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -61,7 +61,7 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  background: var(--tl-paper);
+  background: var(--lx-paper);
 }
 /* The editor scrolls in its table, not as a whole. */
 .editor {
@@ -84,7 +84,7 @@
 }
 .phead .psub {
   margin-top: 8px;
-  color: var(--tl-slate);
+  color: var(--lx-slate);
   font-size: 13.5px;
 }
 
@@ -104,10 +104,10 @@
   align-items: center;
   gap: 20px;
   padding: 20px 0;
-  border-bottom: 1px solid var(--tl-line-2);
+  border-bottom: 1px solid var(--lx-line-2);
 }
 .lrow:hover {
-  background: var(--tl-row-hover);
+  background: var(--lx-row-hover);
 }
 
 /* Grid list rows share the same rhythm. */
@@ -116,13 +116,13 @@
   gap: 24px;
   align-items: center;
   padding: 18px 0;
-  border-bottom: 1px solid var(--tl-line-2);
+  border-bottom: 1px solid var(--lx-line-2);
 }
 .ghead {
   display: grid;
   gap: 24px;
   padding-bottom: 11px;
-  border-bottom: 1px solid var(--tl-line);
+  border-bottom: 1px solid var(--lx-line);
 }
 
 /* ---------- Underline tab filters ---------- */
@@ -131,8 +131,8 @@
   background: none;
   height: 44px;
   padding: 0 2px;
-  font: 500 13px var(--tl-sans);
-  color: var(--tl-slate);
+  font: 500 13px var(--lx-sans);
+  color: var(--lx-slate);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -140,23 +140,23 @@
   border-radius: 0;
 }
 .ftab .n {
-  font-family: var(--tl-mono);
+  font-family: var(--lx-mono);
   font-size: 11px;
-  color: var(--tl-muted);
+  color: var(--lx-muted);
 }
 .ftab.on {
-  color: var(--tl-ink);
+  color: var(--lx-ink);
   font-weight: 600;
-  border-bottom-color: var(--tl-accent);
+  border-bottom-color: var(--lx-accent);
 }
 .ftab.on .n {
-  color: var(--tl-accent-text);
+  color: var(--lx-accent-text);
 }
 
 .subnav {
   display: flex;
   gap: 24px;
-  border-bottom: 1px solid var(--tl-line);
+  border-bottom: 1px solid var(--lx-line);
 }
 .subnav a,
 .subnav button {
@@ -167,16 +167,16 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font: 600 12.5px var(--tl-sans);
-  color: var(--tl-slate);
+  font: 600 12.5px var(--lx-sans);
+  color: var(--lx-slate);
   border-bottom: 2px solid transparent;
   border-radius: 0;
   cursor: pointer;
 }
 .subnav a.on,
 .subnav button.on {
-  color: var(--tl-ink);
-  border-bottom-color: var(--tl-accent);
+  color: var(--lx-ink);
+  border-bottom-color: var(--lx-accent);
 }
 
 /* ---------- Quiet chrome ---------- */
@@ -194,7 +194,7 @@
   border-color: transparent;
 }
 .chip--neutral {
-  border-color: var(--tl-line);
+  border-color: var(--lx-line);
 }
 .cmdk,
 .searchbox {
@@ -206,7 +206,7 @@
 }
 .segmented {
   border-color: transparent;
-  background: var(--tl-fill);
+  background: var(--lx-fill);
 }
 .progress .seg-translated,
 .toggle.on {
@@ -215,18 +215,18 @@
 
 /* Calmer active nav: neutral fill, ink text, accent bar + icon. */
 .navitem.active {
-  background: var(--tl-fill);
-  color: var(--tl-ink);
+  background: var(--lx-fill);
+  color: var(--lx-ink);
   font-weight: 600;
 }
 .navitem.active .count {
-  color: var(--tl-slate);
+  color: var(--lx-slate);
 }
 .navitem.active svg {
-  color: var(--tl-accent);
+  color: var(--lx-accent);
 }
 .navitem.active::before {
-  background: var(--tl-accent);
+  background: var(--lx-accent);
   box-shadow: none;
 }
 
@@ -245,7 +245,7 @@
 
 /* The toast is an overlay: as a plain grid child it claimed a second row of
    the app grid and cut the rail short of the viewport. */
-tl-toast {
+lx-toast {
   display: contents;
 }
 
@@ -265,7 +265,7 @@ button {
 .rail__proj .psub,
 .proj-menu .pm-code {
   font-size: 12.5px;
-  color: var(--tl-slate);
+  color: var(--lx-slate);
 }
 .navitem {
   font-size: 14.5px;
@@ -279,7 +279,7 @@ button {
 }
 .rail__foot .foot-role {
   font-size: 12.5px;
-  color: var(--tl-slate);
+  color: var(--lx-slate);
 }
 .topbar .crumb {
   font-size: 14px;
@@ -329,17 +329,17 @@ button {
 .ttable thead th {
   letter-spacing: 0.08em;
   font-size: 11.5px;
-  color: var(--tl-slate);
-  border-bottom-color: var(--tl-line);
+  color: var(--lx-slate);
+  border-bottom-color: var(--lx-line);
   padding-top: 13px;
   padding-bottom: 13px;
   background: transparent;
 }
 .trow td {
-  border-bottom: 1px solid var(--tl-line-2);
+  border-bottom: 1px solid var(--lx-line-2);
 }
 .trow:hover {
-  background: var(--tl-row-hover);
+  background: var(--lx-row-hover);
 }
 :root[data-density='cozy'] .trow td {
   padding-top: 16px;
@@ -352,23 +352,23 @@ button {
 }
 .trow .keysub {
   font-size: 12.5px;
-  color: var(--tl-slate);
+  color: var(--lx-slate);
 }
 
 /* An empty translation is an invitation, not a whisper: readable at rest,
    clearly editable on hover and focus. */
 .trow .tgt.empty {
-  color: var(--tl-slate);
+  color: var(--lx-slate);
   font-style: normal;
 }
 .trow:hover .tgt.empty,
 .trow .tgt.empty:focus-visible {
-  color: var(--tl-accent-text);
+  color: var(--lx-accent-text);
 }
 
 /* Status as a small colored caption, not a filled pill. */
 .stcap {
-  font: 600 12px var(--tl-mono);
+  font: 600 12px var(--lx-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -385,7 +385,7 @@ button {
 /* ---------- Shared page-header helpers (legacy) ---------- */
 .page-sub {
   font-size: 13.5px;
-  color: var(--tl-muted);
+  color: var(--lx-muted);
   margin: 6px 0 0;
   line-height: 1.5;
 }
@@ -422,8 +422,8 @@ button {
 
 /* Destructive confirmation reads as destructive. */
 .btn--danger {
-  background: var(--tl-danger);
-  border-color: var(--tl-danger);
+  background: var(--lx-danger);
+  border-color: var(--lx-danger);
   color: #fff;
   font-weight: 600;
 }
@@ -446,7 +446,7 @@ button {
   border-radius: 4px;
 }
 :root[data-theme='dark'] :focus-visible {
-  outline-color: var(--tl-accent-hi);
+  outline-color: var(--lx-accent-hi);
 }
 .btn:focus-visible,
 .navitem:focus-visible,
@@ -478,7 +478,7 @@ textarea:focus-visible {
 .searchbox,
 .cmdk,
 input[type='checkbox'] {
-  border-color: var(--tl-line-strong);
+  border-color: var(--lx-line-strong);
 }
 @media (prefers-reduced-motion: reduce) {
   *,

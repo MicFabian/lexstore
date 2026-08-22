@@ -23,14 +23,14 @@ interface QuickItem {
 }
 
 @Component({
-  selector: 'tl-sidebar',
+  selector: 'lx-sidebar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, RouterLinkActive, Icon, Avatar, BrandMark],
   template: `
     <aside class="rail">
       <div class="rail__brand">
-        <tl-brand-mark [size]="28" [radius]="7" />
-        <span class="word">Trans<b>Lad</b></span>
+        <lx-brand-mark [size]="28" [radius]="7" />
+        <span class="word">Lex<b>store</b></span>
       </div>
 
       <!-- Project switcher -->
@@ -40,14 +40,14 @@ interface QuickItem {
             @if (current()?.image; as img) {
               <img class="pimg" [src]="img" alt="" />
             } @else {
-              <tl-icon name="ArrowRightLeft" [size]="14" color="#fff" />
+              <lx-icon name="ArrowRightLeft" [size]="14" color="#fff" />
             }
           </span>
           <span class="pmeta">
             <span class="pname">{{ current()?.name }}</span>
             <span class="psub">{{ current()?.code }}</span>
           </span>
-          <tl-icon name="ChevronsUpDown" [size]="15" color="var(--tl-muted)" />
+          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-muted)" />
         </button>
         @if (switcherOpen()) {
           <div class="menu-backdrop" (click)="switcherOpen.set(false)"></div>
@@ -59,7 +59,7 @@ interface QuickItem {
                   @if (p.image; as img) {
                     <img class="pimg" [src]="img" alt="" />
                   } @else {
-                    <tl-icon name="ArrowRightLeft" [size]="12" color="#fff" />
+                    <lx-icon name="ArrowRightLeft" [size]="12" color="#fff" />
                   }
                 </span>
                 <span class="pm-meta">
@@ -67,7 +67,7 @@ interface QuickItem {
                   <span class="pm-code">{{ p.code }}</span>
                 </span>
                 @if (p.id === current()?.id) {
-                  <tl-icon name="Check" [size]="15" color="var(--tl-accent-hi)" />
+                  <lx-icon name="Check" [size]="15" color="var(--lx-accent-hi)" />
                 } @else {
                   <span class="pm-prog">{{ p.progress }}%</span>
                 }
@@ -75,7 +75,7 @@ interface QuickItem {
             }
             <div class="menu__divider"></div>
             <button class="menu__item" (click)="viewAll()">
-              <tl-icon name="LayoutGrid" [size]="15" color="var(--tl-slate)" />
+              <lx-icon name="LayoutGrid" [size]="15" color="var(--lx-slate)" />
               <span>View all projects</span>
             </button>
           </div>
@@ -85,19 +85,19 @@ interface QuickItem {
       <nav class="rail__nav">
         <div class="rail__group">Workspace</div>
         <a class="navitem" [routerLink]="['/', 'projects']" routerLinkActive="active">
-          <tl-icon name="LayoutGrid" [size]="17" />
+          <lx-icon name="LayoutGrid" [size]="17" />
           <span>Projects</span>
           <span class="count">{{ projects().length }}</span>
         </a>
         <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
-          <tl-icon name="WandSparkles" [size]="16" />
+          <lx-icon name="WandSparkles" [size]="16" />
           <span>Translation AI</span>
         </a>
 
         <div class="rail__group">Work</div>
         @for (n of workNav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
-            <tl-icon [name]="n.icon" [size]="17" />
+            <lx-icon [name]="n.icon" [size]="17" />
             <span>{{ n.label }}</span>
             @if (n.count != null) {
               <span class="count">{{ n.count.toLocaleString() }}</span>
@@ -108,7 +108,7 @@ interface QuickItem {
         <div class="rail__group">Manage</div>
         @for (n of manageNav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
-            <tl-icon [name]="n.icon" [size]="17" />
+            <lx-icon [name]="n.icon" [size]="17" />
             <span>{{ n.label }}</span>
             @if (n.count != null) {
               <span class="count">{{ n.count.toLocaleString() }}</span>
@@ -119,7 +119,7 @@ interface QuickItem {
         <div class="rail__group">Quick filters</div>
         @for (q of quick(); track q.label) {
           <a class="navitem" [routerLink]="q.link" [queryParams]="q.params">
-            <tl-icon [name]="q.icon" [size]="15" [color]="q.color" />
+            <lx-icon [name]="q.icon" [size]="15" [color]="q.color" />
             <span>{{ q.label }}</span>
             <span class="count">{{ q.count }}</span>
           </a>
@@ -128,12 +128,12 @@ interface QuickItem {
 
       <div class="proj-switch">
         <button class="rail__foot foot-btn" (click)="userMenuOpen.set(!userMenuOpen())">
-          <tl-avatar [i]="userAvatar()" [name]="userName()" [sm]="true" />
+          <lx-avatar [i]="userAvatar()" [name]="userName()" [sm]="true" />
           <div style="min-width:0;flex:1;text-align:left">
             <div class="foot-name">{{ userName() }}</div>
             <div class="foot-role">{{ topRole() }}</div>
           </div>
-          <tl-icon name="ChevronsUpDown" [size]="15" color="var(--tl-muted)" />
+          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-muted)" />
         </button>
         @if (userMenuOpen()) {
           <div class="menu-backdrop" (click)="userMenuOpen.set(false)"></div>
@@ -141,12 +141,12 @@ interface QuickItem {
             <div class="menu__label">{{ userEmail() || userName() }}</div>
             @for (r of roles(); track r) {
               <div class="menu__item" style="cursor:default">
-                <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" /><span style="text-transform:capitalize">{{ r }}</span>
+                <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" /><span style="text-transform:capitalize">{{ r }}</span>
               </div>
             }
             <div class="menu__divider"></div>
             <button class="menu__item" (click)="logout()">
-              <tl-icon name="ArrowRight" [size]="15" color="var(--tl-slate)" /><span>Sign out</span>
+              <lx-icon name="ArrowRight" [size]="15" color="var(--lx-slate)" /><span>Sign out</span>
             </button>
           </div>
         }
@@ -173,19 +173,19 @@ interface QuickItem {
       cursor: pointer;
     }
     .foot-btn:hover {
-      background: var(--tl-fill);
+      background: var(--lx-fill);
     }
     .foot-name {
       font-size: 14px;
       font-weight: 600;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .foot-role {
       font-size: 12.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       text-transform: capitalize;
     }
   `,
@@ -237,7 +237,7 @@ export class Sidebar {
         icon: 'CircleDashed',
         label: 'Untranslated',
         count: c?.untranslated ?? 0,
-        color: 'var(--tl-st-untranslated)',
+        color: 'var(--lx-st-untranslated)',
         link: ['/editor'],
         params: { filter: 'untranslated' },
       },
@@ -245,7 +245,7 @@ export class Sidebar {
         icon: 'Sparkles',
         label: 'Newly added',
         count: c?.newTerms ?? 0,
-        color: 'var(--tl-st-new)',
+        color: 'var(--lx-st-new)',
         link: ['/terms'],
         params: { new: '1' },
       },
@@ -253,7 +253,7 @@ export class Sidebar {
         icon: 'Eye',
         label: 'Needs review',
         count: c?.needsReview ?? 0,
-        color: 'var(--tl-st-fuzzy)',
+        color: 'var(--lx-st-fuzzy)',
         link: ['/editor'],
         params: { filter: 'fuzzy' },
       },

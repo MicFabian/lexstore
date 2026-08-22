@@ -7,23 +7,23 @@ import { Btn } from './primitives';
  * act immediately and offer Undo in the toast instead of asking first.
  */
 @Component({
-  selector: 'tl-confirm-dialog',
+  selector: 'lx-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Dialog, Btn],
   template: `
-    <tl-dialog [title]="title()" [description]="description()" [width]="400" (closed)="cancelled.emit()">
+    <lx-dialog [title]="title()" [description]="description()" [width]="400" (closed)="cancelled.emit()">
       <div dialogActions>
-        <tl-btn
+        <lx-btn
           [variant]="tone() === 'danger' ? 'danger' : 'primary'"
           [sm]="true"
           [disabled]="busy()"
           (clicked)="confirmed.emit()"
         >
           {{ busy() ? 'Working…' : confirmLabel() }}
-        </tl-btn>
-        <tl-btn variant="subtle" [sm]="true" (clicked)="cancelled.emit()">Cancel</tl-btn>
+        </lx-btn>
+        <lx-btn variant="subtle" [sm]="true" (clicked)="cancelled.emit()">Cancel</lx-btn>
       </div>
-    </tl-dialog>
+    </lx-dialog>
   `,
 })
 export class ConfirmDialog {

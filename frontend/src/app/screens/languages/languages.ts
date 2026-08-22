@@ -9,7 +9,7 @@ import { ToastService } from '../../core/toast.service';
 import { LanguageView } from '../../core/models';
 
 @Component({
-  selector: 'tl-languages-screen',
+  selector: 'lx-languages-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, ConfirmDialog, PromptDialog],
   template: `
@@ -23,7 +23,7 @@ import { LanguageView } from '../../core/models';
           </div>
           <div style="display:flex;gap:8px">
             <div style="position:relative">
-              <tl-btn variant="ghost" icon="FileDown" (clicked)="exportOpen.set(!exportOpen())">Export all</tl-btn>
+              <lx-btn variant="ghost" icon="FileDown" (clicked)="exportOpen.set(!exportOpen())">Export all</lx-btn>
               @if (exportOpen()) {
                 <div class="menu-backdrop" (click)="exportOpen.set(false)"></div>
                 <div class="menu export" role="dialog" aria-label="Export translations">
@@ -33,13 +33,13 @@ import { LanguageView } from '../../core/models';
                     <div class="row" style="gap:6px;flex-wrap:wrap">
                       <button
                         [class]="'btn btn--sm ' + (exportLangs().size === 0 ? 'btn--ghost' : 'btn--subtle')"
-                        [style.border-color]="exportLangs().size === 0 ? 'var(--tl-accent)' : null"
+                        [style.border-color]="exportLangs().size === 0 ? 'var(--lx-accent)' : null"
                         (click)="selectAllLangs()"
                       >All</button>
                       @for (l of langs(); track l.id) {
                         <button
                           [class]="'btn btn--sm ' + (exportLangs().has(l.code) ? 'btn--ghost' : 'btn--subtle')"
-                          [style.border-color]="exportLangs().has(l.code) ? 'var(--tl-accent)' : null"
+                          [style.border-color]="exportLangs().has(l.code) ? 'var(--lx-accent)' : null"
                           (click)="toggleExportLang(l.code)"
                         >{{ l.code }}</button>
                       }
@@ -51,7 +51,7 @@ import { LanguageView } from '../../core/models';
                       @for (f of formats; track f) {
                         <button
                           [class]="'btn btn--sm ' + (exportFormat() === f ? 'btn--ghost' : 'btn--subtle')"
-                          [style.border-color]="exportFormat() === f ? 'var(--tl-accent)' : null"
+                          [style.border-color]="exportFormat() === f ? 'var(--lx-accent)' : null"
                           (click)="exportFormat.set(f)"
                         >{{ f.toUpperCase() }}</button>
                       }
@@ -59,24 +59,24 @@ import { LanguageView } from '../../core/models';
                   </div>
                   <p class="export__hint">{{ exportSummary() }}</p>
                   <div class="row" style="gap:8px">
-                    <tl-btn variant="primary" [sm]="true" [disabled]="exportBusy()" (clicked)="runExport()">
+                    <lx-btn variant="primary" [sm]="true" [disabled]="exportBusy()" (clicked)="runExport()">
                       {{ exportBusy() ? 'Exporting…' : 'Download' }}
-                    </tl-btn>
-                    <tl-btn variant="subtle" [sm]="true" (clicked)="exportOpen.set(false)">Cancel</tl-btn>
+                    </lx-btn>
+                    <lx-btn variant="subtle" [sm]="true" (clicked)="exportOpen.set(false)">Cancel</lx-btn>
                   </div>
                 </div>
               }
             </div>
-            <tl-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add language</tl-btn>
+            <lx-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add language</lx-btn>
           </div>
         </div>
 
-        <div class="lang-grid" style="border-top:1px solid var(--tl-line)">
+        <div class="lang-grid" style="border-top:1px solid var(--lx-line)">
           @for (l of langs(); track l.id) {
             <div class="lang-row">
               <span class="locale" style="font-size:12px">{{ l.code }}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:14.5px;font-weight:600;color:var(--tl-ink)">{{ l.name }}</div>
+                <div style="font-size:14.5px;font-weight:600;color:var(--lx-ink)">{{ l.name }}</div>
                 <div class="lmeta">
                   {{ l.contributors }} contributor{{ l.contributors === 1 ? '' : 's' }}
                   @if (l.fuzzy > 0) { · {{ l.fuzzy }}% in review }
@@ -88,7 +88,7 @@ import { LanguageView } from '../../core/models';
                 <i class="seg-fuzzy" [style.width.%]="l.fuzzy"></i>
               </span>
               <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove language" (click)="pendingRemove.set(l)">
-                <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
               </button>
             </div>
           }
@@ -97,7 +97,7 @@ import { LanguageView } from '../../core/models';
     </div>
 
     @if (adding()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="Add a language"
         description="Its code is what the API, the CLI, and exported files use."
         [fields]="addLanguageFields"
@@ -108,7 +108,7 @@ import { LanguageView } from '../../core/models';
     }
 
     @if (pendingRemove(); as l) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Remove this language?"
         [description]="'Every translation in ' + l.name + ' is deleted. This cannot be undone \u2014 export it first if you may need it.'"
         confirmLabel="Remove language"
@@ -128,7 +128,7 @@ import { LanguageView } from '../../core/models';
       align-items: center;
       gap: 18px;
       padding: 22px 0;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .export {
       top: calc(100% + 6px);
@@ -142,13 +142,13 @@ import { LanguageView } from '../../core/models';
     }
     .export__hint {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       line-height: 1.5;
       margin: 0;
     }
     .lmeta {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
       margin-top: 3px;
     }
   `,

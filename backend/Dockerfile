@@ -16,9 +16,9 @@ RUN ./gradlew --no-daemon bootJar -x test
 FROM eclipse-temurin:24-jre AS runtime
 WORKDIR /app
 # Run unprivileged: nothing here needs root.
-RUN useradd --system --uid 10001 translad
+RUN useradd --system --uid 10001 lexstore
 COPY --from=build /src/build/libs/*.jar app.jar
-USER translad
+USER lexstore
 EXPOSE 8088
 ENV SPRING_PROFILES_ACTIVE=prod
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \

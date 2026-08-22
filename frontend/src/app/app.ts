@@ -5,10 +5,10 @@ import { AuthService } from './core/auth.service';
 import { CommandPalette } from './shell/command-palette';
 
 @Component({
-  selector: 'tl-root',
+  selector: 'lx-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, CommandPalette],
-  template: `<router-outlet /><tl-command-palette />`,
+  template: `<router-outlet /><lx-command-palette />`,
   host: {
     '(document:keydown)': 'onKeydown($event)',
   },

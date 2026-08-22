@@ -46,8 +46,14 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await expect(page.locator('.inspector')).toBeVisible();
   await shot(page, '05-editor-inspector');
 
-  // Inspector translation helper on an untranslated row
+  // Inspector translation helper on an untranslated row. Earlier specs may have
+  // auto-translated this language, so add a term that is certainly untranslated.
   await page.locator('.inspector button[aria-label="Close"]').click();
+  await page.locator('.ed-head button', { hasText: 'Add term' }).click();
+  await page.locator('.dlg input').first().fill(`shots.helper.${Date.now()}`);
+  await page.locator('.dlg input').nth(1).fill('Needs a suggestion');
+  await page.locator('.dlg button', { hasText: 'Add' }).click();
+  await expect(page.locator('.trow .tgt.empty').first()).toBeVisible();
   await page.locator('.trow', { has: page.locator('.tgt.empty') }).first().locator('.tgt').first().click();
   await page.locator('.inspector .helper button', { hasText: 'Suggest' }).click();
   await expect(page.locator('.inspector .helper__text')).toBeVisible();

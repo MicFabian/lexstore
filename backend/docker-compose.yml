@@ -1,26 +1,26 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: translad-postgres
+    container_name: lexstore-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: translad
-      POSTGRES_USER: translad
-      POSTGRES_PASSWORD: translad
+      POSTGRES_DB: lexstore
+      POSTGRES_USER: lexstore
+      POSTGRES_PASSWORD: lexstore
     ports:
       # Host port 5442: 5432 is commonly taken by other local Postgres instances.
       - "5442:5432"
     volumes:
-      - translad-pgdata:/var/lib/postgresql/data
+      - lexstore-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U translad -d translad"]
+      test: ["CMD-SHELL", "pg_isready -U lexstore -d lexstore"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
-    container_name: translad-keycloak
+    container_name: lexstore-keycloak
     restart: unless-stopped
     command: ["start-dev", "--import-realm"]
     environment:
@@ -31,14 +31,14 @@ services:
     ports:
       - "8089:8089"
     volumes:
-      - ./keycloak/realm-translad.json:/opt/keycloak/data/import/realm-translad.json:ro
+      - ./keycloak/realm-lexstore.json:/opt/keycloak/data/import/realm-lexstore.json:ro
     healthcheck:
       # KC 26 has no curl/wget; probe the realm's OIDC config over bash /dev/tcp.
       test:
         - CMD-SHELL
         - >-
           exec 3<>/dev/tcp/127.0.0.1/8089 &&
-          printf 'GET /realms/translad/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          printf 'GET /realms/lexstore/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
           grep -q '200 OK' <&3
       interval: 10s
       timeout: 5s
@@ -46,4 +46,4 @@ services:
       start_period: 40s
 
 volumes:
-  translad-pgdata:
+  lexstore-pgdata:

@@ -8,7 +8,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "io.translad"
+group = "io.lexstore"
 version = "0.1.0"
 
 // Kotlin 2.2 emits at most JVM 24 bytecode, so the Java compiler is pinned to 24 to

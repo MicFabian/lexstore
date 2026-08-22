@@ -12,7 +12,7 @@ import { ToastService } from '../../core/toast.service';
 import { FeatureView, OpenTranslationView } from '../../core/models';
 
 @Component({
-  selector: 'tl-features-screen',
+  selector: 'lx-features-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, SearchBox, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
@@ -27,15 +27,15 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
             </div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <tl-search placeholder="Search features" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New feature</tl-btn>
+            <lx-search placeholder="Search features" [value]="query()" [width]="200" (changed)="query.set($event)" />
+            <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New feature</lx-btn>
           </div>
         </div>
 
         @if (loading()) {
-          <tl-table-skeleton [rows]="6" [columns]="5" />
+          <lx-table-skeleton [rows]="6" [columns]="5" />
         } @else if (loadError()) {
-          <tl-content-state
+          <lx-content-state
             kind="error"
             title="Could not load features"
             description="The request failed. This is usually temporary."
@@ -60,7 +60,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span class="expand-toggle" [class.open]="expanded() === f.id">
-                      <tl-icon name="ChevronRight" [size]="15" />
+                      <lx-icon name="ChevronRight" [size]="15" />
                     </span>
                     <div>
                       <div class="fname">{{ f.name }}</div>
@@ -71,16 +71,16 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 <td style="text-align:right"><span class="fnum">{{ f.terms }}</span></td>
                 <td style="text-align:right">
                   @if (f.fuzzy > 0) {
-                    <span class="fnum" style="color:var(--tl-st-fuzzy)">{{ f.fuzzy }}</span>
+                    <span class="fnum" style="color:var(--lx-st-fuzzy)">{{ f.fuzzy }}</span>
                   } @else {
-                    <span class="fnum" style="color:var(--tl-muted)">—</span>
+                    <span class="fnum" style="color:var(--lx-muted)">—</span>
                   }
                 </td>
                 <td style="text-align:right">
                   @if (f.untranslated > 0) {
-                    <span class="fnum" style="color:var(--tl-st-untranslated)">{{ f.untranslated }}</span>
+                    <span class="fnum" style="color:var(--lx-st-untranslated)">{{ f.untranslated }}</span>
                   } @else {
-                    <span class="fnum" style="color:var(--tl-st-translated)">0</span>
+                    <span class="fnum" style="color:var(--lx-st-translated)">0</span>
                   }
                 </td>
                 <td>
@@ -94,7 +94,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete feature" (click)="pendingDelete.set(f)">
-                    <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
                   </button>
                 </td>
               </tr>
@@ -106,9 +106,9 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                       <div class="row" style="margin-bottom:12px">
                         <div class="eyebrow">Coverage per language</div>
                         <div class="spacer"></div>
-                        <tl-btn variant="subtle" [sm]="true" icon="List" (clicked)="openEditor(f)">
+                        <lx-btn variant="subtle" [sm]="true" icon="List" (clicked)="openEditor(f)">
                           Open in editor
-                        </tl-btn>
+                        </lx-btn>
                       </div>
                       <div class="lang-cov">
                         @for (l of f.languages; track l.code) {
@@ -139,7 +139,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                         <div class="eyebrow" style="margin:18px 0 8px">
                           Open in {{ openLang() }} · {{ openRows().length }}
                           @if (openRows().length >= 500) {
-                            <span style="color:var(--tl-slate)"> · first 500 shown</span>
+                            <span style="color:var(--lx-slate)"> · first 500 shown</span>
                           }
                         </div>
                         <div class="open-list">
@@ -147,7 +147,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                             <div class="open-row">
                               <span class="keytag">{{ r.key }}</span>
                               <span class="open-src">{{ r.sourceText }}</span>
-                              <span class="stcap" [style.color]="'var(--tl-st-' + r.status + ')'">
+                              <span class="stcap" [style.color]="'var(--lx-st-' + r.status + ')'">
                                 {{ r.status === 'fuzzy' ? 'Needs review' : 'Untranslated' }}
                               </span>
                             </div>
@@ -167,7 +167,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
               <tr>
                 <td colspan="6" style="padding:0">
                   @if (features().length === 0) {
-                    <tl-content-state
+                    <lx-content-state
                       kind="empty"
                       title="No features yet"
                       description="Group a project's terms by what ships together — a screen, a flow, a release — and track how far along each one is."
@@ -175,7 +175,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                       (acted)="creating.set(true)"
                     />
                   } @else {
-                    <tl-content-state
+                    <lx-content-state
                       kind="no-results"
                       title="No features match that search"
                       [description]="'Nothing matches “' + query() + '”.'"
@@ -193,7 +193,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
     </div>
 
     @if (creating()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="New feature"
         description="Group the terms that ship together, then track how far along they are."
         [fields]="[{ name: 'name', label: 'Feature name', placeholder: 'Checkout' }]"
@@ -204,7 +204,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
     }
 
     @if (pendingDelete(); as f) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Delete this feature?"
         [description]="'“' + f.name + '” stops grouping its ' + f.terms + ' terms. The terms and their translations stay.'"
         confirmLabel="Delete feature"
@@ -220,15 +220,15 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
     .fname {
       font-size: 14px;
       font-weight: 600;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .fkey {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
       margin-top: 2px;
     }
     .fnum {
-      font: 500 13px var(--tl-mono);
+      font: 500 13px var(--lx-mono);
       font-variant-numeric: tabular-nums;
     }
     .covcell {
@@ -238,8 +238,8 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       justify-content: flex-end;
     }
     .covnum {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
       width: 40px;
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -260,30 +260,30 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       margin: 0 -8px;
       border: none;
       background: none;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
       text-align: left;
       cursor: pointer;
-      border-radius: var(--tl-r-sm);
+      border-radius: var(--lx-r-sm);
     }
     .cov-row:hover {
-      background: var(--tl-row-hover);
+      background: var(--lx-row-hover);
     }
     .cov-row.on {
-      background: var(--tl-accent-soft);
+      background: var(--lx-accent-soft);
     }
     .cov-name {
       flex: 1;
       font-size: 13.5px;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .cov-open {
       width: 88px;
       text-align: right;
-      font: 500 12px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12px var(--lx-mono);
+      color: var(--lx-slate);
     }
     .open-list {
-      border-top: 1px solid var(--tl-line-2);
+      border-top: 1px solid var(--lx-line-2);
     }
     .open-row {
       display: grid;
@@ -291,11 +291,11 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       gap: 16px;
       align-items: center;
       padding: 10px 0;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .open-src {
       font-size: 13.5px;
-      color: var(--tl-ink-80);
+      color: var(--lx-ink-80);
     }
   `,
 })

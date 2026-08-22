@@ -1,4 +1,4 @@
-/** Domain models mirroring the TransLad backend DTOs. */
+/** Domain models mirroring the Lexstore backend DTOs. */
 
 export type TranslationStatus = 'untranslated' | 'translated' | 'fuzzy' | 'proofread';
 

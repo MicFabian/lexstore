@@ -1,8 +1,8 @@
-# TransLad
+# Lexstore
 
 Translation & localization management platform for software teams. Upload source strings (terms), invite translators per language, track untranslated/translated/fuzzy/proofread status, pull finished translations via API/CLI.
 
-Built to the **TransLad design system** (dark-first, electric-cobalt accent, editorial-meets-developer). State-of-the-art stack.
+Built to the **Lexstore design system** (dark-first, electric-cobalt accent, editorial-meets-developer). State-of-the-art stack.
 
 ## Stack
 
@@ -29,9 +29,9 @@ frontend/   Angular app. Design tokens in src/styles/, feature screens in
 **1. Postgres + Keycloak**
 ```bash
 cd backend
-docker compose up -d        # Postgres :5432, Keycloak :8089 (realm "translad")
+docker compose up -d        # Postgres :5432, Keycloak :8089 (realm "lexstore")
 ```
-Keycloak imports the `translad` realm with three test users (password = username):
+Keycloak imports the `lexstore` realm with three test users (password = username):
 `owner` (all roles), `translator`, `proofreader`.
 
 **2. Backend** (Java 25, runs on `:8088`)
@@ -81,7 +81,7 @@ Theme (dark/light), accent, and density are switchable via the appearance panel
 
 The E2E suite resets the backend to its seeded state before every test (a
 global fixture calls `POST /api/dev/reset`), so it is fully order-independent
-and repeatable. Run the backend with `TRANSLAD_DEV_RESET=true` to enable that
+and repeatable. Run the backend with `LEXSTORE_DEV_RESET=true` to enable that
 endpoint (it is disabled by default and refused in any other configuration).
 
 ## API
@@ -117,7 +117,7 @@ things that only make sense on a laptop:
 
 | Setting | Development | Production |
 |---|---|---|
-| `POST /api/dev/reset` | opt-in via `TRANSLAD_DEV_RESET` | refused |
+| `POST /api/dev/reset` | opt-in via `LEXSTORE_DEV_RESET` | refused |
 | Flyway `clean` | allowed, so the reset endpoint can wipe and reseed | disabled |
 | CORS origins | localhost and 127.0.0.1 | exactly what `ALLOWED_ORIGINS` names |
 | SQL logging | formatted statements | warnings only |
@@ -131,9 +131,9 @@ things that only make sense on a laptop:
 | `ALLOWED_ORIGINS` | Browser origins allowed to call the API |
 | `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | Optional; the mock translator is used when unset |
 
-Two realm files exist on purpose: `realm-translad.json` seeds owner,
+Two realm files exist on purpose: `realm-lexstore.json` seeds owner,
 translator, and proofreader accounts with matching passwords for local work,
-and is never mounted by the compose file. `realm-translad.prod.json` has no
+and is never mounted by the compose file. `realm-lexstore.prod.json` has no
 users and sets `sslRequired: external` — create the first account through the
 Keycloak admin console after the stack is up.
 

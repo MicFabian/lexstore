@@ -2,9 +2,9 @@
 # CLI smoke + edge-case sweep. Exits non-zero on first failure.
 # Authenticates as the owner test user (the API requires a Keycloak token).
 set -u
-export TRANSLAD_USER="${TRANSLAD_USER:-owner}"
-export TRANSLAD_PASS="${TRANSLAD_PASS:-owner}"
-CLI="node $(dirname "$0")/translad.mjs"
+export LEXSTORE_USER="${LEXSTORE_USER:-owner}"
+export LEXSTORE_PASS="${LEXSTORE_PASS:-owner}"
+CLI="node $(dirname "$0")/lexstore.mjs"
 PASS=0; FAIL=0
 ok()   { echo "  ✓ $1"; PASS=$((PASS+1)); }
 bad()  { echo "  ✗ $1"; FAIL=$((FAIL+1)); }
@@ -44,8 +44,8 @@ fi
 if $CLI projects | grep -q "mosaic-web"; then ok "projects lists mosaic-web"; else bad "projects lists mosaic-web"; fi
 
 # push of an unknown key is skipped, not fatal
-echo '{"this.key.does.not.exist":"x"}' > /tmp/translad-bad.json
-if $CLI push --project mosaic-web --lang fr --in /tmp/translad-bad.json 2>&1 | grep -q "skip"; then
+echo '{"this.key.does.not.exist":"x"}' > /tmp/lexstore-bad.json
+if $CLI push --project mosaic-web --lang fr --in /tmp/lexstore-bad.json 2>&1 | grep -q "skip"; then
   ok "push skips unknown keys"
 else
   bad "push skips unknown keys"

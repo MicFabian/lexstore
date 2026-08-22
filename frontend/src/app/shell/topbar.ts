@@ -24,31 +24,31 @@ const LABELS: Record<string, string> = {
 const WORKSPACE = new Set(['projects', 'ai']);
 
 @Component({
-  selector: 'tl-topbar',
+  selector: 'lx-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, RouterLink],
   template: `
     <header class="topbar">
       <nav class="crumb" aria-label="Breadcrumb">
         <a class="crumb-link" [routerLink]="['/', 'projects']">{{ crumbRoot() }}</a>
-        <tl-icon name="ChevronRight" [size]="14" color="var(--tl-line)" />
+        <lx-icon name="ChevronRight" [size]="14" color="var(--lx-line)" />
         <span class="crumb-active" aria-current="page">{{ screenLabel() }}</span>
       </nav>
       <div class="spacer"></div>
 
       <button class="cmdk" type="button" (click)="cmd.show()">
-        <tl-icon name="Search" [size]="14" color="var(--tl-muted)" />
+        <lx-icon name="Search" [size]="14" color="var(--lx-muted)" />
         <span>Search</span>
         <span class="cmdk__keys"><span class="kbd">⌘</span><span class="kbd">K</span></span>
       </button>
 
       <button class="btn btn--icon btn--subtle bell" type="button" aria-label="Notifications">
-        <tl-icon name="Bell" [size]="17" color="var(--tl-slate)" />
+        <lx-icon name="Bell" [size]="17" color="var(--lx-slate)" />
         <span class="bell-dot"></span>
       </button>
 
       <div style="position:relative">
-        <tl-btn variant="primary" [sm]="true" icon="UserPlus" (clicked)="openInvite()">Invite</tl-btn>
+        <lx-btn variant="primary" [sm]="true" icon="UserPlus" (clicked)="openInvite()">Invite</lx-btn>
         @if (inviteOpen()) {
           <div class="menu-backdrop" (click)="inviteOpen.set(false)"></div>
           <div class="menu invite" role="dialog" aria-label="Invite a contributor">
@@ -75,17 +75,17 @@ const WORKSPACE = new Set(['projects', 'ai']);
                 @for (r of roles; track r) {
                   <button
                     [class]="'btn btn--sm ' + (role() === r ? 'btn--ghost' : 'btn--subtle')"
-                    [style.border-color]="role() === r ? 'var(--tl-accent)' : null"
+                    [style.border-color]="role() === r ? 'var(--lx-accent)' : null"
                     (click)="role.set(r)"
                   >{{ r }}</button>
                 }
               </div>
             </div>
             <div class="row" style="gap:8px;margin-top:4px">
-              <tl-btn variant="primary" [sm]="true" [disabled]="!name() || !email() || busy()" (clicked)="sendInvite()">
+              <lx-btn variant="primary" [sm]="true" [disabled]="!name() || !email() || busy()" (clicked)="sendInvite()">
                 {{ busy() ? 'Inviting…' : 'Send invite' }}
-              </tl-btn>
-              <tl-btn variant="subtle" [sm]="true" (clicked)="inviteOpen.set(false)">Cancel</tl-btn>
+              </lx-btn>
+              <lx-btn variant="subtle" [sm]="true" (clicked)="inviteOpen.set(false)">Cancel</lx-btn>
             </div>
           </div>
         }
@@ -96,10 +96,10 @@ const WORKSPACE = new Set(['projects', 'ai']);
     .crumb-link {
       color: inherit;
       text-decoration: none;
-      border-radius: var(--tl-r-xs);
+      border-radius: var(--lx-r-xs);
     }
     .crumb-link:hover {
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       text-decoration: underline;
     }
     .invite {
@@ -112,7 +112,7 @@ const WORKSPACE = new Set(['projects', 'ai']);
       gap: 12px;
     }
     .crumb-active {
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       font-weight: 600;
     }
     .bell {
@@ -125,7 +125,7 @@ const WORKSPACE = new Set(['projects', 'ai']);
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--tl-st-untranslated);
+      background: var(--lx-st-untranslated);
     }
   `,
 })

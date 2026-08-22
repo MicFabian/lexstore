@@ -1,4 +1,4 @@
-/* TransLad global styles — design tokens + app UI kit.
+/* Lexstore global styles — design tokens + app UI kit.
    app.css pulls in tokens.css (palette, type) and the Google Fonts @import. */
 @import './styles/app.css';
 @import './styles/redesign.css';
@@ -10,7 +10,7 @@ body {
 
 body {
   margin: 0;
-  font-family: var(--tl-sans);
-  background: var(--tl-paper);
-  color: var(--tl-ink);
+  font-family: var(--lx-sans);
+  background: var(--lx-paper);
+  color: var(--lx-ink);
 }

@@ -13,7 +13,7 @@ export function avatarIndexFor(name: string): number {
 
 /* ---------------- Button ---------------- */
 @Component({
-  selector: 'tl-btn',
+  selector: 'lx-btn',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   template: `
@@ -24,7 +24,7 @@ export function avatarIndexFor(name: string): number {
       (click)="clicked.emit($event)"
     >
       @if (icon()) {
-        <tl-icon [name]="icon()!" [size]="sm() ? 15 : 16" />
+        <lx-icon [name]="icon()!" [size]="sm() ? 15 : 16" />
       }
       <ng-content />
     </button>
@@ -48,7 +48,7 @@ export class Btn {
 
 /* ---------------- Status chip ---------------- */
 @Component({
-  selector: 'tl-status-chip',
+  selector: 'lx-status-chip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span [class]="'chip chip--' + chipClass()">{{ label() }}</span>`,
 })
@@ -62,7 +62,7 @@ export class StatusChip {
 
 /* ---------------- Avatar ---------------- */
 @Component({
-  selector: 'tl-avatar',
+  selector: 'lx-avatar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span
     [class]="sm() ? 'avatar avatar--sm' : 'avatar'"
@@ -87,7 +87,7 @@ export class Avatar {
 
 /* ---------------- Progress bar ---------------- */
 @Component({
-  selector: 'tl-progress',
+  selector: 'lx-progress',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span class="progress">
     <i class="seg-translated" [style.width.%]="translated()"></i>
@@ -101,7 +101,7 @@ export class Progress {
 
 /* ---------------- Locale code chip ---------------- */
 @Component({
-  selector: 'tl-locale',
+  selector: 'lx-locale',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span class="locale"><ng-content /></span>`,
 })
@@ -109,7 +109,7 @@ export class Locale {}
 
 /* ---------------- Toggle ---------------- */
 @Component({
-  selector: 'tl-toggle',
+  selector: 'lx-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<button
     [class]="on() ? 'toggle on' : 'toggle'"
@@ -127,11 +127,11 @@ export class Toggle {
 
 /* ---------------- Search box ---------------- */
 @Component({
-  selector: 'tl-search',
+  selector: 'lx-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   template: `<div class="searchbox" [style.width.px]="width()">
-    <tl-icon name="Search" [size]="16" />
+    <lx-icon name="Search" [size]="16" />
     <input
       [placeholder]="placeholder()"
       [value]="value()"
@@ -149,22 +149,22 @@ export class SearchBox {
 
 /* ---------------- Tag ---------------- */
 @Component({
-  selector: 'tl-tag',
+  selector: 'lx-tag',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<span class="tl-tag"><ng-content /></span>`,
+  template: `<span class="lx-tag"><ng-content /></span>`,
   styles: `
-    .tl-tag {
+    .lx-tag {
       display: inline-flex;
       align-items: center;
       gap: 4px;
       height: 20px;
       padding: 0 7px;
       border-radius: 5px;
-      background: var(--tl-fill);
-      border: 1px solid var(--tl-line);
+      background: var(--lx-fill);
+      border: 1px solid var(--lx-line);
       font-size: 11.5px;
       font-weight: 600;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
   `,
 })

@@ -9,7 +9,7 @@ import { ToastService } from '../../core/toast.service';
 import { ProjectSummary } from '../../core/models';
 
 @Component({
-  selector: 'tl-projects-dashboard',
+  selector: 'lx-projects-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, SearchBox, PromptDialog],
   template: `
@@ -24,8 +24,8 @@ import { ProjectSummary } from '../../core/models';
             </div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <tl-search placeholder="Search projects" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <tl-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New project</tl-btn>
+            <lx-search placeholder="Search projects" [value]="query()" [width]="200" (changed)="query.set($event)" />
+            <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New project</lx-btn>
           </div>
         </div>
 
@@ -36,11 +36,11 @@ import { ProjectSummary } from '../../core/models';
           </div>
           <div class="statcell">
             <div class="eyebrow">Untranslated</div>
-            <div class="serif statnum" style="color:var(--tl-st-untranslated)">{{ totalUntranslated().toLocaleString() }}</div>
+            <div class="serif statnum" style="color:var(--lx-st-untranslated)">{{ totalUntranslated().toLocaleString() }}</div>
           </div>
           <div class="statcell">
             <div class="eyebrow">New this week</div>
-            <div class="serif statnum" style="color:var(--tl-accent-text)">{{ totalNew() }}</div>
+            <div class="serif statnum" style="color:var(--lx-accent-text)">{{ totalNew() }}</div>
           </div>
         </div>
 
@@ -53,17 +53,17 @@ import { ProjectSummary } from '../../core/models';
                   @if (p.image; as img) {
                     <img class="pimg" [src]="img" alt="" />
                   } @else {
-                    <tl-icon name="ArrowRightLeft" [size]="15" color="#fff" />
+                    <lx-icon name="ArrowRightLeft" [size]="15" color="#fff" />
                   }
                 </span>
                 <span class="work-name">{{ p.name }}</span>
                 <span class="work-open">
-                  <span class="cap" style="color:var(--tl-st-untranslated)">{{ p.untranslated }} untranslated</span>
+                  <span class="cap" style="color:var(--lx-st-untranslated)">{{ p.untranslated }} untranslated</span>
                   @if (p.needsReview > 0) {
-                    <span class="cap" style="color:var(--tl-st-fuzzy)">{{ p.needsReview }} need review</span>
+                    <span class="cap" style="color:var(--lx-st-fuzzy)">{{ p.needsReview }} need review</span>
                   }
                 </span>
-                <span class="work-go">Continue<tl-icon name="ArrowRight" [size]="15" /></span>
+                <span class="work-go">Continue<lx-icon name="ArrowRight" [size]="15" /></span>
               </button>
             }
           </div>
@@ -77,7 +77,7 @@ import { ProjectSummary } from '../../core/models';
                 @if (p.image; as img) {
                   <img class="pimg" [src]="img" alt="" />
                 } @else {
-                  <tl-icon name="ArrowRightLeft" [size]="17" color="#fff" />
+                  <lx-icon name="ArrowRightLeft" [size]="17" color="#fff" />
                 }
               </span>
               <span class="pid">
@@ -93,26 +93,26 @@ import { ProjectSummary } from '../../core/models';
               </span>
               <span class="ptag">
                 @if (p.terms === 0) {
-                  <span class="cap" style="color:var(--tl-slate)">No terms yet</span>
+                  <span class="cap" style="color:var(--lx-slate)">No terms yet</span>
                 } @else if (p.untranslated > 0) {
-                  <span class="cap" style="color:var(--tl-st-untranslated)">{{ p.untranslated }} untranslated</span>
+                  <span class="cap" style="color:var(--lx-st-untranslated)">{{ p.untranslated }} untranslated</span>
                 } @else {
-                  <span class="cap" style="color:var(--tl-st-translated)">Complete</span>
+                  <span class="cap" style="color:var(--lx-st-translated)">Complete</span>
                 }
                 <span class="pupd">{{ p.updated }}</span>
               </span>
-              <tl-icon name="ArrowUpRight" [size]="17" color="var(--tl-muted)" />
+              <lx-icon name="ArrowUpRight" [size]="17" color="var(--lx-muted)" />
             </button>
           }
           @if (filtered().length === 0) {
-            <div style="padding:48px 0;color:var(--tl-slate);font-size:13.5px">No projects match your search.</div>
+            <div style="padding:48px 0;color:var(--lx-slate);font-size:13.5px">No projects match your search.</div>
           }
         </div>
       </div>
     </div>
 
     @if (creating()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="New project"
         description="The slug is what the CLI and API use; it cannot be changed later."
         [fields]="newProjectFields"
@@ -126,9 +126,9 @@ import { ProjectSummary } from '../../core/models';
     .statstrip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-xl);
-      background: var(--tl-card);
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-xl);
+      background: var(--lx-card);
       overflow: hidden;
       margin-bottom: 34px;
     }
@@ -136,7 +136,7 @@ import { ProjectSummary } from '../../core/models';
       padding: 22px 24px;
     }
     .statcell + .statcell {
-      border-left: 1px solid var(--tl-line);
+      border-left: 1px solid var(--lx-line);
     }
     .statnum {
       font-size: 40px;
@@ -144,7 +144,7 @@ import { ProjectSummary } from '../../core/models';
     }
     .worklist {
       margin-bottom: 34px;
-      border-top: 1px solid var(--tl-line);
+      border-top: 1px solid var(--lx-line);
     }
     .work-row {
       width: 100%;
@@ -159,7 +159,7 @@ import { ProjectSummary } from '../../core/models';
     .work-name {
       font-size: 14.5px;
       font-weight: 600;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       flex: 1;
     }
     .work-open {
@@ -175,7 +175,7 @@ import { ProjectSummary } from '../../core/models';
       justify-content: flex-end;
       font-size: 13px;
       font-weight: 600;
-      color: var(--tl-accent-text);
+      color: var(--lx-accent-text);
     }
     .proj-row {
       width: 100%;
@@ -210,11 +210,11 @@ import { ProjectSummary } from '../../core/models';
     .pname {
       font-size: 15px;
       font-weight: 700;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .pcode {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-muted);
     }
     .pprog {
       flex: 1;
@@ -230,8 +230,8 @@ import { ProjectSummary } from '../../core/models';
       gap: 16px;
     }
     .pmeta {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-muted);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-muted);
       white-space: nowrap;
     }
     .ptag {
@@ -243,8 +243,8 @@ import { ProjectSummary } from '../../core/models';
       gap: 5px;
     }
     .pupd {
-      font: 500 12px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12px var(--lx-mono);
+      color: var(--lx-slate);
     }
   `,
 })

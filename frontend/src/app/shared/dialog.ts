@@ -18,7 +18,7 @@ const FOCUSABLE =
  * one focus lifecycle instead of hand-rolling its own.
  */
 @Component({
-  selector: 'tl-dialog',
+  selector: 'lx-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
   host: {
@@ -45,7 +45,7 @@ const FOCUSABLE =
         </div>
         <div class="spacer"></div>
         <button class="btn btn--subtle btn--sm btn--icon" aria-label="Close" (click)="closed.emit()">
-          <tl-icon name="X" [size]="16" />
+          <lx-icon name="X" [size]="16" />
         </button>
       </div>
       <div class="dlg__body">
@@ -67,28 +67,28 @@ const FOCUSABLE =
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--tl-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
       backdrop-filter: blur(2px);
     }
     .modal {
       position: relative;
       max-width: calc(100vw - 32px);
-      background: var(--tl-elev, var(--tl-card));
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-xl);
-      box-shadow: var(--tl-shadow-pop);
+      background: var(--lx-elev, var(--lx-card));
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-xl);
+      box-shadow: var(--lx-shadow-pop);
     }
     .modal__head {
       display: flex;
       align-items: flex-start;
       gap: 10px;
       padding: 16px 18px;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .modal__title {
       font-size: 15px;
       font-weight: 700;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .dlg {
       display: flex;
@@ -97,7 +97,7 @@ const FOCUSABLE =
     }
     .dlg__desc {
       font-size: 13px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       margin-top: 4px;
       line-height: 1.5;
     }
@@ -113,7 +113,7 @@ const FOCUSABLE =
       gap: 8px;
       align-items: center;
       padding: 14px 18px;
-      border-top: 1px solid var(--tl-line-2);
+      border-top: 1px solid var(--lx-line-2);
     }
   `,
 })

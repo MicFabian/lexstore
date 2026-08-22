@@ -61,7 +61,7 @@ jobs:
 
       - name: Start the API
         env:
-          TRANSLAD_DEV_RESET: 'true'
+          LEXSTORE_DEV_RESET: 'true'
         run: |
           ./gradlew bootRun -x test &
           for i in $(seq 1 60); do

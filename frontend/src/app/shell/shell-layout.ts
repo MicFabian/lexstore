@@ -6,17 +6,17 @@ import { Toast } from './toast';
 import { ProjectStateService } from '../core/project-state.service';
 
 @Component({
-  selector: 'tl-shell-layout',
+  selector: 'lx-shell-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, Sidebar, Topbar, Toast],
   template: `
     <div class="app">
-      <tl-sidebar />
+      <lx-sidebar />
       <div class="main" style="position:relative">
-        <tl-topbar />
+        <lx-topbar />
         <router-outlet />
       </div>
-      <tl-toast />
+      <lx-toast />
     </div>
   `,
 })

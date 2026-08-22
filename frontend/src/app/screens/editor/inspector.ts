@@ -18,23 +18,23 @@ import { ProjectStateService } from '../../core/project-state.service';
 import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 
 @Component({
-  selector: 'tl-inspector',
+  selector: 'lx-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn, StatusChip, Avatar, HistoryModal, PromptDialog],
   template: `
     <div class="inspector">
       <div class="inspector__head">
-        <tl-status-chip [status]="row().status" />
+        <lx-status-chip [status]="row().status" />
         @if (row().isNew) {
           <span class="chip chip--new">New</span>
         }
         <div class="spacer"></div>
-        <tl-btn variant="subtle" [sm]="true" [iconOnly]="true" icon="X" ariaLabel="Close" (clicked)="closed.emit()" />
+        <lx-btn variant="subtle" [sm]="true" [iconOnly]="true" icon="X" ariaLabel="Close" (clicked)="closed.emit()" />
       </div>
 
       <div class="inspector__body">
         <div>
-          <div class="tl-eyebrow" style="margin-bottom:6px">Key</div>
+          <div class="lx-eyebrow" style="margin-bottom:6px">Key</div>
           <div class="keytag" style="font-size:13px">{{ row().key }}</div>
           <div class="row" style="margin-top:4px;gap:6px">
             <span class="muted" style="font-size:12px">Context ·</span>
@@ -48,27 +48,27 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           </div>
           <div class="row" style="gap:5px;margin-top:8px;flex-wrap:wrap">
             @for (t of tags(); track t) {
-              <span class="tl-tag-edit">
+              <span class="lx-tag-edit">
                 {{ t }}
-                <button class="tag-x" aria-label="Remove tag" (click)="removeTag(t)"><tl-icon name="X" [size]="11" /></button>
+                <button class="tag-x" aria-label="Remove tag" (click)="removeTag(t)"><lx-icon name="X" [size]="11" /></button>
               </span>
             }
             <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" (click)="addingTag.set(true)">
-              <tl-icon name="Plus" [size]="12" />
+              <lx-icon name="Plus" [size]="12" />
             </button>
           </div>
         </div>
 
         <div>
-          <div class="tl-eyebrow" style="margin-bottom:6px">Source — <span class="locale">en</span></div>
-          <div class="card" style="padding:11px 13px;font-size:13.5px;line-height:1.5;background:var(--tl-paper)">
+          <div class="lx-eyebrow" style="margin-bottom:6px">Source — <span class="locale">en</span></div>
+          <div class="card" style="padding:11px 13px;font-size:13.5px;line-height:1.5;background:var(--lx-paper)">
             {{ row().plural ? row().plural!.one + ' / ' + row().plural!.other : row().source }}
           </div>
         </div>
 
         <div class="field">
           <div class="tfield__head">
-            <label for="tl-translation">Translation</label>
+            <label for="lx-translation">Translation</label>
             <span style="position:relative;margin-left:auto">
               <button
                 class="btn btn--subtle btn--sm lang-pick"
@@ -77,7 +77,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
               >
                 <span class="locale">{{ lang() }}</span>
                 {{ langName() }}
-                <tl-icon name="ChevronDown" [size]="13" color="var(--tl-muted)" />
+                <lx-icon name="ChevronDown" [size]="13" color="var(--lx-muted)" />
               </button>
               @if (langMenuOpen()) {
                 <span class="menu-backdrop" (click)="langMenuOpen.set(false)"></span>
@@ -88,7 +88,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
                       <span class="locale">{{ l.code }}</span>
                       <span>{{ l.name }}</span>
                       @if (l.code === lang()) {
-                        <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                        <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
                       }
                     </button>
                   }
@@ -97,7 +97,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
             </span>
           </div>
           <textarea
-            id="tl-translation"
+            id="lx-translation"
             class="textarea"
             rows="3"
             (keydown)="onTranslationKey($event)"
@@ -108,23 +108,23 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
         </div>
 
         <div class="row insp-actions" style="gap:8px">
-          <tl-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
+          <lx-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
             Save
-          </tl-btn>
-          <tl-btn variant="ghost" [sm]="true" icon="ArrowRight" [disabled]="!value()" (clicked)="saveAndNext()">
+          </lx-btn>
+          <lx-btn variant="ghost" [sm]="true" icon="ArrowRight" [disabled]="!value()" (clicked)="saveAndNext()">
             Save &amp; next
-          </tl-btn>
-          <tl-btn variant="ghost" [sm]="true" icon="CheckCheck" [disabled]="!value()" (clicked)="save('proofread')">
+          </lx-btn>
+          <lx-btn variant="ghost" [sm]="true" icon="CheckCheck" [disabled]="!value()" (clicked)="save('proofread')">
             Proofread
-          </tl-btn>
-          <tl-btn variant="subtle" [sm]="true" icon="Flag" [disabled]="!value()" (clicked)="save('fuzzy')">
+          </lx-btn>
+          <lx-btn variant="subtle" [sm]="true" icon="Flag" [disabled]="!value()" (clicked)="save('fuzzy')">
             Flag
-          </tl-btn>
+          </lx-btn>
         </div>
 
         <div class="helper" aria-live="polite">
           <div class="helper__head">
-            <tl-icon name="WandSparkles" [size]="14" color="var(--tl-slate)" />
+            <lx-icon name="WandSparkles" [size]="14" color="var(--lx-slate)" />
             <span class="helper__title">Translation helper</span>
             <div class="spacer"></div>
             <button class="btn btn--subtle btn--sm" [disabled]="suggestBusy()" (click)="fetchSuggestion()">
@@ -138,8 +138,8 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
                 <div class="helper__meta">{{ m }}</div>
               }
               <div class="row" style="gap:8px;margin-top:10px">
-                <tl-btn variant="ghost" [sm]="true" icon="Check" (clicked)="applySuggestion(s)">Use it</tl-btn>
-                <tl-btn variant="subtle" [sm]="true" icon="Plus" (clicked)="appendSuggestion(s)">Append</tl-btn>
+                <lx-btn variant="ghost" [sm]="true" icon="Check" (clicked)="applySuggestion(s)">Use it</lx-btn>
+                <lx-btn variant="subtle" [sm]="true" icon="Plus" (clicked)="appendSuggestion(s)">Append</lx-btn>
               </div>
             </div>
           } @else {
@@ -151,7 +151,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 
         <div class="lastedit">
           @if (row().modifiedBy; as m) {
-            <tl-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
+            <lx-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
             <span class="lastedit__text">
               Last edited by <b>{{ m.name }}</b> · {{ row().modifiedAt }}
             </span>
@@ -160,33 +160,33 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           }
           <div class="spacer"></div>
           <button class="btn btn--subtle btn--sm" (click)="showHistory.set(true)">
-            <tl-icon name="CalendarClock" [size]="13" />History
+            <lx-icon name="CalendarClock" [size]="13" />History
           </button>
         </div>
 
         <div class="divider"></div>
 
         <div>
-          <div class="tl-eyebrow" style="margin-bottom:12px">
+          <div class="lx-eyebrow" style="margin-bottom:12px">
             Comments
             @if (comments().length) {
-              <span class="tnum" style="color:var(--tl-muted)">· {{ comments().length }}</span>
+              <span class="tnum" style="color:var(--lx-muted)">· {{ comments().length }}</span>
             }
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
             @for (c of comments(); track c.id) {
               <div class="row" style="gap:10px;align-items:flex-start">
-                <tl-avatar [i]="c.authorAvatar" [name]="c.authorName" [sm]="true" />
+                <lx-avatar [i]="c.authorAvatar" [name]="c.authorName" [sm]="true" />
                 <div style="font-size:12.5px;line-height:1.45;flex:1">
                   <div class="row" style="gap:6px">
                     <b style="font-weight:600">{{ c.authorName }}</b>
                     <span class="muted" style="font-size:11.5px">{{ c.time }}</span>
                     <div class="spacer"></div>
                     <button class="btn btn--subtle btn--sm btn--icon" style="height:24px;width:24px" aria-label="Delete comment" (click)="deleteComment(c)">
-                      <tl-icon name="Trash2" [size]="12" color="var(--tl-muted)" />
+                      <lx-icon name="Trash2" [size]="12" color="var(--lx-muted)" />
                     </button>
                   </div>
-                  <div style="color:var(--tl-ink-80);margin-top:2px">{{ c.text }}</div>
+                  <div style="color:var(--lx-ink-80);margin-top:2px">{{ c.text }}</div>
                 </div>
               </div>
             }
@@ -206,14 +206,14 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
               placeholder="Add a comment…"
               (keydown)="onCommentKey($event)"
             ></textarea>
-            <tl-btn variant="ghost" [sm]="true" [iconOnly]="true" icon="SendHorizontal" ariaLabel="Send" (clicked)="addComment()" />
+            <lx-btn variant="ghost" [sm]="true" [iconOnly]="true" icon="SendHorizontal" ariaLabel="Send" (clicked)="addComment()" />
           </div>
         </div>
       </div>
     </div>
 
     @if (addingTag()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="Add a tag"
         description="Tags group terms across features — checkout, billing, legal."
         [fields]="tagFields"
@@ -224,7 +224,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     }
 
     @if (showHistory()) {
-      <tl-history-modal
+      <lx-history-modal
         [projectId]="projectId()!"
         [termId]="row().id"
         [termKey]="row().key"
@@ -243,29 +243,29 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       background: none;
       font-family: inherit;
       font-size: 12px;
-      color: var(--tl-ink-80);
+      color: var(--lx-ink-80);
       outline: none;
       border-bottom: 1px solid transparent;
       padding: 1px 0;
     }
     .ctx-input:focus {
-      border-bottom-color: var(--tl-accent);
+      border-bottom-color: var(--lx-accent);
     }
     .ctx-input::placeholder {
-      color: var(--tl-muted);
+      color: var(--lx-muted);
     }
-    .tl-tag-edit {
+    .lx-tag-edit {
       display: inline-flex;
       align-items: center;
       gap: 3px;
       height: 20px;
       padding: 0 4px 0 7px;
       border-radius: 5px;
-      background: var(--tl-fill);
-      border: 1px solid var(--tl-line);
+      background: var(--lx-fill);
+      border: 1px solid var(--lx-line);
       font-size: 11.5px;
       font-weight: 600;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
     .tag-x {
       border: none;
@@ -277,10 +277,10 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       width: 24px;
       height: 24px;
       margin: -2px -6px -2px 0;
-      color: var(--tl-muted);
+      color: var(--lx-muted);
     }
     .tag-x:hover {
-      color: var(--tl-danger);
+      color: var(--lx-danger);
     }
     .lastedit {
       display: flex;
@@ -289,10 +289,10 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     }
     .lastedit__text {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
     .lastedit__text b {
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       font-weight: 600;
     }
     .lang-pick {
@@ -301,9 +301,9 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
       letter-spacing: 0;
     }
     .helper {
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-lg);
-      background: var(--tl-paper);
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-lg);
+      background: var(--lx-paper);
       padding: 11px 13px;
     }
     .tfield__head {
@@ -323,7 +323,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     .helper__title {
       font-size: 11px;
       font-weight: 700;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
@@ -333,12 +333,12 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     .helper__text {
       font-size: 13.5px;
       line-height: 1.5;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
     .helper__meta,
     .helper__hint {
       font-size: 11.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       margin-top: 4px;
     }
     .helper__hint {

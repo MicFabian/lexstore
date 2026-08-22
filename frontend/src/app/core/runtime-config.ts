@@ -10,8 +10,8 @@ export interface RuntimeConfig {
 }
 
 const FALLBACK: RuntimeConfig = {
-  authority: 'http://localhost:8089/realms/translad',
-  clientId: 'translad-spa',
+  authority: 'http://localhost:8089/realms/lexstore',
+  clientId: 'lexstore-spa',
   apiBase: '/api',
 };
 

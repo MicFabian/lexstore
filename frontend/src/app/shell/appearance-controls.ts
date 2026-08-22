@@ -3,7 +3,7 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
 
 /** Theme, accent, and density pickers — shared by the settings screen and the floating panel. */
 @Component({
-  selector: 'tl-appearance-controls',
+  selector: 'lx-appearance-controls',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tweaks-label">Mode</div>
@@ -38,11 +38,11 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       display: block;
     }
     .tweaks-label {
-      font-family: var(--tl-mono);
+      font-family: var(--lx-mono);
       font-size: 10.5px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--tl-muted);
+      color: var(--lx-muted);
       margin: 12px 0 6px;
     }
     :host > .tweaks-label:first-child {
@@ -51,9 +51,9 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
     .tweaks-seg {
       display: flex;
       gap: 4px;
-      background: var(--tl-fill);
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-md);
+      background: var(--lx-fill);
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-md);
       padding: 3px;
       max-width: 260px;
     }
@@ -62,16 +62,16 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       height: 26px;
       border: none;
       background: none;
-      border-radius: var(--tl-r-sm);
+      border-radius: var(--lx-r-sm);
       font-size: 12px;
       font-weight: 600;
       text-transform: capitalize;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
     .tweaks-seg button.on {
-      background: var(--tl-elev, var(--tl-card));
-      color: var(--tl-ink);
-      box-shadow: var(--tl-shadow-xs);
+      background: var(--lx-elev, var(--lx-card));
+      color: var(--lx-ink);
+      box-shadow: var(--lx-shadow-xs);
     }
     .tweaks-accents {
       display: flex;
@@ -85,8 +85,8 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       cursor: pointer;
     }
     .swatch.on {
-      border-color: var(--tl-ink);
-      box-shadow: 0 0 0 2px var(--tl-card);
+      border-color: var(--lx-ink);
+      box-shadow: 0 0 0 2px var(--lx-card);
     }
   `,
 })

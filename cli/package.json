@@ -1,13 +1,13 @@
 {
-  "name": "@translad/cli",
+  "name": "@lexstore/cli",
   "version": "0.1.0",
-  "description": "TransLad command-line client — pull and push translations from your terminal.",
+  "description": "Lexstore command-line client — pull and push translations from your terminal.",
   "type": "module",
   "bin": {
-    "translad": "translad.mjs"
+    "lexstore": "lexstore.mjs"
   },
   "engines": {
     "node": ">=20"
   },
-  "files": ["translad.mjs"]
+  "files": ["lexstore.mjs"]
 }

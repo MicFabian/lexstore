@@ -29,7 +29,7 @@ export class AuthService {
   }
 
   /** E2E-only: a pre-fetched bearer token injected by the test harness. */
-  static readonly E2E_TOKEN_KEY = 'tl.e2e.token';
+  static readonly E2E_TOKEN_KEY = 'lx.e2e.token';
   readonly e2eToken = (() => {
     try {
       return localStorage.getItem(AuthService.E2E_TOKEN_KEY);

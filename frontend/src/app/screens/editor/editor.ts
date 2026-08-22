@@ -23,7 +23,7 @@ import { ToastService } from '../../core/toast.service';
 import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../core/models';
 
 @Component({
-  selector: 'tl-editor-screen',
+  selector: 'lx-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, Icon, Btn, SearchBox, Inspector, PromptDialog, ContentState],
   template: `
@@ -33,7 +33,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
           <div class="eyebrow">Editing · {{ langsLabel() }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;margin-top:12px">
             <span class="serif" style="font-size:52px;line-height:1">{{ pct().done }}%</span>
-            <span class="serif" style="font-size:22px;color:var(--tl-slate);font-style:italic">translated</span>
+            <span class="serif" style="font-size:22px;color:var(--lx-slate);font-style:italic">translated</span>
           </div>
           <div class="progress" style="width:340px;margin-top:16px;height:5px">
             <i class="seg-translated" [style.width.%]="pct().done"></i>
@@ -57,7 +57,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                 <span class="locale">{{ c }}</span>
               }
               {{ langsLabel() }}
-              <tl-icon name="ChevronDown" [size]="15" color="var(--tl-muted)" />
+              <lx-icon name="ChevronDown" [size]="15" color="var(--lx-muted)" />
             </button>
             @if (langMenuOpen()) {
               <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
@@ -73,20 +73,20 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                     <span class="locale">{{ l.code }}</span>
                     <span>{{ l.name }}</span>
                     @if (langs().includes(l.code)) {
-                      <tl-icon name="Check" [size]="14" color="var(--tl-accent-hi)" style="margin-left:auto" />
+                      <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
                     }
                   </button>
                 }
               </div>
             }
           </div>
-          <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="adding.set(true)">Add term</tl-btn>
+          <lx-btn variant="primary" [sm]="true" icon="Plus" (clicked)="adding.set(true)">Add term</lx-btn>
         </div>
       </div>
 
       @if (activeFeature(); as f) {
         <div class="feature-scope">
-          <tl-icon name="LayoutGrid" [size]="14" color="var(--tl-slate)" />
+          <lx-icon name="LayoutGrid" [size]="14" color="var(--lx-slate)" />
           <span>Showing <b>{{ f.name }}</b> only</span>
           <a class="feature-scope__clear" [routerLink]="['/', 'editor']">Show all terms</a>
         </div>
@@ -99,9 +99,9 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
           </button>
         }
         <div class="spacer"></div>
-        <tl-search placeholder="Search keys or text" [value]="query()" [width]="200" (changed)="query.set($event)" />
+        <lx-search placeholder="Search keys or text" [value]="query()" [width]="200" (changed)="query.set($event)" />
         <button class="btn btn--subtle btn--sm" [disabled]="autoBusy()" (click)="autoTranslate()">
-          <tl-icon name="WandSparkles" [size]="14" />{{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
+          <lx-icon name="WandSparkles" [size]="14" />{{ autoBusy() ? 'Translating…' : 'Auto-translate' }}
         </button>
       </div>
 
@@ -130,7 +130,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                 <td class="keycell" (click)="select(r.id, langs()[0])">
                   <div class="keytag">{{ r.key }}</div>
                   @if (r.isNew) {
-                    <div class="stcap" style="margin-top:7px;color:var(--tl-st-new)">New</div>
+                    <div class="stcap" style="margin-top:7px;color:var(--lx-st-new)">New</div>
                   }
                 </td>
                 <td class="src" (click)="select(r.id, langs()[0])">
@@ -146,7 +146,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                   >
                     <span class="tgt__value">{{ cellRow?.target || 'Add translation…' }}</span>
                     @if (cellRow && cellRow.status !== 'translated') {
-                      <span class="stcap tgt__status" [style.color]="'var(--tl-st-' + cellRow.status + ')'">
+                      <span class="stcap tgt__status" [style.color]="'var(--lx-st-' + cellRow.status + ')'">
                         {{ statusLabel(cellRow.status) }}
                       </span>
                     }
@@ -158,7 +158,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
               <tr>
                 <td [attr.colspan]="langs().length + 2" style="padding:0">
                   @if (rows().length === 0) {
-                    <tl-content-state
+                    <lx-content-state
                       kind="empty"
                       title="No terms in this project yet"
                       description="Add the first source string, and it appears here for every language."
@@ -166,7 +166,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                       (acted)="adding.set(true)"
                     />
                   } @else {
-                    <tl-content-state
+                    <lx-content-state
                       kind="no-results"
                       [title]="'Nothing ' + activeFilterLabel()"
                       description="No terms match this filter and search."
@@ -190,7 +190,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       </div>
 
       @if (selectedRow(); as row) {
-        <tl-inspector
+        <lx-inspector
           [row]="row"
           [lang]="sel()!.lang"
           [languages]="languages()"
@@ -202,7 +202,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       }
 
       @if (adding()) {
-        <tl-prompt-dialog
+        <lx-prompt-dialog
           title="Add a term"
           description="The key identifies this string in your code; the source text is what gets translated."
           [fields]="addTermFields"
@@ -224,14 +224,14 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     .ed-counts {
       margin-top: 10px;
       font-size: 12.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
     .ed-tabs {
       display: flex;
       align-items: center;
       gap: 20px;
       padding: 0 32px;
-      border-bottom: 1px solid var(--tl-line);
+      border-bottom: 1px solid var(--lx-line);
       flex: none;
     }
     .tgt__value {
@@ -243,8 +243,8 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     }
     /* The open cell is the edited one — mark it, not just its row. */
     .tgt.cell-sel {
-      box-shadow: inset 2px 0 0 var(--tl-accent);
-      background: var(--tl-accent-soft);
+      box-shadow: inset 2px 0 0 var(--lx-accent);
+      background: var(--lx-accent-soft);
     }
 
     /* Comparing many languages scrolls sideways; the key and source stay put. */
@@ -254,8 +254,8 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       gap: 8px;
       padding: 10px 20px;
       font-size: 13px;
-      border-bottom: 1px solid var(--tl-line);
-      background: var(--tl-fill);
+      border-bottom: 1px solid var(--lx-line);
+      background: var(--lx-fill);
     }
     .feature-scope__clear {
       margin-left: auto;
@@ -268,8 +268,8 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       gap: 12px;
       padding: 16px 20px;
       font-size: 13px;
-      color: var(--tl-slate);
-      border-top: 1px solid var(--tl-line);
+      color: var(--lx-slate);
+      border-top: 1px solid var(--lx-line);
     }
     .editor__scroll {
       overflow: auto;
@@ -282,7 +282,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       position: sticky;
       left: 0;
       z-index: 2;
-      background: var(--tl-card);
+      background: var(--lx-card);
       width: var(--key-col);
       min-width: var(--key-col);
       max-width: var(--key-col);
@@ -295,14 +295,14 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       position: sticky;
       left: var(--key-col);
       z-index: 2;
-      background: var(--tl-card);
+      background: var(--lx-card);
       min-width: 260px;
     }
     .ttable thead th {
       position: sticky;
       top: 0;
       z-index: 3;
-      background: var(--tl-card);
+      background: var(--lx-card);
     }
     .ttable thead th.keycell,
     .ttable thead th.src-col {
@@ -310,11 +310,11 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     }
     .trow:hover .keycell,
     .trow:hover .src {
-      background: var(--tl-row-hover);
+      background: var(--lx-row-hover);
     }
     .trow.sel .keycell,
     .trow.sel .src {
-      background: var(--tl-accent-soft);
+      background: var(--lx-accent-soft);
     }
     .ttable td.tgt,
     .ttable th.tgt-col {

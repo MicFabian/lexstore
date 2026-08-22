@@ -13,7 +13,7 @@ export const ACCENTS: { key: Accent; hex: string }[] = [
 
 /* v2: the editorial redesign made light the default — the bump discards
    pre-redesign persisted tweaks so everyone starts from the new baseline. */
-const KEY = 'translad.tweaks.v2';
+const KEY = 'lexstore.tweaks.v2';
 
 @Injectable({ providedIn: 'root' })
 export class TweaksService {

@@ -24,7 +24,7 @@ import { TermView } from '../../core/models';
 const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
 
 @Component({
-  selector: 'tl-terms-screen',
+  selector: 'lx-terms-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
@@ -37,26 +37,26 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
           <div class="psub">{{ rows().length }} terms · manage the keys; translate them per language</div>
         </div>
         <div style="display:flex;gap:8px">
-          <tl-btn variant="ghost" icon="FileUp" (clicked)="goImport()">Import</tl-btn>
-          <tl-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add term</tl-btn>
+          <lx-btn variant="ghost" icon="FileUp" (clicked)="goImport()">Import</lx-btn>
+          <lx-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add term</lx-btn>
         </div>
       </div>
 
       <div class="row" style="margin:16px 0 12px;gap:8px;flex-wrap:wrap">
-        <tl-search placeholder="Search terms" [value]="query()" [width]="220" (changed)="query.set($event)" />
+        <lx-search placeholder="Search terms" [value]="query()" [width]="220" (changed)="query.set($event)" />
         <button
           [class]="'btn btn--sm ' + (newOnly() ? 'btn--ghost' : 'btn--subtle')"
-          [style.border-color]="newOnly() ? 'var(--tl-st-new)' : null"
-          [style.color]="newOnly() ? 'var(--tl-st-new)' : null"
+          [style.border-color]="newOnly() ? 'var(--lx-st-new)' : null"
+          [style.color]="newOnly() ? 'var(--lx-st-new)' : null"
           (click)="newOnly.set(!newOnly())"
         >
-          <tl-icon name="Sparkles" [size]="13" />New only
+          <lx-icon name="Sparkles" [size]="13" />New only
         </button>
         <div class="row" style="gap:6px;flex-wrap:wrap">
           <button
             [class]="'btn btn--sm ' + (tag() === null ? 'btn--ghost' : 'btn--subtle')"
-            [style.border-color]="tag() === null ? 'var(--tl-accent)' : null"
-            [style.color]="tag() === null ? 'var(--tl-accent-text)' : null"
+            [style.border-color]="tag() === null ? 'var(--lx-accent)' : null"
+            [style.color]="tag() === null ? 'var(--lx-accent-text)' : null"
             (click)="tag.set(null)"
           >
             All tags
@@ -64,11 +64,11 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
           @for (t of allTags; track t) {
             <button
               [class]="'btn btn--sm ' + (tag() === t ? 'btn--ghost' : 'btn--subtle')"
-              [style.border-color]="tag() === t ? 'var(--tl-accent)' : null"
-              [style.color]="tag() === t ? 'var(--tl-accent-text)' : null"
+              [style.border-color]="tag() === t ? 'var(--lx-accent)' : null"
+              [style.color]="tag() === t ? 'var(--lx-accent-text)' : null"
               (click)="tag.set(t)"
             >
-              <tl-icon name="Tag" [size]="12" />{{ t }}
+              <lx-icon name="Tag" [size]="12" />{{ t }}
             </button>
           }
         </div>
@@ -77,18 +77,18 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       <div>
         @if (selectedCount() > 0) {
           <div class="bulk-bar">
-            <span style="font-size:13px;font-weight:600;color:var(--tl-accent-text)">{{ selectedCount() }} selected</span>
+            <span style="font-size:13px;font-weight:600;color:var(--lx-accent-text)">{{ selectedCount() }} selected</span>
             <div class="spacer"></div>
             <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); clearSelection()">Clear</button>
-            <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger)" (click)="$event.stopPropagation(); pendingBulkDelete.set(true)">
-              <tl-icon name="Trash2" [size]="14" />Delete selected
+            <button class="btn btn--subtle btn--sm" style="color:var(--lx-danger)" (click)="$event.stopPropagation(); pendingBulkDelete.set(true)">
+              <lx-icon name="Trash2" [size]="14" />Delete selected
             </button>
           </div>
         }
         @if (loading()) {
-          <tl-table-skeleton [rows]="8" [columns]="5" />
+          <lx-table-skeleton [rows]="8" [columns]="5" />
         } @else if (loadError()) {
-          <tl-content-state
+          <lx-content-state
             kind="error"
             title="Could not load terms"
             description="The request failed. This is usually temporary."
@@ -117,11 +117,11 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 </td>
                 <td>
                   <div style="display:flex;align-items:center">
-                    <span class="expand-toggle" [class.open]="expanded() === r.id"><tl-icon name="ChevronRight" [size]="15" /></span>
+                    <span class="expand-toggle" [class.open]="expanded() === r.id"><lx-icon name="ChevronRight" [size]="15" /></span>
                     <div>
                       <div class="keytag">{{ r.key }}</div>
                       @if (r.plural) {
-                        <div class="keysub"><tl-icon name="Variable" [size]="11" /> plural</div>
+                        <div class="keysub"><lx-icon name="Variable" [size]="11" /> plural</div>
                       }
                     </div>
                   </div>
@@ -130,7 +130,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 <td>
                   <div class="row" style="gap:4px;flex-wrap:wrap">
                     @for (t of r.tags; track t) {
-                      <tl-tag>{{ t }}</tl-tag>
+                      <lx-tag>{{ t }}</lx-tag>
                     }
                     @if (r.isNew) {
                       <span class="chip chip--new">New</span>
@@ -145,7 +145,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="pendingDelete.set(r)">
-                    <tl-icon name="Trash2" [size]="15" color="var(--tl-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
                   </button>
                 </td>
               </tr>
@@ -154,12 +154,12 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                   <td colspan="6">
                     <div class="expand-body">
                       <div class="row" style="margin-bottom:10px">
-                        <div class="tl-eyebrow">
+                        <div class="lx-eyebrow">
                           Translations · <span class="tnum">{{ doneCount(r) }}/{{ r.translations.length }}</span>
                         </div>
                         <div class="spacer"></div>
                         <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); openHistory(r)">
-                          <tl-icon name="CalendarClock" [size]="13" />View full history
+                          <lx-icon name="CalendarClock" [size]="13" />View full history
                         </button>
                       </div>
                       <div class="tr-table">
@@ -169,12 +169,12 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                             <span class="tr-name">{{ t.name }}</span>
                             <span
                               class="tr-value"
-                              [style.color]="t.value ? 'var(--tl-ink)' : 'var(--tl-muted)'"
+                              [style.color]="t.value ? 'var(--lx-ink)' : 'var(--lx-muted)'"
                               [style.font-style]="t.value ? 'normal' : 'italic'"
                             >{{ t.value || 'Untranslated' }}</span>
                             <span class="tr-author">
                               @if (t.modifiedBy; as m) {
-                                <tl-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
+                                <lx-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
                                 <span class="tr-author-meta">
                                   <span class="tr-author-name">{{ m.name }}</span>
                                   <span class="muted tnum tr-author-at">{{ m.at }}</span>
@@ -183,7 +183,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                                 <span class="muted" style="font-size:12px">—</span>
                               }
                             </span>
-                            <tl-status-chip [status]="t.status" />
+                            <lx-status-chip [status]="t.status" />
                           </div>
                         }
                       </div>
@@ -196,7 +196,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
               <tr>
                 <td colspan="6" style="padding:0">
                   @if (rows().length === 0) {
-                    <tl-content-state
+                    <lx-content-state
                       kind="empty"
                       title="No terms yet"
                       description="Terms are the source strings your app shows. Add one, or import them from a file or POEditor."
@@ -204,7 +204,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                       (acted)="adding.set(true)"
                     />
                   } @else {
-                    <tl-content-state
+                    <lx-content-state
                       kind="no-results"
                       title="No terms match these filters"
                       description="Nothing matches the current search, tag, and New-only combination."
@@ -223,7 +223,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     </div>
 
     @if (adding()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="Add a term"
         description="The key identifies this string in your code; the source text is what gets translated."
         [fields]="addTermFields"
@@ -234,7 +234,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
 
     @if (pendingDelete(); as r) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Delete this term?"
         [description]="'“' + r.key + '” and its translations in every language are deleted. This cannot be undone.'"
         confirmLabel="Delete term"
@@ -244,7 +244,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
 
     @if (pendingBulkDelete()) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Delete selected terms?"
         [description]="selectedCount() + ' terms and their translations in every language are deleted. This cannot be undone.'"
         confirmLabel="Delete terms"
@@ -254,7 +254,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
     }
 
     @if (historyTerm(); as h) {
-      <tl-history-modal
+      <lx-history-modal
         [projectId]="projectId()!"
         [termId]="h.id"
         [termKey]="h.key"
@@ -270,8 +270,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       justify-content: flex-end;
     }
     .covnum {
-      font: 500 12.5px var(--tl-mono);
-      color: var(--tl-slate);
+      font: 500 12.5px var(--lx-mono);
+      color: var(--lx-slate);
       width: 34px;
       text-align: right;
     }
@@ -280,8 +280,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       align-items: center;
       gap: 8px;
       padding: 10px 16px;
-      background: var(--tl-accent-soft);
-      border-bottom: 1px solid var(--tl-line);
+      background: var(--lx-accent-soft);
+      border-bottom: 1px solid var(--lx-line);
     }
     .expand-body {
       padding: 16px 24px 20px 56px;
@@ -296,14 +296,14 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       align-items: center;
       gap: 14px;
       padding: 9px 0;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .tr-row:last-child {
       border-bottom: none;
     }
     .tr-name {
       font-size: 12.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
     }
     .tr-value {
       font-size: 14px;

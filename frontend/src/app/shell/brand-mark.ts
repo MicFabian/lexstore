@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
-  selector: 'tl-brand-mark',
+  selector: 'lx-brand-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <svg
@@ -13,7 +13,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       [style.borderRadius.px]="radius()"
       style="display:block"
     >
-      <rect width="120" height="120" rx="27" fill="var(--tl-accent)" />
+      <rect width="120" height="120" rx="27" fill="var(--lx-accent)" />
       <g
         stroke="#fff"
         stroke-width="8"

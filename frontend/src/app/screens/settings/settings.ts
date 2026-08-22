@@ -19,7 +19,7 @@ interface IntegrationItem {
 }
 
 @Component({
-  selector: 'tl-settings-screen',
+  selector: 'lx-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, Icon, Btn, Toggle, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
   template: `
@@ -34,7 +34,7 @@ interface IntegrationItem {
         <div class="subnav" style="margin-bottom:30px">
           @for (t of tabs; track t.id) {
             <button [class.on]="tab() === t.id" (click)="tab.set(t.id)">
-              <tl-icon [name]="t.icon" [size]="14" /><span>{{ t.label }}</span>
+              <lx-icon [name]="t.icon" [size]="14" /><span>{{ t.label }}</span>
             </button>
           }
         </div>
@@ -45,14 +45,14 @@ interface IntegrationItem {
               <div style="display:flex;flex-direction:column;gap:18px">
                 <div class="panel">
                   <div class="panel__head">
-                    <tl-icon name="KeyRound" [size]="17" color="var(--tl-accent-hi)" />
+                    <lx-icon name="KeyRound" [size]="17" color="var(--lx-accent-hi)" />
                     <h2>API keys</h2>
                     <div class="spacer"></div>
-                    <tl-btn variant="primary" [sm]="true" icon="Plus" (clicked)="generating.set(true)">Generate key</tl-btn>
+                    <lx-btn variant="primary" [sm]="true" icon="Plus" (clicked)="generating.set(true)">Generate key</lx-btn>
                   </div>
                   <div style="padding:6px 0">
                     @for (k of keys(); track k.id; let last = $last) {
-                      <div class="keyrow" [style.border-bottom]="last ? 'none' : '1px solid var(--tl-line-2)'">
+                      <div class="keyrow" [style.border-bottom]="last ? 'none' : '1px solid var(--lx-line-2)'">
                         <div style="flex:1;min-width:0">
                           <div class="row" style="gap:8px;margin-bottom:6px">
                             <span style="font-weight:600;font-size:13.5px">{{ k.label }}</span>
@@ -69,8 +69,8 @@ interface IntegrationItem {
                         <div style="text-align:right;flex:none;min-width:150px">
                           <div class="muted" style="font-size:12px">Last used {{ k.used }}</div>
                           <div class="muted" style="font-size:11.5px;margin-top:2px">Created {{ k.created }}</div>
-                          <button class="btn btn--subtle btn--sm" style="color:var(--tl-danger);margin-top:4px" (click)="pendingRevoke.set(k)">
-                            <tl-icon name="Trash2" [size]="14" />Revoke
+                          <button class="btn btn--subtle btn--sm" style="color:var(--lx-danger);margin-top:4px" (click)="pendingRevoke.set(k)">
+                            <lx-icon name="Trash2" [size]="14" />Revoke
                           </button>
                         </div>
                       </div>
@@ -79,10 +79,10 @@ interface IntegrationItem {
                 </div>
 
                 <div class="card cli-card">
-                  <tl-icon name="Terminal" [size]="18" color="var(--tl-accent-text)" style="margin-top:1px" />
+                  <lx-icon name="Terminal" [size]="18" color="var(--lx-accent-text)" style="margin-top:1px" />
                   <div>
                     <div style="font-weight:600;font-size:13.5px;margin-bottom:4px">Pull translations from your terminal</div>
-                    <code class="tl-mono" style="font-size:12.5px;color:var(--tl-accent-text)">$ translad pull --project {{ project()?.code }} --lang fr</code>
+                    <code class="lx-mono" style="font-size:12.5px;color:var(--lx-accent-text)">$ lexstore pull --project {{ project()?.code }} --lang fr</code>
                   </div>
                 </div>
               </div>
@@ -91,10 +91,10 @@ interface IntegrationItem {
               <div class="panel" style="max-width:520px">
                 <div class="panel__head"><h2>Appearance</h2></div>
                 <div style="padding:18px">
-                  <p style="margin:0 0 16px;font-size:13.5px;color:var(--tl-slate);line-height:1.55">
+                  <p style="margin:0 0 16px;font-size:13.5px;color:var(--lx-slate);line-height:1.55">
                     Theme, accent, and row density. Saved in this browser, for you only.
                   </p>
-                  <tl-appearance-controls />
+                  <lx-appearance-controls />
                 </div>
               </div>
             }
@@ -110,7 +110,7 @@ interface IntegrationItem {
                           @if (draftImage(); as img) {
                             <img [src]="img" alt="" />
                           } @else {
-                            <tl-icon name="ArrowRightLeft" [size]="18" color="#fff" />
+                            <lx-icon name="ArrowRightLeft" [size]="18" color="#fff" />
                           }
                         </span>
                         <input
@@ -120,7 +120,7 @@ interface IntegrationItem {
                           style="display:none"
                           (change)="onImageFile($event)"
                         />
-                        <tl-btn variant="ghost" [sm]="true" icon="Upload" (clicked)="imageInput.click()">Upload image</tl-btn>
+                        <lx-btn variant="ghost" [sm]="true" icon="Upload" (clicked)="imageInput.click()">Upload image</lx-btn>
                         @if (draftImage()) {
                           <button class="btn btn--subtle btn--sm" (click)="clearImage()">Remove</button>
                         }
@@ -142,13 +142,13 @@ interface IntegrationItem {
                         </div>
                       </div>
                     </div>
-                    <div><tl-btn variant="primary" [disabled]="saving()" (clicked)="saveProject()">{{ saving() ? 'Saving…' : 'Save changes' }}</tl-btn></div>
+                    <div><lx-btn variant="primary" [disabled]="saving()" (clicked)="saveProject()">{{ saving() ? 'Saving…' : 'Save changes' }}</lx-btn></div>
                   </div>
                 </div>
 
                 <div class="panel">
                   <div class="panel__head">
-                    <tl-icon name="WandSparkles" [size]="17" color="var(--tl-accent-hi)" />
+                    <lx-icon name="WandSparkles" [size]="17" color="var(--lx-accent-hi)" />
                     <h2>Translation context</h2>
                   </div>
                   <div style="padding:18px;display:flex;flex-direction:column;gap:12px;max-width:640px">
@@ -164,7 +164,7 @@ interface IntegrationItem {
                       placeholder="e.g. Agricultural software. Translate &quot;Schlag&quot; as &quot;field&quot;, never &quot;hit&quot;. Keep product names untranslated."
                     ></textarea>
                     <div>
-                      <tl-btn variant="primary" [sm]="true" [disabled]="saving()" (clicked)="saveContext()">Save context</tl-btn>
+                      <lx-btn variant="primary" [sm]="true" [disabled]="saving()" (clicked)="saveContext()">Save context</lx-btn>
                     </div>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ interface IntegrationItem {
                 @for (it of integrations; track it.name) {
                   <div class="card" style="padding:16px">
                     <div class="row" style="margin-bottom:10px">
-                      <span class="int-ico"><tl-icon [name]="it.icon" [size]="18" color="var(--tl-ink)" /></span>
+                      <span class="int-ico"><lx-icon [name]="it.icon" [size]="18" color="var(--lx-ink)" /></span>
                       <span style="font-weight:700;font-size:14px">{{ it.name }}</span>
                       <div class="spacer"></div>
                       @if (it.on) {
@@ -191,10 +191,10 @@ interface IntegrationItem {
             }
             @case ('export') {
               <div style="display:flex;flex-direction:column;gap:18px">
-              <tl-poeditor-wizard />
+              <lx-poeditor-wizard />
               <div class="two-col">
                 <div class="card" style="padding:18px">
-                  <tl-icon name="FileUp" [size]="20" color="var(--tl-accent-hi)" />
+                  <lx-icon name="FileUp" [size]="20" color="var(--lx-accent-hi)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Import strings</div>
                   <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Upload a JSON file of key→value pairs into a language.</p>
                   <div class="field" style="margin-bottom:10px">
@@ -202,10 +202,10 @@ interface IntegrationItem {
                     <input class="input" [value]="ioLang()" (input)="ioLang.set($any($event.target).value)" placeholder="fr" />
                   </div>
                   <input #fileInput type="file" accept=".json,application/json" style="display:none" (change)="onImportFile($event)" />
-                  <tl-btn variant="ghost" icon="Upload" (clicked)="fileInput.click()">Choose JSON file</tl-btn>
+                  <lx-btn variant="ghost" icon="Upload" (clicked)="fileInput.click()">Choose JSON file</lx-btn>
                 </div>
                 <div class="card" style="padding:18px">
-                  <tl-icon name="FileDown" [size]="20" color="var(--tl-accent-hi)" />
+                  <lx-icon name="FileDown" [size]="20" color="var(--lx-accent-hi)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Export translations</div>
                   <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Download one language as JSON or CSV.</p>
                   <div class="field" style="margin-bottom:10px">
@@ -213,8 +213,8 @@ interface IntegrationItem {
                     <input class="input" [value]="ioLang()" (input)="ioLang.set($any($event.target).value)" placeholder="fr" />
                   </div>
                   <div class="row" style="gap:8px">
-                    <tl-btn variant="ghost" icon="Download" (clicked)="exportFile('json')">JSON</tl-btn>
-                    <tl-btn variant="ghost" icon="Download" (clicked)="exportFile('csv')">CSV</tl-btn>
+                    <lx-btn variant="ghost" icon="Download" (clicked)="exportFile('json')">JSON</lx-btn>
+                    <lx-btn variant="ghost" icon="Download" (clicked)="exportFile('csv')">CSV</lx-btn>
                   </div>
                 </div>
               </div>
@@ -226,7 +226,7 @@ interface IntegrationItem {
     </div>
 
     @if (generating()) {
-      <tl-prompt-dialog
+      <lx-prompt-dialog
         title="Generate an API key"
         description="The secret is shown once, right after it is created."
         [fields]="keyFields"
@@ -237,7 +237,7 @@ interface IntegrationItem {
     }
 
     @if (pendingRevoke(); as k) {
-      <tl-confirm-dialog
+      <lx-confirm-dialog
         title="Revoke this key?"
         [description]="'“' + k.label + '” stops working immediately. Anything using it — CI, the CLI, your apps — loses access until it is replaced.'"
         confirmLabel="Revoke key"
@@ -264,7 +264,7 @@ interface IntegrationItem {
     }
     .hint {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       line-height: 1.5;
       margin: 6px 0 0;
     }
@@ -275,20 +275,20 @@ interface IntegrationItem {
       padding: 13px 18px;
     }
     .keycode {
-      font-family: var(--tl-mono);
+      font-family: var(--lx-mono);
       font-size: 12.5px;
-      background: var(--tl-fill);
+      background: var(--lx-fill);
       padding: 4px 9px;
-      border-radius: var(--tl-r-sm);
-      color: var(--tl-ink-80);
+      border-radius: var(--lx-r-sm);
+      color: var(--lx-ink-80);
     }
     .cli-card {
       padding: 16px;
       display: flex;
       gap: 12px;
       align-items: flex-start;
-      background: var(--tl-accent-soft);
-      border-color: var(--tl-accent-soft-2);
+      background: var(--lx-accent-soft);
+      border-color: var(--lx-accent-soft-2);
     }
     .two-col {
       display: grid;
@@ -299,7 +299,7 @@ interface IntegrationItem {
       width: 36px;
       height: 36px;
       border-radius: 9px;
-      background: var(--tl-fill);
+      background: var(--lx-fill);
       display: grid;
       place-items: center;
     }

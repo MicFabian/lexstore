@@ -14,13 +14,13 @@ type Target = 'existing' | 'new';
  * to our backend per request, which proxies POEditor; it is never persisted.
  */
 @Component({
-  selector: 'tl-poeditor-wizard',
+  selector: 'lx-poeditor-wizard',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Btn],
   template: `
     <div class="card wiz">
       <div class="wiz__head">
-        <span class="int-ico"><tl-icon name="Download" [size]="18" color="var(--tl-ink)" /></span>
+        <span class="int-ico"><lx-icon name="Download" [size]="18" color="var(--lx-ink)" /></span>
         <div style="flex:1;min-width:0">
           <div class="wiz__title">Import from POEditor</div>
           <div class="wiz__sub">Pull terms and translations straight from a POEditor project.</div>
@@ -45,12 +45,12 @@ type Target = 'existing' | 'new';
                 placeholder="Paste your API token"
               />
               <p class="wiz__hint">
-                Found in POEditor under Account settings → API access. Used for this import only — TransLad never stores it.
+                Found in POEditor under Account settings → API access. Used for this import only — Lexstore never stores it.
               </p>
             </div>
-            <tl-btn variant="primary" [sm]="true" [disabled]="!token() || busy()" (clicked)="loadProjects()">
+            <lx-btn variant="primary" [sm]="true" [disabled]="!token() || busy()" (clicked)="loadProjects()">
               {{ busy() ? 'Connecting…' : 'Connect' }}
-            </tl-btn>
+            </lx-btn>
           </div>
         }
 
@@ -62,14 +62,14 @@ type Target = 'existing' | 'new';
                 <button class="wiz__row" (click)="pickProject(p)">
                   <span class="wiz__row-name">{{ p.name }}</span>
                   <span class="wiz__row-meta">#{{ p.id }}</span>
-                  <tl-icon name="ChevronRight" [size]="15" color="var(--tl-muted)" />
+                  <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
                 </button>
               }
               @if (projects().length === 0) {
                 <div class="wiz__hint">That account has no projects.</div>
               }
             </div>
-            <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('token')">Back</tl-btn>
+            <lx-btn variant="subtle" [sm]="true" (clicked)="step.set('token')">Back</lx-btn>
           </div>
         }
 
@@ -82,17 +82,17 @@ type Target = 'existing' | 'new';
                   Import into {{ currentProject()?.name }}
                   <span class="wiz__row-note">Adds languages and terms to the project you are in.</span>
                 </span>
-                <tl-icon name="ChevronRight" [size]="15" color="var(--tl-muted)" />
+                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
               </button>
               <button class="wiz__row" (click)="pickTarget('new')">
                 <span class="wiz__row-name">
                   Import as a new project
-                  <span class="wiz__row-note">Creates “{{ target()?.name }}” in TransLad and imports everything into it.</span>
+                  <span class="wiz__row-note">Creates “{{ target()?.name }}” in Lexstore and imports everything into it.</span>
                 </span>
-                <tl-icon name="ChevronRight" [size]="15" color="var(--tl-muted)" />
+                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
               </button>
             </div>
-            <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('project')">Back</tl-btn>
+            <lx-btn variant="subtle" [sm]="true" (clicked)="step.set('project')">Back</lx-btn>
           </div>
         }
 
@@ -121,10 +121,10 @@ type Target = 'existing' | 'new';
               }
             </div>
             <div class="row" style="gap:8px">
-              <tl-btn variant="primary" [sm]="true" [disabled]="selected().size === 0 || busy()" (clicked)="loadPreview()">
+              <lx-btn variant="primary" [sm]="true" [disabled]="selected().size === 0 || busy()" (clicked)="loadPreview()">
                 {{ busy() ? 'Reading…' : 'Preview ' + selected().size + ' language' + (selected().size === 1 ? '' : 's') }}
-              </tl-btn>
-              <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('target')">Back</tl-btn>
+              </lx-btn>
+              <lx-btn variant="subtle" [sm]="true" (clicked)="step.set('target')">Back</lx-btn>
             </div>
           </div>
         }
@@ -167,10 +167,10 @@ type Target = 'existing' | 'new';
               {{ importTargetLabel() }}
             </p>
             <div class="row" style="gap:8px">
-              <tl-btn variant="primary" [sm]="true" [disabled]="busy()" (clicked)="runImport()">
+              <lx-btn variant="primary" [sm]="true" [disabled]="busy()" (clicked)="runImport()">
                 {{ busy() ? 'Importing…' : 'Import these' }}
-              </tl-btn>
-              <tl-btn variant="subtle" [sm]="true" (clicked)="step.set('languages')">Back</tl-btn>
+              </lx-btn>
+              <lx-btn variant="subtle" [sm]="true" (clicked)="step.set('languages')">Back</lx-btn>
             </div>
           </div>
         }
@@ -178,10 +178,10 @@ type Target = 'existing' | 'new';
         @case ('done') {
           <div class="wiz__body">
             <div class="wiz__done">
-              <tl-icon name="CheckCheck" [size]="18" color="var(--tl-st-translated)" />
+              <lx-icon name="CheckCheck" [size]="18" color="var(--lx-st-translated)" />
               <span>{{ summary() }}</span>
             </div>
-            <tl-btn variant="subtle" [sm]="true" (clicked)="restart()">Import more</tl-btn>
+            <lx-btn variant="subtle" [sm]="true" (clicked)="restart()">Import more</lx-btn>
           </div>
         }
       }
@@ -197,7 +197,7 @@ type Target = 'existing' | 'new';
       align-items: center;
       gap: 12px;
       padding: 16px 18px;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
     }
     .wiz__title {
       font-weight: 700;
@@ -205,11 +205,11 @@ type Target = 'existing' | 'new';
     }
     .wiz__sub {
       font-size: 12.5px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       margin-top: 2px;
     }
     .wiz__step {
-      color: var(--tl-muted);
+      color: var(--lx-muted);
       white-space: nowrap;
     }
     .wiz__body {
@@ -221,13 +221,13 @@ type Target = 'existing' | 'new';
     }
     .wiz__hint {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       line-height: 1.5;
       margin: 6px 0 0;
     }
     .wiz__list {
       width: 100%;
-      border-top: 1px solid var(--tl-line-2);
+      border-top: 1px solid var(--lx-line-2);
       max-height: 280px;
       overflow-y: auto;
     }
@@ -238,39 +238,39 @@ type Target = 'existing' | 'new';
       gap: 12px;
       padding: 12px 2px;
       border: none;
-      border-bottom: 1px solid var(--tl-line-2);
+      border-bottom: 1px solid var(--lx-line-2);
       background: none;
       text-align: left;
       cursor: pointer;
       min-height: 44px;
     }
     .wiz__row:hover {
-      background: var(--tl-row-hover);
+      background: var(--lx-row-hover);
     }
     .wiz__row-name {
       font-size: 13.5px;
       font-weight: 600;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
       flex: 1;
     }
     .wiz__row-note {
       display: block;
       font-size: 12.5px;
       font-weight: 400;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       margin-top: 3px;
     }
     .wiz__row-meta {
       font-size: 12px;
-      color: var(--tl-slate);
+      color: var(--lx-slate);
       font-variant-numeric: tabular-nums;
     }
     .wiz__table {
       width: 100%;
       max-height: 320px;
       overflow: auto;
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-lg);
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-lg);
     }
     .wiz__table .ttable {
       background: transparent;
@@ -280,7 +280,7 @@ type Target = 'existing' | 'new';
       align-items: center;
       gap: 9px;
       font-size: 13.5px;
-      color: var(--tl-ink);
+      color: var(--lx-ink);
     }
   `,
 })

@@ -1,1 +1,1 @@
-rootProject.name = "translad-backend"
+rootProject.name = "lexstore-backend"

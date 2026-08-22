@@ -7,7 +7,7 @@ export interface SegmentOption {
 }
 
 @Component({
-  selector: 'tl-segmented',
+  selector: 'lx-segmented',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="segmented" role="tablist">

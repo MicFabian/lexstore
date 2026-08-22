@@ -4,13 +4,13 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: translad
-      POSTGRES_USER: ${DATABASE_USER:-translad}
+      POSTGRES_DB: lexstore
+      POSTGRES_USER: ${DATABASE_USER:-lexstore}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-translad} -d translad"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-lexstore} -d lexstore"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -23,14 +23,14 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/translad
-      KC_DB_USERNAME: ${DATABASE_USER:-translad}
+      KC_DB_URL: jdbc:postgresql://postgres:5432/lexstore
+      KC_DB_USERNAME: ${DATABASE_USER:-lexstore}
       KC_DB_PASSWORD: ${DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: "true"
     volumes:
       # The production realm carries no seeded users and requires TLS; the
-      # development one (realm-translad.json) is deliberately not mounted here.
-      - ./backend/keycloak/realm-translad.prod.json:/opt/keycloak/data/import/realm.json:ro
+      # development one (realm-lexstore.json) is deliberately not mounted here.
+      - ./backend/keycloak/realm-lexstore.prod.json:/opt/keycloak/data/import/realm.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,8 +42,8 @@ services:
     build: ./backend
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DATABASE_URL: jdbc:postgresql://postgres:5432/translad
-      DATABASE_USER: ${DATABASE_USER:-translad}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/lexstore
+      DATABASE_USER: ${DATABASE_USER:-lexstore}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:?set KEYCLOAK_ISSUER}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?set ALLOWED_ORIGINS}

@@ -14,15 +14,15 @@ import { ApiService } from '../core/api.service';
 import { TranslationHistoryEntry } from '../core/models';
 
 const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCheck' | 'Flag' | 'Sparkles' | 'X'; color: string }> = {
-  translated: { label: 'Translated', icon: 'Sparkles', color: 'var(--tl-st-translated)' },
-  edited: { label: 'Edited', icon: 'PencilLine', color: 'var(--tl-slate)' },
-  proofread: { label: 'Proofread', icon: 'CheckCheck', color: 'var(--tl-st-proofread)' },
-  flagged: { label: 'Flagged', icon: 'Flag', color: 'var(--tl-st-fuzzy)' },
-  cleared: { label: 'Cleared', icon: 'X', color: 'var(--tl-st-untranslated)' },
+  translated: { label: 'Translated', icon: 'Sparkles', color: 'var(--lx-st-translated)' },
+  edited: { label: 'Edited', icon: 'PencilLine', color: 'var(--lx-slate)' },
+  proofread: { label: 'Proofread', icon: 'CheckCheck', color: 'var(--lx-st-proofread)' },
+  flagged: { label: 'Flagged', icon: 'Flag', color: 'var(--lx-st-fuzzy)' },
+  cleared: { label: 'Cleared', icon: 'X', color: 'var(--lx-st-untranslated)' },
 };
 
 @Component({
-  selector: 'tl-history-modal',
+  selector: 'lx-history-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon, Avatar],
   template: `
@@ -35,7 +35,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
         </div>
         <div class="spacer"></div>
         <button class="btn btn--subtle btn--sm btn--icon" aria-label="Close" (click)="closed.emit()">
-          <tl-icon name="X" [size]="16" />
+          <lx-icon name="X" [size]="16" />
         </button>
       </div>
 
@@ -55,10 +55,10 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
                 </span>
                 <div class="event__body">
                   <div class="event__head">
-                    <tl-avatar [i]="e.authorAvatar" [name]="e.authorName" [sm]="true" />
+                    <lx-avatar [i]="e.authorAvatar" [name]="e.authorName" [sm]="true" />
                     <b>{{ e.authorName }}</b>
                     <span class="event__action" [style.color]="meta(e.action).color">
-                      <tl-icon [name]="meta(e.action).icon" [size]="12" />
+                      <lx-icon [name]="meta(e.action).icon" [size]="12" />
                       {{ meta(e.action).label }}
                     </span>
                     <span class="locale">{{ e.languageCode }}</span>
@@ -69,7 +69,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
                     <div class="event__diff">
                       @if (e.oldValue) {
                         <span class="diff-old">{{ e.oldValue }}</span>
-                        <tl-icon name="ArrowRight" [size]="12" color="var(--tl-muted)" />
+                        <lx-icon name="ArrowRight" [size]="12" color="var(--lx-muted)" />
                       }
                       <span class="diff-new">{{ e.newValue || '—' }}</span>
                     </div>
@@ -93,7 +93,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--tl-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
       backdrop-filter: blur(2px);
     }
     .modal {
@@ -102,10 +102,10 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       max-height: min(640px, calc(100vh - 64px));
       display: flex;
       flex-direction: column;
-      background: var(--tl-elev, var(--tl-card));
-      border: 1px solid var(--tl-line);
-      border-radius: var(--tl-r-xl);
-      box-shadow: var(--tl-shadow-pop);
+      background: var(--lx-elev, var(--lx-card));
+      border: 1px solid var(--lx-line);
+      border-radius: var(--lx-r-xl);
+      box-shadow: var(--lx-shadow-pop);
       animation: modalIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     @keyframes modalIn {
@@ -120,7 +120,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       align-items: center;
       gap: 12px;
       padding: 16px 18px;
-      border-bottom: 1px solid var(--tl-line);
+      border-bottom: 1px solid var(--lx-line);
     }
     .modal__title { font-size: 15px; font-weight: 700; }
     .modal__sub { margin-top: 4px; }
@@ -140,7 +140,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       top: 0;
       bottom: 0;
       width: 1px;
-      background: var(--tl-line);
+      background: var(--lx-line);
     }
     .event:first-child .event__rail::before { top: 18px; }
     .event:last-child .event__rail::before { bottom: calc(100% - 18px); }
@@ -150,7 +150,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       height: 8px;
       border-radius: 50%;
       margin-top: 14px;
-      box-shadow: 0 0 0 3px var(--tl-elev, var(--tl-card));
+      box-shadow: 0 0 0 3px var(--lx-elev, var(--lx-card));
     }
     .event__body { flex: 1; min-width: 0; padding: 10px 0; }
     .event__head { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
@@ -172,11 +172,11 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       flex-wrap: wrap;
     }
     .diff-old {
-      color: var(--tl-muted);
+      color: var(--lx-muted);
       text-decoration: line-through;
-      text-decoration-color: color-mix(in srgb, var(--tl-muted) 60%, transparent);
+      text-decoration-color: color-mix(in srgb, var(--lx-muted) 60%, transparent);
     }
-    .diff-new { color: var(--tl-ink); }
+    .diff-new { color: var(--lx-ink); }
   `,
 })
 export class HistoryModal {
