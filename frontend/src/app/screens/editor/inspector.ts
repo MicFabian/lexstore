@@ -106,7 +106,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           ></textarea>
         </div>
 
-        <div class="row" style="gap:8px">
+        <div class="row insp-actions" style="gap:8px">
           <tl-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
             Save
           </tl-btn>
@@ -232,6 +232,10 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     }
   `,
   styles: `
+    .insp-actions {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
     .ctx-input {
       flex: 1;
       border: none;

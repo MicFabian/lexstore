@@ -8,6 +8,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
 import { SegmentOption } from '../../shared/segmented';
@@ -17,12 +18,12 @@ import { ContentState } from '../../shared/content-state';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
-import { EditorRow, TranslationStatus } from '../../core/models';
+import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
 
 @Component({
   selector: 'tl-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, Inspector, PromptDialog, ContentState],
+  imports: [RouterLink, Icon, Btn, SearchBox, Inspector, PromptDialog, ContentState],
   template: `
     <div class="editor" [class.editor--split]="!!selectedRow()" style="position:relative">
       <div class="ed-head">
@@ -81,6 +82,14 @@ import { EditorRow, TranslationStatus } from '../../core/models';
         </div>
       </div>
 
+      @if (activeFeature(); as f) {
+        <div class="feature-scope">
+          <tl-icon name="LayoutGrid" [size]="14" color="var(--tl-slate)" />
+          <span>Showing <b>{{ f.name }}</b> only</span>
+          <a class="feature-scope__clear" [routerLink]="['/', 'editor']">Show all terms</a>
+        </div>
+      }
+
       <div class="ed-tabs">
         @for (o of filterOptions(); track o.value) {
           <button class="ftab" [class.on]="filter() === o.value" (click)="filter.set($any(o.value))">
@@ -118,9 +127,9 @@ import { EditorRow, TranslationStatus } from '../../core/models';
               >
                 <td class="keycell" (click)="select(r.id, langs()[0])">
                   <div class="keytag">{{ r.key }}</div>
-                  <div class="stcap" style="margin-top:7px" [style.color]="'var(--tl-st-' + r.status + ')'">
-                    {{ statusLabel(r.status) }}{{ r.isNew ? ' · New' : '' }}
-                  </div>
+                  @if (r.isNew) {
+                    <div class="stcap" style="margin-top:7px;color:var(--tl-st-new)">New</div>
+                  }
                 </td>
                 <td class="src" (click)="select(r.id, langs()[0])">
                   {{ r.plural ? r.plural.one + ' / ' + r.plural.other : r.source }}
@@ -132,7 +141,14 @@ import { EditorRow, TranslationStatus } from '../../core/models';
                     [class.cell-sel]="sel()?.termId === r.id && sel()?.lang === c"
                     (click)="select(r.id, c)"
                   >
-                    {{ cell(r.id, c)?.target || 'Add translation…' }}
+                    <span class="tgt__value">{{ cell(r.id, c)?.target || 'Add translation…' }}</span>
+                    @if (cell(r.id, c); as cellRow) {
+                      @if (cellRow.status !== 'translated') {
+                        <span class="stcap tgt__status" [style.color]="'var(--tl-st-' + cellRow.status + ')'">
+                          {{ statusLabel(cellRow.status) }}
+                        </span>
+                      }
+                    }
                   </td>
                 }
               </tr>
@@ -209,6 +225,13 @@ import { EditorRow, TranslationStatus } from '../../core/models';
       border-bottom: 1px solid var(--tl-line);
       flex: none;
     }
+    .tgt__value {
+      display: block;
+    }
+    .tgt__status {
+      display: block;
+      margin-top: 6px;
+    }
     /* The open cell is the edited one — mark it, not just its row. */
     .tgt.cell-sel {
       box-shadow: inset 2px 0 0 var(--tl-accent);
@@ -216,8 +239,24 @@ import { EditorRow, TranslationStatus } from '../../core/models';
     }
 
     /* Comparing many languages scrolls sideways; the key and source stay put. */
+    .feature-scope {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--tl-line);
+      background: var(--tl-fill);
+    }
+    .feature-scope__clear {
+      margin-left: auto;
+      font-size: 13px;
+    }
     .editor__scroll {
       overflow: auto;
+    }
+    .ttable {
+      --key-col: 240px;
     }
     .ttable th.keycell,
     .ttable td.keycell {
@@ -225,12 +264,17 @@ import { EditorRow, TranslationStatus } from '../../core/models';
       left: 0;
       z-index: 2;
       background: var(--tl-card);
-      min-width: 240px;
+      width: var(--key-col);
+      min-width: var(--key-col);
+      max-width: var(--key-col);
+    }
+    .keytag {
+      overflow-wrap: anywhere;
     }
     .ttable th.src-col,
     .ttable td.src {
       position: sticky;
-      left: 240px;
+      left: var(--key-col);
       z-index: 2;
       background: var(--tl-card);
       min-width: 260px;
@@ -281,6 +325,8 @@ export class EditorScreen implements OnInit {
     if (l && this.languages().some((x) => x.code === l)) this.langs.set([l]);
   });
 
+  readonly featureParam = input<string | undefined>(undefined, { alias: 'feature' });
+
   private readonly applyFilterParam = effect(() => {
     const f = this.filterParam();
     if (f && ['all', 'untranslated', 'new', 'fuzzy', 'proofread'].includes(f)) {
@@ -301,6 +347,12 @@ export class EditorScreen implements OnInit {
     { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
   ];
 
+  protected readonly features = signal<FeatureView[]>([]);
+  protected readonly activeFeature = computed(() => {
+    const key = this.featureParam();
+    return key ? (this.features().find((f) => f.key === key) ?? null) : null;
+  });
+
   /** Target languages available for this project (from the API). */
   protected readonly languages = signal<{ code: string; name: string }[]>([]);
   protected readonly langsLabel = computed(() => {
@@ -314,13 +366,31 @@ export class EditorScreen implements OnInit {
   protected readonly rows = computed(() => this.byLang()[this.langs()[0]] ?? []);
 
   protected readonly counts = computed(() => {
+    const map = this.byLang();
+    const codes = this.langs();
+    const cells = codes.flatMap((code) => map[code] ?? []);
+    return {
+      all: cells.length,
+      untranslated: cells.filter((x) => x.status === 'untranslated').length,
+      new: this.rows().filter((x) => x.isNew).length,
+      fuzzy: cells.filter((x) => x.status === 'fuzzy').length,
+      proofread: cells.filter((x) => x.status === 'proofread').length,
+    };
+  });
+
+  protected readonly termCounts = computed(() => {
     const r = this.rows();
+    const codes = this.langs();
+    const map = this.byLang();
+    // A term is open when any visible language is missing it.
+    const openIn = (id: string, status: TranslationStatus) =>
+      codes.some((c) => map[c]?.find((x) => x.id === id)?.status === status);
     return {
       all: r.length,
-      untranslated: r.filter((x) => x.status === 'untranslated').length,
+      untranslated: r.filter((x) => openIn(x.id, 'untranslated')).length,
       new: r.filter((x) => x.isNew).length,
-      fuzzy: r.filter((x) => x.status === 'fuzzy').length,
-      proofread: r.filter((x) => x.status === 'proofread').length,
+      fuzzy: r.filter((x) => openIn(x.id, 'fuzzy')).length,
+      proofread: r.filter((x) => openIn(x.id, 'proofread')).length,
     };
   });
 
@@ -338,7 +408,7 @@ export class EditorScreen implements OnInit {
   }
 
   protected readonly filterOptions = computed<SegmentOption[]>(() => {
-    const c = this.counts();
+    const c = this.termCounts();
     return [
       { value: 'all', label: 'All', n: c.all },
       { value: 'untranslated', label: 'Untranslated', n: c.untranslated },
@@ -351,11 +421,17 @@ export class EditorScreen implements OnInit {
   protected readonly filtered = computed(() => {
     const f = this.filter();
     const q = this.query().toLowerCase();
+    const codes = this.langs();
+    const map = this.byLang();
+    const feature = this.activeFeature();
+    const hasStatus = (id: string, status: TranslationStatus) =>
+      codes.some((c) => map[c]?.find((x) => x.id === id)?.status === status);
     return this.rows().filter((r) => {
-      if (f === 'untranslated' && r.status !== 'untranslated') return false;
+      if (feature && r.featureId !== feature.id) return false;
+      if (f === 'untranslated' && !hasStatus(r.id, 'untranslated')) return false;
       if (f === 'new' && !r.isNew) return false;
-      if (f === 'fuzzy' && r.status !== 'fuzzy') return false;
-      if (f === 'proofread' && r.status !== 'proofread') return false;
+      if (f === 'fuzzy' && !hasStatus(r.id, 'fuzzy')) return false;
+      if (f === 'proofread' && !hasStatus(r.id, 'proofread')) return false;
       if (q && !(r.key.includes(q) || r.source.toLowerCase().includes(q))) return false;
       return true;
     });
@@ -382,6 +458,7 @@ export class EditorScreen implements OnInit {
         }
         this.loadEditor(pid);
       });
+      this.api.listFeatures(pid).subscribe((f) => this.features.set(f));
     });
   }
 
@@ -466,7 +543,9 @@ export class EditorScreen implements OnInit {
   }
 
   protected isCursor(index: number): boolean {
-    return this.cursor() === index;
+    const count = this.filtered().length;
+    if (!count) return false;
+    return Math.min(this.cursor(), count - 1) === index;
   }
 
   /** Arrow keys walk the list, Enter edits, Escape closes the inspector. */

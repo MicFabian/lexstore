@@ -27,9 +27,13 @@ class ApiKey(
     @Column(nullable = false)
     var tail: String,
 
-    /** Full secret, only returned once on creation. */
-    @Column(name = "secret", nullable = false)
-    var secret: String,
+    /**
+     * SHA-256 of the generated secret. The secret itself is shown once, at
+     * creation, and never stored: a database or backup copy must not yield a
+     * usable credential.
+     */
+    @Column(name = "secret_hash", nullable = false)
+    var secretHash: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

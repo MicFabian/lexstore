@@ -11,6 +11,24 @@ import java.util.UUID
 class ApiKeyService(private val keys: ApiKeyRepository) {
 
     private val rng = SecureRandom()
+
+    private fun parseScope(raw: String?): ApiKeyScope {
+        val normalized = raw.orEmpty().trim().lowercase()
+            .replace('-', ' ').replace('_', ' ').replace("&", "and")
+            .split(" ").filter { it.isNotBlank() }.joinToString(" ")
+        return when (normalized) {
+            "read only" -> ApiKeyScope.READ_ONLY
+            "read write", "read and write" -> ApiKeyScope.READ_WRITE
+            else -> throw IllegalArgumentException(
+                "Scope must be 'Read only' or 'Read & write'.",
+            )
+        }
+    }
+
+    private fun sha256(value: String): String =
+        java.security.MessageDigest.getInstance("SHA-256")
+            .digest(value.toByteArray())
+            .joinToString("") { "%02x".format(it) }
     private val hex = "0123456789abcdef".toCharArray()
 
     fun list(projectId: UUID): List<ApiKeyView> =
@@ -18,11 +36,7 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
 
     @Transactional
     fun generate(projectId: UUID, req: GenerateApiKeyRequest): ApiKeyCreated {
-        val scope = if (req.scope.equals("Read only", ignoreCase = true)) {
-            ApiKeyScope.READ_ONLY
-        } else {
-            ApiKeyScope.READ_WRITE
-        }
+        val scope = parseScope(req.scope)
         val prefix = if (req.test) "tl_test_" else "tl_live_"
         val body = randomHex(32)
         val tail = body.takeLast(4)
@@ -33,7 +47,7 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
                 label = req.label,
                 prefix = prefix,
                 tail = tail,
-                secret = secret,
+                secretHash = sha256(secret),
                 scope = scope,
                 createdLabel = "Just now",
                 lastUsedLabel = "—",

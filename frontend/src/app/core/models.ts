@@ -93,6 +93,7 @@ export interface EditorRow {
   plural: PluralForms | null;
   tags: string[];
   isNew: boolean;
+  featureId: string | null;
   target: string | null;
   status: TranslationStatus;
   comments: CommentView[];

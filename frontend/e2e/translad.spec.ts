@@ -145,14 +145,12 @@ test.describe('languages + contributors + settings', () => {
     await expect(page.locator('.cap', { hasText: 'Admin' })).toBeVisible();
   });
 
-  test('settings reveals an API key', async ({ page }) => {
+  test('settings never exposes an API key secret after creation', async ({ page }) => {
     await page.goto('/settings');
-    await waitShell(page);
-    await expect(page.locator('.panel__head', { hasText: 'API keys' })).toBeVisible();
     const firstKey = page.locator('.keyrow').first();
     await expect(firstKey.locator('.keycode')).toContainText('••');
-    await firstKey.locator('button', { hasText: 'Reveal' }).click();
-    await expect(firstKey.locator('.keycode')).not.toContainText('••');
+    await expect(firstKey.getByRole('button', { name: 'Reveal' })).toHaveCount(0);
+    await expect(firstKey.getByRole('button', { name: 'Copy' })).toHaveCount(0);
   });
 
   test('settings tabs switch content', async ({ page }) => {

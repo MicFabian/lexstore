@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Icon, IconName } from '../../shared/icon';
 import { Btn, Toggle } from '../../shared/primitives';
 import { AppearanceControls } from '../../shell/appearance-controls';
@@ -20,7 +21,7 @@ interface IntegrationItem {
 @Component({
   selector: 'tl-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, Toggle, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
+  imports: [RouterLink, Icon, Btn, Toggle, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
@@ -61,13 +62,8 @@ interface IntegrationItem {
                             }
                           </div>
                           <div class="row" style="gap:8px">
-                            <code class="keycode">{{ k.prefix }}{{ revealed()[k.id] ? '9f2c4b8e1d7a3056' : '••••••••••••' }}{{ k.tail }}</code>
-                            <button class="btn btn--subtle btn--sm" (click)="toggleReveal(k.id)">
-                              <tl-icon [name]="revealed()[k.id] ? 'EyeOff' : 'Eye'" [size]="14" />{{ revealed()[k.id] ? 'Hide' : 'Reveal' }}
-                            </button>
-                            <button class="btn btn--subtle btn--sm" (click)="toast.show('Key copied to clipboard')">
-                              <tl-icon name="Copy" [size]="14" />Copy
-                            </button>
+                            <code class="keycode">{{ k.prefix }}••••••••••••{{ k.tail }}</code>
+                            <span class="muted" style="font-size:12px">Shown once when created</span>
                           </div>
                         </div>
                         <div style="text-align:right;flex:none;min-width:150px">
@@ -138,10 +134,12 @@ interface IntegrationItem {
                       <div class="row"><span class="locale" style="font-size:12px;padding:4px 8px">en</span><span style="font-size:13.5px">English</span></div>
                     </div>
                     <div class="row">
-                      <tl-toggle [on]="autoFlag()" (toggled)="autoFlag.set(!autoFlag())" />
                       <div>
                         <div style="font-size:13.5px;font-weight:600">Auto-flag machine translations as fuzzy</div>
-                        <div class="muted" style="font-size:12px">Require a human to confirm before they count as done.</div>
+                        <div class="muted" style="font-size:12px">
+                          Set for the whole workspace in
+                          <a [routerLink]="['/', 'ai']">Translation AI</a>.
+                        </div>
                       </div>
                     </div>
                     <div><tl-btn variant="primary" [disabled]="saving()" (clicked)="saveProject()">{{ saving() ? 'Saving…' : 'Save changes' }}</tl-btn></div>
@@ -315,8 +313,6 @@ export class SettingsScreen implements OnInit {
 
   protected readonly tab = signal<'general' | 'appearance' | 'api' | 'integrations' | 'export'>('api');
   protected readonly keys = signal<ApiKeyView[]>([]);
-  protected readonly revealed = signal<Record<string, boolean>>({});
-  protected readonly autoFlag = signal(true);
   protected readonly saving = signal(false);
   protected readonly draftName = signal('');
   protected readonly draftImage = signal<string | null>(null);
@@ -404,10 +400,6 @@ export class SettingsScreen implements OnInit {
         this.toast.show({ message: 'Not allowed (needs admin)', tone: 'error' });
       },
     });
-  }
-
-  protected toggleReveal(id: string): void {
-    this.revealed.update((r) => ({ ...r, [id]: !r[id] }));
   }
 
   protected createKey(values: Record<string, string>): void {

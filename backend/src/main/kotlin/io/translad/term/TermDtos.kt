@@ -53,6 +53,7 @@ data class EditorRow(
     val plural: PluralForms?,
     val tags: List<String>,
     @get:JsonProperty("isNew") val isNew: Boolean,
+    val featureId: UUID?,
     val target: String?,
     val status: String,
     val comments: List<CommentView>,

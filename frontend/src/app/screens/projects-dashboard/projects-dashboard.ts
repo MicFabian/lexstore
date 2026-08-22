@@ -92,7 +92,9 @@ import { ProjectSummary } from '../../core/models';
                 <span class="progress" style="height:5px"><i class="seg-translated" [style.width.%]="p.progress"></i></span>
               </span>
               <span class="ptag">
-                @if (p.untranslated > 0) {
+                @if (p.terms === 0) {
+                  <span class="cap" style="color:var(--tl-slate)">No terms yet</span>
+                } @else if (p.untranslated > 0) {
                   <span class="cap" style="color:var(--tl-st-untranslated)">{{ p.untranslated }} untranslated</span>
                 } @else {
                   <span class="cap" style="color:var(--tl-st-translated)">Complete</span>

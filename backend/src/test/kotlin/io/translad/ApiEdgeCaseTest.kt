@@ -230,6 +230,17 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         assertThat(getList("/api/projects/$id/api-keys")).hasSize(before)
     }
 
+    @Test
+    fun `an unknown api key scope is rejected instead of granting write access`() {
+        val id = mosaicId()
+        val ex = org.junit.jupiter.api.assertThrows<HttpClientErrorException.BadRequest> {
+            client.post().uri("/api/projects/$id/api-keys")
+                .body(mapOf("label" to "Typo", "scope" to "raed only", "test" to true))
+                .retrieve().body(mapType)
+        }
+        assertThat(ex.responseBodyAsString).contains("Read only")
+    }
+
     // ---------------- Comments ----------------
 
     @Test
@@ -305,7 +316,9 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         val row = rows.first { it["key"] == "auth.forgot" }
         @Suppress("UNCHECKED_CAST")
         val modifiedBy = row["modifiedBy"] as Map<String, Any?>
-        assertThat(modifiedBy["name"]).isEqualTo("Lukas Brandt")
+        // The audit identity comes from the authenticated caller, never the body:
+        // a client-supplied author is ignored.
+        assertThat(modifiedBy["name"]).isEqualTo("You There")
     }
 
     @Test
@@ -316,12 +329,12 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
 
         // Seeded history already exists; add one more and confirm it lands on top.
         client.put().uri("/api/projects/$id/languages/fr/translations/$termId")
-            .body(mapOf("value" to "Tableau de bord (révisé)", "status" to "proofread", "authorName" to "QA Bot"))
+            .body(mapOf("value" to "Tableau de bord (révisé)", "status" to "proofread"))
             .retrieve().toBodilessEntity()
 
         val history = getList("/api/projects/$id/terms/$termId/history")
         assertThat(history).isNotEmpty()
-        assertThat(history.first()["authorName"]).isEqualTo("QA Bot")
+        assertThat(history.first()["authorName"]).isEqualTo("You There")
         assertThat(history.first()["newValue"]).isEqualTo("Tableau de bord (révisé)")
         assertThat(history.first()["action"]).isEqualTo("proofread")
         // Events span more than one language (seeded de/ja/es etc).

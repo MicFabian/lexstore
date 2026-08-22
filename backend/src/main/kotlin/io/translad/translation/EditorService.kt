@@ -64,8 +64,8 @@ class EditorService(
 
         val newStatus = TranslationStatus.from(req.status)
         val me = currentUser.identity()
-        val author = req.authorName ?: me.name
-        val avatar = req.authorAvatar ?: me.avatar
+        val author = me.name
+        val avatar = me.avatar
         val now = Instant.now()
 
         val existing = translations.findByTermIdAndLanguageCode(termId, languageCode)
@@ -147,7 +147,7 @@ class EditorService(
         for (t in projTerms) {
             if (!existing[t.id]?.value.isNullOrBlank()) continue // already translated
             val res = ai.translate(TranslateRequest(t.sourceText, project.sourceLang, languageCode, projectContext = project.translationContext))
-            save(projectId, t.id, languageCode, SaveTranslationRequest(res.text, null, targetStatus, author, 0))
+            save(projectId, t.id, languageCode, SaveTranslationRequest(res.text, null, targetStatus))
             translated++
         }
         return AutoTranslateResult(translated, targetStatus)
@@ -184,6 +184,7 @@ class EditorService(
             plural = if (term.isPlural) PluralForms(term.pluralOne, term.pluralOther) else null,
             tags = term.tagList,
             isNew = term.isNew,
+            featureId = term.featureId,
             target = tr?.value,
             status = (tr?.status?.name ?: "UNTRANSLATED").lowercase(),
             comments = comments,

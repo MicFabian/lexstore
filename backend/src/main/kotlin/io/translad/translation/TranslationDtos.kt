@@ -7,9 +7,6 @@ data class SaveTranslationRequest(
     val pluralOne: String? = null,
     /** untranslated | translated | fuzzy | proofread */
     @field:NotBlank val status: String,
-    /** Who is making the change (no auth yet — defaults to the signed-in placeholder). */
-    val authorName: String? = null,
-    val authorAvatar: Int? = null,
 )
 
 data class SuggestionResponse(
