@@ -9,6 +9,7 @@ spring:
   flyway:
     enabled: true
     clean-disabled: false   # tests reset the schema between methods
+    locations: classpath:db/migration,classpath:db/seed
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
