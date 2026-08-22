@@ -26,11 +26,39 @@ class ProjectService(
     private val translations: TranslationRepository,
     private val access: ProjectAccess,
 ) {
+    /**
+     * Counts come from three grouped queries rather than loading every term and
+     * translation of every project: the dashboard only shows the numbers.
+     */
     fun list(): List<ProjectSummary> {
         val visible = access.visibleProjectIds()
+        val termCounts = terms.countsByProject().associateBy { it.projectId }
+        val trCounts = translations.countsByProject().associateBy { it.projectId }
+        val langCounts = languages.countsByProject().associateBy { it.projectId }
         return projects.findAll()
             .filter { visible == null || it.id in visible }
-            .map { summarize(it) }
+            .map { p ->
+                val t = termCounts[p.id]
+                val tr = trCounts[p.id]
+                val termTotal = t?.total ?: 0
+                val langTotal = langCounts[p.id]?.total ?: 0
+                val slots = termTotal * langTotal
+                ProjectSummary(
+                    id = p.id,
+                    name = p.name,
+                    code = p.code,
+                    sourceLang = p.sourceLang,
+                    mark = p.mark,
+                    image = p.image,
+                    terms = termTotal,
+                    langs = langTotal.toInt(),
+                    progress = if (slots == 0L) 0 else (((tr?.done ?: 0) * 100.0) / slots).toInt(),
+                    untranslated = (slots - (tr?.filled ?: 0)).coerceAtLeast(0),
+                    newTerms = t?.newTerms ?: 0,
+                    needsReview = tr?.fuzzy ?: 0,
+                    updated = p.updatedLabel,
+                )
+            }
     }
 
     fun get(id: UUID): Project = projects.findById(id)
@@ -93,38 +121,4 @@ class ProjectService(
         terms = terms.countByProjectId(p.id),
     )
 
-    private fun summarize(p: Project): ProjectSummary {
-        val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(p.id)
-        val langs = languages.findByProjectIdOrderByName(p.id)
-        val termIds = projTerms.map { it.id }
-        val allTr = if (termIds.isEmpty()) emptyList() else translations.findByTermIdIn(termIds)
-
-        val totalSlots = projTerms.size.toLong() * langs.size
-        val translatedSlots = allTr.count {
-            it.status == TranslationStatus.TRANSLATED ||
-                it.status == TranslationStatus.PROOFREAD
-        }
-        val progress = if (totalSlots == 0L) 0 else ((translatedSlots * 100.0) / totalSlots).toInt()
-        val untranslated = totalSlots - allTr.count {
-            it.status != TranslationStatus.UNTRANSLATED && it.value != null
-        }
-        val newTerms = projTerms.count { it.isNew }.toLong()
-        val needsReview = allTr.count { it.status == TranslationStatus.FUZZY }.toLong()
-
-        return ProjectSummary(
-            id = p.id,
-            name = p.name,
-            code = p.code,
-            sourceLang = p.sourceLang,
-            mark = p.mark,
-            image = p.image,
-            terms = projTerms.size.toLong(),
-            langs = langs.size,
-            progress = progress,
-            untranslated = untranslated.coerceAtLeast(0),
-            newTerms = newTerms,
-            needsReview = needsReview,
-            updated = p.updatedLabel,
-        )
-    }
 }

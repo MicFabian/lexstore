@@ -96,8 +96,14 @@ class PoeditorImportService(
         return PoeditorPreview(perLanguage, rows, total)
     }
 
-    /** Import into an existing TransLad project. */
-    @Transactional
+    /**
+     * Import into an existing TransLad project.
+     *
+     * Not transactional: the work is mostly remote — one throttled POEditor call
+     * per language — and holding a database connection across those seconds is
+     * how a handful of concurrent imports exhausts the pool. Each language is
+     * committed by [ImportExportService.import], which is transactional itself.
+     */
     fun import(projectId: UUID, req: PoeditorImportRequest): PoeditorImportResult {
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
@@ -105,7 +111,6 @@ class PoeditorImportService(
     }
 
     /** Import a whole POEditor project into a new TransLad project. */
-    @Transactional
     fun importAsNewProject(req: PoeditorImportAsProjectRequest): PoeditorImportResult {
         val remote = client.projects(req.apiToken).find { it.id == req.poeditorProjectId }
             ?: throw PoeditorException("That POEditor project is not on this account.")

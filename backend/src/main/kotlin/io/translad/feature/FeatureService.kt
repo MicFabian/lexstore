@@ -21,15 +21,33 @@ class FeatureService(
     private val terms: TermRepository,
     private val translations: TranslationRepository,
 ) {
+    /**
+     * Terms and translations for every feature are read once here rather than
+     * twice per feature, which turned a hundred features into a few hundred
+     * queries.
+     */
     fun list(projectId: UUID): List<FeatureView> {
         requireProject(projectId)
         val langs = languages.findByProjectIdOrderByName(projectId)
-        return features.findByProjectIdOrderByName(projectId).map { coverage(it, langs) }
+        val all = features.findByProjectIdOrderByName(projectId)
+        if (all.isEmpty()) return emptyList()
+
+        val termsByFeature = terms.findByFeatureIdIn(all.map { it.id }).groupBy { it.featureId }
+        val byTerm = translationsByTerm(termsByFeature.values.flatten())
+        return all.map { coverage(it, langs, termsByFeature[it.id].orEmpty(), byTerm) }
     }
 
-    fun detail(projectId: UUID, featureId: UUID): FeatureView {
-        val feature = owned(projectId, featureId)
-        return coverage(feature, languages.findByProjectIdOrderByName(projectId))
+    fun detail(projectId: UUID, featureId: UUID): FeatureView =
+        coverageOf(owned(projectId, featureId), projectId)
+
+    private fun coverageOf(feature: Feature, projectId: UUID): FeatureView {
+        val featureTerms = terms.findByFeatureId(feature.id)
+        return coverage(
+            feature,
+            languages.findByProjectIdOrderByName(projectId),
+            featureTerms,
+            translationsByTerm(featureTerms),
+        )
     }
 
     /**
@@ -77,7 +95,7 @@ class FeatureService(
                 description = req.description?.ifBlank { null },
             ),
         )
-        return coverage(saved, languages.findByProjectIdOrderByName(projectId))
+        return coverageOf(saved, projectId)
     }
 
     @Transactional
@@ -86,14 +104,14 @@ class FeatureService(
         req.name?.takeIf { it.isNotBlank() }?.let { feature.name = it }
         req.description?.let { feature.description = it.ifBlank { null } }
         features.save(feature)
-        return coverage(feature, languages.findByProjectIdOrderByName(projectId))
+        return coverageOf(feature, projectId)
     }
 
     @Transactional
     fun delete(projectId: UUID, featureId: UUID) {
         val feature = owned(projectId, featureId)
-        // Terms outlive their feature; they simply become unassigned.
-        terms.findByFeatureId(featureId).forEach { it.featureId = null }
+        // Terms outlive their feature: the foreign key clears their assignment,
+        // so loading and updating each one would only repeat the database's work.
         features.delete(feature)
     }
 
@@ -102,7 +120,7 @@ class FeatureService(
     fun assign(projectId: UUID, featureId: UUID, req: AssignTermsRequest): FeatureView {
         val feature = owned(projectId, featureId)
         assignTo(projectId, req.termIds, featureId)
-        return coverage(feature, languages.findByProjectIdOrderByName(projectId))
+        return coverageOf(feature, projectId)
     }
 
     /** Take the given terms out of any feature. */
@@ -120,10 +138,12 @@ class FeatureService(
 
     // ---------------- coverage ----------------
 
-    private fun coverage(feature: Feature, langs: List<io.translad.language.Language>): FeatureView {
-        val featureTerms = terms.findByFeatureId(feature.id)
-        val byTerm = translationsByTerm(featureTerms)
-
+    private fun coverage(
+        feature: Feature,
+        langs: List<io.translad.language.Language>,
+        featureTerms: List<Term>,
+        byTerm: Map<UUID, Map<String, Translation>>,
+    ): FeatureView {
         val perLanguage = langs.map { lang ->
             var translated = 0
             var fuzzy = 0
@@ -163,7 +183,7 @@ class FeatureService(
         )
     }
 
-    private fun translationsByTerm(featureTerms: List<Term>): Map<UUID, Map<String, Translation>> {
+    private fun translationsByTerm(featureTerms: Collection<Term>): Map<UUID, Map<String, Translation>> {
         if (featureTerms.isEmpty()) return emptyMap()
         return translations.findByTermIdIn(featureTerms.map { it.id })
             .groupBy { it.termId }
