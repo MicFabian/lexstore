@@ -59,10 +59,7 @@ class EditorService(
             .filter { it.languageCode == languageCode }
             .associateBy { it.termId }
 
-        val commentsByTerm = commentsFor(projTerms.map { it.id })
-        val rows = projTerms.map { t ->
-            editorRow(t, byTerm[t.id], commentsByTerm[t.id].orEmpty())
-        }
+        val rows = projTerms.map { t -> editorRow(t, byTerm[t.id]) }
         return EditorResponse(languageCode, project.sourceLang, rows)
     }
 
@@ -129,7 +126,7 @@ class EditorService(
         // Saving a real value clears the "new" flag on the source term.
         if (!req.value.isNullOrBlank()) term.isNew = false
 
-        return editorRow(term, saved, commentsOf(termId))
+        return editorRow(term, saved)
     }
 
     /** AI machine-translation suggestion for one term (cached). Does not save. */
@@ -222,17 +219,9 @@ class EditorService(
         }
     }
 
-    private fun commentsFor(termIds: List<UUID>): Map<UUID, List<CommentView>> {
-        if (termIds.isEmpty()) return emptyMap()
-        return comments.findByTermIdInOrderByCreatedAt(termIds)
-            .groupBy({ it.termId }, { it.toView() })
-    }
-
-    private fun commentsOf(termId: UUID): List<CommentView> =
-        comments.findByTermIdOrderByCreatedAt(termId).map(TermComment::toView)
-
-    private fun editorRow(term: Term, tr: Translation?, comments: List<CommentView>): EditorRow =
-        EditorRow(
+    private fun editorRow(term: Term, tr: Translation?): EditorRow {
+        val editedAt = tr?.modifiedByName?.let { RelativeTime.format(tr.updatedAt) }
+        return EditorRow(
             id = term.id,
             key = term.key,
             ctx = term.ctx,
@@ -244,12 +233,12 @@ class EditorService(
             target = tr?.value,
             version = tr?.version,
             status = (tr?.status?.name ?: "UNTRANSLATED").lowercase(),
-            comments = comments,
             modifiedBy = tr?.modifiedByName?.let {
-                AuditEntry(it, tr.modifiedByAvatar ?: 0, "edited", RelativeTime.format(tr.updatedAt))
+                AuditEntry(it, tr.modifiedByAvatar ?: 0, "edited", editedAt.orEmpty())
             },
-            modifiedAt = tr?.modifiedByName?.let { RelativeTime.format(tr.updatedAt) },
+            modifiedAt = editedAt,
         )
+    }
 
     private fun actionFor(old: String?, new: String?, status: TranslationStatus): String = when {
         new.isNullOrBlank() -> "cleared"

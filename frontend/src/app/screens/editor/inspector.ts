@@ -388,7 +388,11 @@ export class Inspector {
       this.value.set(r.target ?? '');
       this.langMenuOpen.set(false);
       this.draft.set('');
-      this.comments.set(r.comments);
+      this.comments.set([]);
+      const pid = this.state.current()?.id;
+      if (pid) {
+        this.api.listComments(pid, r.id).subscribe((c) => this.comments.set(c));
+      }
       this.ctx.set(r.ctx);
       this.tags.set([...r.tags]);
       this.showHistory.set(false);

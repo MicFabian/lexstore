@@ -48,44 +48,59 @@ class ImportExportService(
         }
 
         val me = currentUser.identity()
-        var created = 0
-        var updated = 0
-        for ((key, value) in entries) {
-            if (key.isBlank()) continue
-            val term = terms.findByProjectIdAndKey(projectId, key) ?: terms.save(
+        val now = Instant.now()
+
+        // One lookup for the whole import rather than two per entry: a 5,000
+        // entry file otherwise costs 10,000 round trips to the database.
+        val existingTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
+            .associateBy { it.key }
+        val newTerms = entries.keys
+            .filter { it.isNotBlank() && it !in existingTerms }
+            .map { key ->
                 Term(
                     projectId = projectId,
                     key = key,
-                    sourceText = value,
+                    sourceText = entries.getValue(key),
                     addedLabel = "Imported",
                     isNew = true,
-                ),
-            ).also { created++ }
+                )
+            }
+        val created = newTerms.size
+        val termsByKey = existingTerms + terms.saveAll(newTerms).associateBy { it.key }
 
-            val existing = translations.findByTermIdAndLanguageCode(term.id, languageCode)
+        val existingTranslations = translations
+            .findByTermIdIn(termsByKey.values.map { it.id })
+            .filter { it.languageCode == languageCode }
+            .associateBy { it.termId }
+
+        var updated = 0
+        val fresh = mutableListOf<Translation>()
+        for ((key, value) in entries) {
+            if (key.isBlank()) continue
+            val term = termsByKey.getValue(key)
+            val existing = existingTranslations[term.id]
             if (existing != null) {
                 existing.apply {
                     this.value = value
                     status = TranslationStatus.TRANSLATED
-                    updatedAt = Instant.now()
+                    updatedAt = now
                     modifiedByName = me.name
                     modifiedByAvatar = me.avatar
                 }
+                updated++
             } else {
-                translations.save(
-                    Translation(
-                        termId = term.id,
-                        languageCode = languageCode,
-                        value = value,
-                        status = TranslationStatus.TRANSLATED,
-                        modifiedByName = me.name,
-                        modifiedByAvatar = me.avatar,
-                    ),
+                fresh += Translation(
+                    termId = term.id,
+                    languageCode = languageCode,
+                    value = value,
+                    status = TranslationStatus.TRANSLATED,
+                    modifiedByName = me.name,
+                    modifiedByAvatar = me.avatar,
                 )
             }
-            updated++
         }
-        return ImportResult(created, updated, entries.size)
+        translations.saveAll(fresh)
+        return ImportResult(created, updated + fresh.size, entries.size)
     }
 
     /** Export a language as an ordered key→value map of all terms. */

@@ -58,7 +58,6 @@ data class EditorRow(
     /** Row version of the stored translation; echo it back when saving. */
     val version: Long?,
     val status: String,
-    val comments: List<CommentView>,
     /** Who last changed this translation, and when (null if never edited). */
     val modifiedBy: AuditEntry?,
     val modifiedAt: String?,

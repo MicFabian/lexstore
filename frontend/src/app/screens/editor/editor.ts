@@ -116,7 +116,7 @@ import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
             </tr>
           </thead>
           <tbody>
-            @for (r of filtered(); track r.id) {
+            @for (r of visible(); track r.id) {
               <tr
                 class="trow"
                 [class.sel]="sel()?.termId === r.id"
@@ -136,19 +136,18 @@ import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
                   {{ r.plural ? r.plural.one + ' / ' + r.plural.other : r.source }}
                 </td>
                 @for (c of langs(); track c) {
+                  @let cellRow = cell(r.id, c);
                   <td
                     class="tgt"
-                    [class.empty]="!cell(r.id, c)?.target"
+                    [class.empty]="!cellRow?.target"
                     [class.cell-sel]="sel()?.termId === r.id && sel()?.lang === c"
                     (click)="select(r.id, c)"
                   >
-                    <span class="tgt__value">{{ cell(r.id, c)?.target || 'Add translation…' }}</span>
-                    @if (cell(r.id, c); as cellRow) {
-                      @if (cellRow.status !== 'translated') {
-                        <span class="stcap tgt__status" [style.color]="'var(--tl-st-' + cellRow.status + ')'">
-                          {{ statusLabel(cellRow.status) }}
-                        </span>
-                      }
+                    <span class="tgt__value">{{ cellRow?.target || 'Add translation…' }}</span>
+                    @if (cellRow && cellRow.status !== 'translated') {
+                      <span class="stcap tgt__status" [style.color]="'var(--tl-st-' + cellRow.status + ')'">
+                        {{ statusLabel(cellRow.status) }}
+                      </span>
                     }
                   </td>
                 }
@@ -179,6 +178,12 @@ import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
             }
           </tbody>
         </table>
+        @if (hiddenCount() > 0) {
+          <div class="more-rows">
+            <span>Showing {{ visible().length }} of {{ filtered().length }} terms</span>
+            <button class="btn btn--subtle btn--sm" (click)="showMore()">Show 200 more</button>
+          </div>
+        }
       </div>
 
       @if (selectedRow(); as row) {
@@ -252,6 +257,16 @@ import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
     .feature-scope__clear {
       margin-left: auto;
       font-size: 13px;
+    }
+    .more-rows {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      font-size: 13px;
+      color: var(--tl-slate);
+      border-top: 1px solid var(--tl-line);
     }
     .editor__scroll {
       overflow: auto;
@@ -384,8 +399,9 @@ export class EditorScreen implements OnInit {
     const codes = this.langs();
     const map = this.byLang();
     // A term is open when any visible language is missing it.
+    const index = this.indexed();
     const openIn = (id: string, status: TranslationStatus) =>
-      codes.some((c) => map[c]?.find((x) => x.id === id)?.status === status);
+      codes.some((c) => index[c]?.get(id)?.status === status);
     return {
       all: r.length,
       untranslated: r.filter((x) => openIn(x.id, 'untranslated')).length,
@@ -425,8 +441,9 @@ export class EditorScreen implements OnInit {
     const codes = this.langs();
     const map = this.byLang();
     const feature = this.activeFeature();
+    const index = this.indexed();
     const hasStatus = (id: string, status: TranslationStatus) =>
-      codes.some((c) => map[c]?.find((x) => x.id === id)?.status === status);
+      codes.some((c) => index[c]?.get(id)?.status === status);
     return this.rows().filter((r) => {
       if (feature && r.featureId !== feature.id) return false;
       if (f === 'untranslated' && !hasStatus(r.id, 'untranslated')) return false;
@@ -438,15 +455,41 @@ export class EditorScreen implements OnInit {
     });
   });
 
+  private readonly pageSize = 200;
+  protected readonly shown = signal(this.pageSize);
+  protected readonly visible = computed(() => this.filtered().slice(0, this.shown()));
+  protected readonly hiddenCount = computed(() =>
+    Math.max(this.filtered().length - this.visible().length, 0),
+  );
+
+  private readonly resetPaging = effect(() => {
+    this.filter();
+    this.query();
+    this.langs();
+    this.shown.set(this.pageSize);
+  });
+
+  protected showMore(): void {
+    this.shown.update((n) => n + this.pageSize);
+  }
+
   protected readonly selectedRow = computed(() => {
     const s = this.sel();
     if (!s) return null;
-    return this.byLang()[s.lang]?.find((r) => r.id === s.termId) ?? null;
+    return this.indexed()[s.lang]?.get(s.termId) ?? null;
   });
 
   /** The row of one term in one language column. */
+  private readonly indexed = computed(() => {
+    const out: Record<string, Map<string, EditorRow>> = {};
+    for (const [code, rows] of Object.entries(this.byLang())) {
+      out[code] = new Map(rows.map((r) => [r.id, r]));
+    }
+    return out;
+  });
+
   protected cell(termId: string, lang: string): EditorRow | undefined {
-    return this.byLang()[lang]?.find((r) => r.id === termId);
+    return this.indexed()[lang]?.get(termId);
   }
 
   ngOnInit(): void {
@@ -558,18 +601,21 @@ export class EditorScreen implements OnInit {
   }
 
   protected isCursor(index: number): boolean {
-    const count = this.filtered().length;
+    const count = this.visible().length;
     if (!count) return false;
     return Math.min(this.cursor(), count - 1) === index;
   }
 
   /** Arrow keys walk the list, Enter edits, Escape closes the inspector. */
   protected onRowKey(e: KeyboardEvent, index: number, row: EditorRow): void {
-    const rows = this.filtered();
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
+      // Arrowing past the window pulls the next page in rather than stopping.
+      if (e.key === 'ArrowDown' && index === this.visible().length - 1 && this.hiddenCount() > 0) {
+        this.showMore();
+      }
       const next = e.key === 'ArrowDown'
-        ? Math.min(index + 1, rows.length - 1)
+        ? Math.min(index + 1, this.visible().length - 1)
         : Math.max(index - 1, 0);
       this.focusRow(next);
     } else if (e.key === 'Enter') {
@@ -601,6 +647,10 @@ export class EditorScreen implements OnInit {
     if (target >= rows.length) {
       this.sel.set(null);
       return;
+    }
+    // The next row needing work may sit past the rendered window.
+    if (target >= this.shown()) {
+      this.shown.set(Math.ceil((target + 1) / this.pageSize) * this.pageSize);
     }
     this.cursor.set(target);
     this.select(rows[target].id, lang);

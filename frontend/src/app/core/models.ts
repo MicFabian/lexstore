@@ -97,7 +97,6 @@ export interface EditorRow {
   target: string | null;
   version: number | null;
   status: TranslationStatus;
-  comments: CommentView[];
   modifiedBy: AuditEntry | null;
   modifiedAt: string | null;
 }

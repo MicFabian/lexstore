@@ -173,6 +173,12 @@ export class ApiService {
   deleteTerm(projectId: string, termId: string): Observable<void> {
     return this.http.delete<void>(`${BASE}/projects/${projectId}/terms/${termId}`);
   }
+  listComments(projectId: string, termId: string): Observable<CommentView[]> {
+    return this.http.get<CommentView[]>(
+      `${BASE}/projects/${projectId}/terms/${termId}/comments`,
+    );
+  }
+
   addComment(
     projectId: string,
     termId: string,

@@ -23,6 +23,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Bulk paths (import, POEditor) insert thousands of rows; without
+        # batching each one is its own round trip.
+        jdbc:
+          batch_size: 200
+        order_inserts: true
+        order_updates: true
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -49,6 +55,12 @@ gemini:
 
 server:
   port: 8088
+  compression:
+    enabled: true
+    mime-types: application/json,application/problem+json,text/plain
+    # The editor ships one row per term; below a couple of KB the round trip
+    # costs more than the bytes saved.
+    min-response-size: 2KB
   # A request larger than this is never legitimate here; the biggest payload is
   # a project image, capped well below it.
   max-http-request-header-size: 16KB
