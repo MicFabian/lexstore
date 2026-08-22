@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -32,10 +33,17 @@ class TermHistoryController(private val service: EditorService) {
 @RequestMapping("/api/projects/{projectId}/languages/{code}/translations")
 class TranslationController(private val service: EditorService) {
 
-    /** GET the full editor view for one language: every term + its translation. */
+    /** GET one page of the editor for a language, filtered server-side. */
     @GetMapping
-    fun list(@PathVariable projectId: UUID, @PathVariable code: String): EditorResponse =
-        service.editor(projectId, code)
+    fun list(
+        @PathVariable projectId: UUID,
+        @PathVariable code: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "100") size: Int,
+        @RequestParam(required = false) status: String?,
+        @RequestParam(required = false) q: String?,
+        @RequestParam(required = false) featureId: UUID?,
+    ): EditorResponse = service.editor(projectId, code, page, size, status, q, featureId)
 
     /** PUT is an idempotent upsert of the translation for (term, language). */
     @PutMapping("/{termId}")

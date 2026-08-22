@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -126,9 +126,20 @@ export class ApiService {
   }
 
   // ---- Translations (the editor view is the translations collection of a language) ----
-  editor(projectId: string, lang: string): Observable<EditorResponse> {
+  editor(
+    projectId: string,
+    lang: string,
+    opts: { page?: number; size?: number; status?: string; q?: string; featureId?: string } = {},
+  ): Observable<EditorResponse> {
+    let params = new HttpParams()
+      .set('page', String(opts.page ?? 0))
+      .set('size', String(opts.size ?? 100));
+    if (opts.status && opts.status !== 'all') params = params.set('status', opts.status);
+    if (opts.q) params = params.set('q', opts.q);
+    if (opts.featureId) params = params.set('featureId', opts.featureId);
     return this.http.get<EditorResponse>(
       `${BASE}/projects/${projectId}/languages/${lang}/translations`,
+      { params },
     );
   }
   saveTranslation(

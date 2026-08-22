@@ -113,10 +113,22 @@ export interface TranslationHistoryEntry {
   at: string;
 }
 
+export interface EditorCounts {
+  all: number;
+  untranslated: number;
+  new: number;
+  fuzzy: number;
+  proofread: number;
+}
+
 export interface EditorResponse {
   languageCode: string;
   sourceLang: string;
   rows: EditorRow[];
+  page: number;
+  size: number;
+  total: number;
+  counts: EditorCounts;
 }
 
 export interface ContributorView {

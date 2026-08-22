@@ -7,6 +7,7 @@ import {
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
 import { forkJoin, map, of, catchError } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -19,7 +20,7 @@ import { ContentState } from '../../shared/content-state';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
-import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
+import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../core/models';
 
 @Component({
   selector: 'tl-editor-screen',
@@ -180,8 +181,10 @@ import { EditorRow, FeatureView, TranslationStatus } from '../../core/models';
         </table>
         @if (hiddenCount() > 0) {
           <div class="more-rows">
-            <span>Showing {{ visible().length }} of {{ filtered().length }} terms</span>
-            <button class="btn btn--subtle btn--sm" (click)="showMore()">Show 200 more</button>
+            <span>Showing {{ visible().length }} of {{ loadedTotal() }} terms</span>
+            <button class="btn btn--subtle btn--sm" [disabled]="loadingMore()" (click)="showMore()">
+              {{ loadingMore() ? 'Loading…' : 'Load 100 more' }}
+            </button>
           </div>
         }
       </div>
@@ -326,6 +329,7 @@ export class EditorScreen implements OnInit {
 
   /** Rows per language code; the first selected language drives key/source/status. */
   protected readonly byLang = signal<Record<string, EditorRow[]>>({});
+  protected readonly countsByLang = signal<Record<string, EditorCounts>>({});
   /** Selected target languages, in display order — one table column each. */
   protected readonly langs = signal<string[]>(['fr']);
   protected readonly filter = signal('all');
@@ -381,34 +385,32 @@ export class EditorScreen implements OnInit {
   /** Rows of the leading language carry key, source, and status for the table. */
   protected readonly rows = computed(() => this.byLang()[this.langs()[0]] ?? []);
 
+  /**
+   * Counts describe the whole project and come from the server, because the
+   * browser now only holds one page. Summed across the visible languages,
+   * which is what the headline percentage is about.
+   */
   protected readonly counts = computed(() => {
-    const map = this.byLang();
-    const codes = this.langs();
-    const cells = codes.flatMap((code) => map[code] ?? []);
+    const per = Object.entries(this.countsByLang())
+      .filter(([code]) => this.langs().includes(code))
+      .map(([, c]) => c);
     return {
-      all: cells.length,
-      untranslated: cells.filter((x) => x.status === 'untranslated').length,
-      new: this.rows().filter((x) => x.isNew).length,
-      fuzzy: cells.filter((x) => x.status === 'fuzzy').length,
-      proofread: cells.filter((x) => x.status === 'proofread').length,
+      all: per.reduce((n, c) => n + c.all, 0),
+      untranslated: per.reduce((n, c) => n + c.untranslated, 0),
+      new: this.termTotals().new,
+      fuzzy: per.reduce((n, c) => n + c.fuzzy, 0),
+      proofread: per.reduce((n, c) => n + c.proofread, 0),
     };
   });
 
-  protected readonly termCounts = computed(() => {
-    const r = this.rows();
-    const codes = this.langs();
-    const map = this.byLang();
-    // A term is open when any visible language is missing it.
-    const index = this.indexed();
-    const openIn = (id: string, status: TranslationStatus) =>
-      codes.some((c) => index[c]?.get(id)?.status === status);
-    return {
-      all: r.length,
-      untranslated: r.filter((x) => openIn(x.id, 'untranslated')).length,
-      new: r.filter((x) => x.isNew).length,
-      fuzzy: r.filter((x) => openIn(x.id, 'fuzzy')).length,
-      proofread: r.filter((x) => openIn(x.id, 'proofread')).length,
-    };
+  /** Filter tabs count terms, so they use the leading language's counts. */
+  protected readonly termCounts = computed(() => this.termTotals());
+
+  private readonly termTotals = computed(() => {
+    const lead = this.langs()[0];
+    return (
+      this.countsByLang()[lead] ?? { all: 0, untranslated: 0, new: 0, fuzzy: 0, proofread: 0 }
+    );
   });
 
   /** Stacked progress segments for the editorial headline. */
@@ -435,42 +437,54 @@ export class EditorScreen implements OnInit {
     ];
   });
 
-  protected readonly filtered = computed(() => {
-    const f = this.filter();
-    const q = this.query().toLowerCase();
-    const codes = this.langs();
-    const map = this.byLang();
-    const feature = this.activeFeature();
-    const index = this.indexed();
-    const hasStatus = (id: string, status: TranslationStatus) =>
-      codes.some((c) => index[c]?.get(id)?.status === status);
-    return this.rows().filter((r) => {
-      if (feature && r.featureId !== feature.id) return false;
-      if (f === 'untranslated' && !hasStatus(r.id, 'untranslated')) return false;
-      if (f === 'new' && !r.isNew) return false;
-      if (f === 'fuzzy' && !hasStatus(r.id, 'fuzzy')) return false;
-      if (f === 'proofread' && !hasStatus(r.id, 'proofread')) return false;
-      if (q && !(r.key.includes(q) || r.source.toLowerCase().includes(q))) return false;
-      return true;
-    });
-  });
-
-  private readonly pageSize = 200;
-  protected readonly shown = signal(this.pageSize);
-  protected readonly visible = computed(() => this.filtered().slice(0, this.shown()));
+  /** The server already applied the filter, so the page is what is shown. */
+  protected readonly filtered = computed(() => this.rows());
+  protected readonly visible = computed(() => this.rows());
+  protected readonly loadedTotal = signal(0);
   protected readonly hiddenCount = computed(() =>
-    Math.max(this.filtered().length - this.visible().length, 0),
+    Math.max(this.loadedTotal() - this.rows().length, 0),
   );
+  protected readonly loadingMore = signal(false);
 
-  private readonly resetPaging = effect(() => {
-    this.filter();
-    this.query();
-    this.langs();
-    this.shown.set(this.pageSize);
-  });
+  private readonly pageSize = 100;
+  private nextPage = 1;
 
   protected showMore(): void {
-    this.shown.update((n) => n + this.pageSize);
+    const pid = this.state.current()?.id;
+    if (!pid || this.loadingMore()) return;
+    this.loadingMore.set(true);
+    const page = this.nextPage;
+    const codes = this.langs();
+    const generation = this.loadGeneration;
+    forkJoin(
+      codes.map((code) =>
+        this.api
+          .editor(pid, code, this.queryOptions(page))
+          .pipe(map((res) => ({ code, res }))),
+      ),
+    ).subscribe({
+      next: (results) => {
+        this.loadingMore.set(false);
+        if (generation !== this.loadGeneration) return;
+        this.byLang.update((m) => {
+          const next = { ...m };
+          for (const { code, res } of results) next[code] = [...(next[code] ?? []), ...res.rows];
+          return next;
+        });
+        this.nextPage = page + 1;
+      },
+      error: () => this.loadingMore.set(false),
+    });
+  }
+
+  private queryOptions(page: number) {
+    return {
+      page,
+      size: this.pageSize,
+      status: this.filter(),
+      q: this.query().trim() || undefined,
+      featureId: this.activeFeature()?.id,
+    };
   }
 
   protected readonly selectedRow = computed(() => {
@@ -507,12 +521,50 @@ export class EditorScreen implements OnInit {
   }
 
   private loadEditor(pid: string, codes = this.langs()): void {
-    for (const code of codes) {
-      this.api
-        .editor(pid, code)
-        .subscribe((res) => this.byLang.update((m) => ({ ...m, [code]: res.rows })));
-    }
+    if (!codes.length) return;
+    this.nextPage = 1;
+    const generation = ++this.loadGeneration;
+    forkJoin(
+      codes.map((code) =>
+        this.api.editor(pid, code, this.queryOptions(0)).pipe(map((res) => ({ code, res }))),
+      ),
+    ).subscribe((results) => {
+      if (generation !== this.loadGeneration) return;
+      this.byLang.update((m) => {
+        const next = { ...m };
+        for (const { code, res } of results) next[code] = res.rows;
+        return next;
+      });
+      this.countsByLang.update((m) => {
+        const next = { ...m };
+        for (const { code, res } of results) next[code] = res.counts;
+        return next;
+      });
+      this.loadedTotal.set(results[0]?.res.total ?? 0);
+    });
   }
+
+  /**
+   * Filter, search and feature changes go back to the server for page one.
+   * Typing is debounced so a query is one request, not one per keystroke, and
+   * each load carries a generation so a slow earlier response cannot land on
+   * top of a newer one.
+   */
+  private readonly reloadOnFilter = effect(() => {
+    this.filter();
+    this.query();
+    this.featureParam();
+    untracked(() => {
+      const pid = this.state.current()?.id;
+      const codes = this.langs();
+      if (!pid || !codes.length || !this.languages().length) return;
+      clearTimeout(this.reloadTimer);
+      this.reloadTimer = setTimeout(() => this.loadEditor(pid, codes), 200);
+    });
+  });
+
+  private reloadTimer: ReturnType<typeof setTimeout> | undefined;
+  private loadGeneration = 0;
 
   protected toggleLang(code: string): void {
     const current = this.langs();
@@ -647,10 +699,6 @@ export class EditorScreen implements OnInit {
     if (target >= rows.length) {
       this.sel.set(null);
       return;
-    }
-    // The next row needing work may sit past the rendered window.
-    if (target >= this.shown()) {
-      this.shown.set(Math.ceil((target + 1) / this.pageSize) * this.pageSize);
     }
     this.cursor.set(target);
     this.select(rows[target].id, lang);

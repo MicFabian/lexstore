@@ -67,6 +67,20 @@ data class EditorResponse(
     val languageCode: String,
     val sourceLang: String,
     val rows: List<EditorRow>,
+    val page: Int = 0,
+    val size: Int = 0,
+    /** Terms matching the current filter, which is what the row count means. */
+    val total: Long = 0,
+    /** Filter tab counts over the whole project, not just this page. */
+    val counts: EditorCounts = EditorCounts(),
+)
+
+data class EditorCounts(
+    val all: Long = 0,
+    val untranslated: Long = 0,
+    val new: Long = 0,
+    val fuzzy: Long = 0,
+    val proofread: Long = 0,
 )
 
 /** Minimal pagination envelope for collection endpoints that can grow. */

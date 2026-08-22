@@ -34,4 +34,65 @@ interface TermRepository : JpaRepository<Term, UUID> {
 
     @Query("select t.id from Term t where t.projectId = :projectId")
     fun idsByProject(projectId: UUID): List<UUID>
+
+    /**
+     * Term ids for one page of the editor, filtered the way the screen filters:
+     * by status in the addressed language, by key or source text, and by
+     * feature. Ordering matches the unfiltered editor so paging is stable.
+     */
+    @Query(
+        """
+        select t.id from Term t
+        left join Translation tr on tr.termId = t.id and tr.languageCode = :lang
+        where t.projectId = :projectId
+          and (:featureId is null or t.featureId = :featureId)
+          and (:q = '' or lower(t.key) like lower(concat('%', :q, '%'))
+                       or lower(t.sourceText) like lower(concat('%', :q, '%')))
+          and (
+            :status = ''
+            or (:status = 'new' and t.isNew = true)
+            or (:status = 'untranslated' and (tr is null or tr.value is null or tr.value = ''
+                                              or tr.status = io.translad.common.TranslationStatus.UNTRANSLATED))
+            or (:status = 'fuzzy' and tr.status = io.translad.common.TranslationStatus.FUZZY)
+            or (:status = 'proofread' and tr.status = io.translad.common.TranslationStatus.PROOFREAD)
+          )
+        order by t.createdAt desc
+        """,
+    )
+    fun editorPageIds(
+        projectId: UUID,
+        lang: String,
+        status: String,
+        q: String,
+        featureId: UUID?,
+        pageable: Pageable,
+    ): List<UUID>
+
+    @Query(
+        """
+        select count(t) from Term t
+        left join Translation tr on tr.termId = t.id and tr.languageCode = :lang
+        where t.projectId = :projectId
+          and (:featureId is null or t.featureId = :featureId)
+          and (:q = '' or lower(t.key) like lower(concat('%', :q, '%'))
+                       or lower(t.sourceText) like lower(concat('%', :q, '%')))
+          and (
+            :status = ''
+            or (:status = 'new' and t.isNew = true)
+            or (:status = 'untranslated' and (tr is null or tr.value is null or tr.value = ''
+                                              or tr.status = io.translad.common.TranslationStatus.UNTRANSLATED))
+            or (:status = 'fuzzy' and tr.status = io.translad.common.TranslationStatus.FUZZY)
+            or (:status = 'proofread' and tr.status = io.translad.common.TranslationStatus.PROOFREAD)
+          )
+        """,
+    )
+    fun editorCount(
+        projectId: UUID,
+        lang: String,
+        status: String,
+        q: String,
+        featureId: UUID?,
+    ): Long
+
+    fun findByIdIn(ids: Collection<UUID>): List<Term>
 }

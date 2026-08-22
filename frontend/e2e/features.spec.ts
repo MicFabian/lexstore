@@ -325,6 +325,31 @@ test.describe('editor — language switch + AI suggestion', () => {
     await expect(page.locator('.trow .tgt.empty')).toHaveCount(0);
   });
 
+  test('the editor filter goes to the server and keeps whole-project counts', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    await expect(page.locator('.trow').first()).toBeVisible();
+
+    const allTab = page.locator('.ftab').first();
+    const allCount = Number((await allTab.innerText()).replace(/\D/g, ''));
+    expect(allCount).toBeGreaterThan(0);
+
+    await page.locator('.ftab', { hasText: 'Untranslated' }).click();
+    await expect(page.locator('.trow').first()).toBeVisible();
+    await expect(page.locator('.ftab').first()).toContainText(String(allCount));
+
+    await page.locator('.ftab').first().click();
+    await expect(page.locator('.trow').first()).toBeVisible();
+
+    const search = page.getByRole('textbox', { name: 'Search keys or text' });
+    await search.fill('nav.dashboard');
+    await expect(page.locator('.keytag').first()).toHaveText('nav.dashboard', { timeout: 10000 });
+    await expect(page.locator('.trow')).toHaveCount(1);
+
+    await search.fill('');
+    await expect(page.locator('.trow').first()).toBeVisible();
+  });
+
   test('auto-translate fills every visible language, not just the first', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);

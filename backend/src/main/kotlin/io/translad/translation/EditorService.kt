@@ -11,6 +11,7 @@ import io.translad.project.ProjectRepository
 import io.translad.term.AuditEntry
 import io.translad.term.CommentView
 import io.translad.term.EditorResponse
+import io.translad.term.EditorCounts
 import io.translad.term.EditorRow
 import io.translad.term.PluralForms
 import io.translad.term.Term
@@ -31,6 +32,8 @@ class TranslationConflictException :
     RuntimeException("Someone else saved this translation while you were editing it. Reload to see their version.")
 
 private const val MAX_AUTO_TRANSLATE_BATCH = 200
+private const val DEFAULT_EDITOR_PAGE = 100
+private const val MAX_EDITOR_PAGE = 500
 
 /** A term's history panel shows the recent past; the full audit lives in the events table. */
 private const val MAX_HISTORY_ENTRIES = 100
@@ -50,20 +53,66 @@ class EditorService(
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
 
-    fun editor(projectId: UUID, languageCode: String): EditorResponse {
+    /**
+     * One page of the editor for one language.
+     *
+     * The filter is applied in the database rather than in the browser, so a
+     * project with thousands of terms sends a page instead of all of them. The
+     * tab counts come from separate counting queries, because they describe the
+     * whole project and must not change as the reader pages through it.
+     */
+    fun editor(
+        projectId: UUID,
+        languageCode: String,
+        page: Int = 0,
+        size: Int = DEFAULT_EDITOR_PAGE,
+        status: String? = null,
+        query: String? = null,
+        featureId: UUID? = null,
+    ): EditorResponse {
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
         languages.findByProjectIdAndCode(projectId, languageCode)
             ?: throw LanguageNotInProjectException(languageCode)
 
-        val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
-        val byTerm = if (projTerms.isEmpty()) emptyMap()
-        else translations.findByTermIdInAndLanguageCode(projTerms.map { it.id }, languageCode)
-            .associateBy { it.termId }
+        val statusFilter = status?.takeIf { it != "all" }?.trim().orEmpty()
+        val q = query?.trim().orEmpty()
+        val boundedSize = size.coerceIn(1, MAX_EDITOR_PAGE)
 
-        val rows = projTerms.map { t -> editorRow(t, byTerm[t.id]) }
-        return EditorResponse(languageCode, project.sourceLang, rows)
+        val ids = terms.editorPageIds(
+            projectId, languageCode, statusFilter, q, featureId,
+            org.springframework.data.domain.PageRequest.of(page.coerceAtLeast(0), boundedSize),
+        )
+        val total = terms.editorCount(projectId, languageCode, statusFilter, q, featureId)
+
+        val pageTerms = if (ids.isEmpty()) emptyList() else terms.findByIdIn(ids)
+        val ordered = ids.mapNotNull { id -> pageTerms.firstOrNull { it.id == id } }
+        val byTerm = if (ids.isEmpty()) emptyMap()
+        else translations.findByTermIdInAndLanguageCode(ids, languageCode).associateBy { it.termId }
+
+        return EditorResponse(
+            languageCode = languageCode,
+            sourceLang = project.sourceLang,
+            rows = ordered.map { t -> editorRow(t, byTerm[t.id]) },
+            page = page.coerceAtLeast(0),
+            size = boundedSize,
+            total = total,
+            counts = countsFor(projectId, languageCode, q, featureId),
+        )
     }
+
+    private fun countsFor(
+        projectId: UUID,
+        languageCode: String,
+        q: String,
+        featureId: UUID?,
+    ) = EditorCounts(
+        all = terms.editorCount(projectId, languageCode, "", q, featureId),
+        untranslated = terms.editorCount(projectId, languageCode, "untranslated", q, featureId),
+        new = terms.editorCount(projectId, languageCode, "new", q, featureId),
+        fuzzy = terms.editorCount(projectId, languageCode, "fuzzy", q, featureId),
+        proofread = terms.editorCount(projectId, languageCode, "proofread", q, featureId),
+    )
 
     @Transactional
     fun save(projectId: UUID, termId: UUID, languageCode: String, req: SaveTranslationRequest): EditorRow {
