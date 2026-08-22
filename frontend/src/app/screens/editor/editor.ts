@@ -13,6 +13,7 @@ import { Btn, SearchBox } from '../../shared/primitives';
 import { SegmentOption } from '../../shared/segmented';
 import { Inspector } from './inspector';
 import { PromptDialog } from '../../shared/prompt-dialog';
+import { ContentState } from '../../shared/content-state';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -21,7 +22,7 @@ import { EditorRow, TranslationStatus } from '../../core/models';
 @Component({
   selector: 'tl-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, Inspector, PromptDialog],
+  imports: [Icon, Btn, SearchBox, Inspector, PromptDialog, ContentState],
   template: `
     <div class="editor" [class.editor--split]="!!selectedRow()" style="position:relative">
       <div class="ed-head">
@@ -138,9 +139,24 @@ import { EditorRow, TranslationStatus } from '../../core/models';
             }
             @if (filtered().length === 0) {
               <tr>
-                <td [attr.colspan]="langs().length + 2" style="padding:56px 16px;text-align:center">
-                  <div class="serif" style="font-size:26px;margin-bottom:6px">Nothing here</div>
-                  <div class="muted" style="font-size:13.5px">No terms match this filter — try another.</div>
+                <td [attr.colspan]="langs().length + 2" style="padding:0">
+                  @if (rows().length === 0) {
+                    <tl-content-state
+                      kind="empty"
+                      title="No terms in this project yet"
+                      description="Add the first source string, and it appears here for every language."
+                      actionLabel="Add term"
+                      (acted)="adding.set(true)"
+                    />
+                  } @else {
+                    <tl-content-state
+                      kind="no-results"
+                      [title]="'Nothing ' + activeFilterLabel()"
+                      description="No terms match this filter and search."
+                      actionLabel="Show all terms"
+                      (acted)="resetFilters()"
+                    />
+                  }
                 </td>
               </tr>
             }
@@ -429,6 +445,16 @@ export class EditorScreen implements OnInit {
       },
       error: () => this.toast.show({ message: 'That key already exists', tone: 'error' }),
     });
+  }
+
+  protected activeFilterLabel(): string {
+    const f = this.filter();
+    return f === 'all' ? 'to show' : `is ${this.statusLabel(f as TranslationStatus).toLowerCase()}`;
+  }
+
+  protected resetFilters(): void {
+    this.filter.set('all');
+    this.query.set('');
   }
 
   protected isCursor(index: number): boolean {

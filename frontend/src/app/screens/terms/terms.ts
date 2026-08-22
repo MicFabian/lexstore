@@ -14,6 +14,8 @@ import { Avatar, Btn, SearchBox, StatusChip, Tag } from '../../shared/primitives
 import { HistoryModal } from '../../shared/history-modal';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { PromptDialog } from '../../shared/prompt-dialog';
+import { ContentState } from '../../shared/content-state';
+import { TableSkeleton } from '../../shared/table-skeleton';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -24,7 +26,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
 @Component({
   selector: 'tl-terms-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal, ConfirmDialog, PromptDialog],
+  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
     <div class="well">
       <div class="pad">
@@ -83,6 +85,17 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
             </button>
           </div>
         }
+        @if (loading()) {
+          <tl-table-skeleton [rows]="8" [columns]="5" />
+        } @else if (loadError()) {
+          <tl-content-state
+            kind="error"
+            title="Could not load terms"
+            description="The request failed. This is usually temporary."
+            actionLabel="Try again"
+            (acted)="reload()"
+          />
+        } @else {
         <table class="ttable">
           <thead>
             <tr>
@@ -179,16 +192,32 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 </tr>
               }
             }
-            @if (filtered().length === 0) {
+            @if (!loading() && !loadError() && filtered().length === 0) {
               <tr>
-                <td colspan="6" style="padding:48px 16px;text-align:center">
-                  <div class="serif" style="margin-bottom:6px;font-size:22px">No terms found</div>
-                  <div class="muted" style="font-size:13.5px">Try another search, tag, or time range.</div>
+                <td colspan="6" style="padding:0">
+                  @if (rows().length === 0) {
+                    <tl-content-state
+                      kind="empty"
+                      title="No terms yet"
+                      description="Terms are the source strings your app shows. Add one, or import them from a file or POEditor."
+                      actionLabel="Add term"
+                      (acted)="adding.set(true)"
+                    />
+                  } @else {
+                    <tl-content-state
+                      kind="no-results"
+                      title="No terms match these filters"
+                      description="Nothing matches the current search, tag, and New-only combination."
+                      actionLabel="Clear filters"
+                      (acted)="clearFilters()"
+                    />
+                  }
                 </td>
               </tr>
             }
           </tbody>
         </table>
+        }
       </div>
       </div>
     </div>
@@ -327,6 +356,8 @@ export class TermsScreen implements OnInit {
   protected readonly pendingDelete = signal<TermView | null>(null);
   protected readonly pendingBulkDelete = signal(false);
   protected readonly adding = signal(false);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
   protected readonly addTermFields = [
     { name: 'key', label: 'Key', placeholder: 'checkout.button.confirm', mono: true },
     { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
@@ -353,7 +384,33 @@ export class TermsScreen implements OnInit {
   });
 
   ngOnInit(): void {
-    this.state.whenReady((pid) => this.api.listTerms(pid).subscribe((t) => this.rows.set(t)));
+    this.state.whenReady((pid) => this.load(pid));
+  }
+
+  private load(pid: string): void {
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.api.listTerms(pid).subscribe({
+      next: (t) => {
+        this.rows.set(t);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.loadError.set(true);
+      },
+    });
+  }
+
+  protected reload(): void {
+    const pid = this.state.current()?.id;
+    if (pid) this.load(pid);
+  }
+
+  protected clearFilters(): void {
+    this.query.set('');
+    this.tag.set(null);
+    this.newOnly.set(false);
   }
 
   /** Import lives in Settings, where the file and POEditor flows already are. */

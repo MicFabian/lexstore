@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
+import { ContentState } from '../../shared/content-state';
+import { TableSkeleton } from '../../shared/table-skeleton';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
@@ -12,7 +14,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
 @Component({
   selector: 'tl-features-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, ConfirmDialog, PromptDialog],
+  imports: [Icon, Btn, SearchBox, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
     <div class="well">
       <div class="pad">
@@ -30,6 +32,17 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
           </div>
         </div>
 
+        @if (loading()) {
+          <tl-table-skeleton [rows]="6" [columns]="5" />
+        } @else if (loadError()) {
+          <tl-content-state
+            kind="error"
+            title="Could not load features"
+            description="The request failed. This is usually temporary."
+            actionLabel="Try again"
+            (acted)="reload()"
+          />
+        } @else {
         <table class="ttable features">
           <thead>
             <tr>
@@ -147,18 +160,32 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 </tr>
               }
             }
-            @if (filtered().length === 0) {
+            @if (!loading() && !loadError() && filtered().length === 0) {
               <tr>
-                <td colspan="6" style="padding:48px 16px;text-align:center">
-                  <div class="serif" style="font-size:22px;margin-bottom:6px">No features yet</div>
-                  <div class="muted" style="font-size:13.5px">
-                    Group a project's terms by what ships together to track coverage per feature.
-                  </div>
+                <td colspan="6" style="padding:0">
+                  @if (features().length === 0) {
+                    <tl-content-state
+                      kind="empty"
+                      title="No features yet"
+                      description="Group a project's terms by what ships together — a screen, a flow, a release — and track how far along each one is."
+                      actionLabel="New feature"
+                      (acted)="creating.set(true)"
+                    />
+                  } @else {
+                    <tl-content-state
+                      kind="no-results"
+                      title="No features match that search"
+                      [description]="'Nothing matches “' + query() + '”.'"
+                      actionLabel="Clear search"
+                      (acted)="query.set('')"
+                    />
+                  }
                 </td>
               </tr>
             }
           </tbody>
         </table>
+        }
       </div>
     </div>
 
@@ -282,6 +309,8 @@ export class FeaturesScreen implements OnInit {
   protected readonly openRows = signal<OpenTranslationView[]>([]);
   protected readonly creating = signal(false);
   protected readonly pendingDelete = signal<FeatureView | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal(false);
 
   protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
@@ -300,7 +329,23 @@ export class FeaturesScreen implements OnInit {
   }
 
   private load(pid: string): void {
-    this.api.listFeatures(pid).subscribe((f) => this.features.set(f));
+    this.loading.set(true);
+    this.loadError.set(false);
+    this.api.listFeatures(pid).subscribe({
+      next: (f) => {
+        this.features.set(f);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.loadError.set(true);
+      },
+    });
+  }
+
+  protected reload(): void {
+    const pid = this.state.current()?.id;
+    if (pid) this.load(pid);
   }
 
   /** The fuzzy share sits on top of the translated bar, so it is offset by it. */

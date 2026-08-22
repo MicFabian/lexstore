@@ -79,6 +79,42 @@ test.describe('dialogs', () => {
 });
 
 // ----------------------------------------------------------------------------
+test.describe('content states', () => {
+  test('a failed load offers a retry instead of an empty table', async ({ page }) => {
+    // Fail the first terms request, then let the retry through.
+    let failed = false;
+    await page.route('**/api/projects/*/terms*', (route) => {
+      if (!failed) {
+        failed = true;
+        return route.fulfill({ status: 500, body: '{}' });
+      }
+      return route.continue();
+    });
+
+    await page.goto('/terms');
+    await waitShell(page);
+    const state = page.locator('.cstate');
+    await expect(state).toContainText('Could not load terms');
+
+    await state.locator('button', { hasText: 'Try again' }).click();
+    await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
+  });
+
+  test('an over-filtered list explains itself and can be cleared', async ({ page }) => {
+    await page.goto('/terms');
+    await waitShell(page);
+    await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
+
+    await page.locator('input[placeholder="Search terms"]').fill('zzzznomatch');
+    const state = page.locator('.cstate');
+    await expect(state).toContainText('No terms match these filters');
+
+    await state.locator('button', { hasText: 'Clear filters' }).click();
+    await expect(page.locator('.ttable tbody tr.trow').first()).toBeVisible();
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('editor keyboard', () => {
   test('arrows walk rows, Enter opens, Escape closes', async ({ page }) => {
     await page.goto('/editor');
