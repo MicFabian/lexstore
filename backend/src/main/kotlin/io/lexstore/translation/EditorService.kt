@@ -176,6 +176,7 @@ class EditorService(
 
         // Saving a real value clears the "new" flag on the source term.
         if (!req.value.isNullOrBlank()) term.isNew = false
+        projects.touch(projectId, now)
 
         return editorRow(term, saved)
     }

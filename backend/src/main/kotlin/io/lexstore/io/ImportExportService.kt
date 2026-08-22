@@ -99,6 +99,7 @@ class ImportExportService(
             }
         }
         translations.saveAll(fresh)
+        projects.touch(projectId, now)
         return ImportResult(created, updated + fresh.size, entries.size)
     }
 

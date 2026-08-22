@@ -26,6 +26,7 @@ class TermService(
     private val languages: LanguageRepository,
     private val comments: TermCommentRepository,
     private val events: io.lexstore.translation.TranslationEventRepository,
+    private val projects: io.lexstore.project.ProjectRepository,
     private val currentUser: CurrentUser,
 ) {
     fun list(projectId: UUID): List<TermView> =
@@ -62,6 +63,7 @@ class TermService(
                 createdByAvatar = currentUser.identity().avatar,
             ),
         )
+        projects.touch(projectId, java.time.Instant.now())
         return toView(saved, languages.findByProjectIdOrderByName(projectId), emptyList())
     }
 
@@ -173,7 +175,7 @@ class TermService(
                 }
             cmts.lastOrNull()?.let { add(AuditEntry(it.authorName, it.authorAvatar, "commented", it.time)) }
             term.createdByName?.let {
-                add(AuditEntry(it, term.createdByAvatar ?: 0, "created the term", term.addedLabel))
+                add(AuditEntry(it, term.createdByAvatar ?: 0, "created the term", RelativeTime.format(term.createdAt)))
             }
         }
         return TermView(
@@ -184,12 +186,12 @@ class TermService(
             plural = if (term.isPlural) PluralForms(term.pluralOne, term.pluralOther) else null,
             tags = term.tagList,
             isNew = term.isNew,
-            added = term.addedLabel,
-            createdAt = term.addedLabel,
+            added = RelativeTime.format(term.createdAt),
+            createdAt = RelativeTime.format(term.createdAt),
             createdBy = term.createdByName?.let {
-                AuditEntry(it, term.createdByAvatar ?: 0, "created the term", term.addedLabel)
+                AuditEntry(it, term.createdByAvatar ?: 0, "created the term", RelativeTime.format(term.createdAt))
             },
-            modifiedAt = cmts.lastOrNull()?.time ?: term.addedLabel,
+            modifiedAt = cmts.lastOrNull()?.time ?: RelativeTime.format(term.createdAt),
             modifiedBy = history.firstOrNull(),
             translations = trViews,
             comments = cmts,

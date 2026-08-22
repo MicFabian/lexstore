@@ -34,4 +34,8 @@ class Project(
 
     @Column(name = "updated_label")
     var updatedLabel: String? = null,
+
+    /** When the project last changed; the label shown to users derives from it. */
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: java.time.Instant = java.time.Instant.now(),
 )

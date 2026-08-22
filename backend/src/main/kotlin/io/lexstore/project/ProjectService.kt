@@ -1,6 +1,7 @@
 package io.lexstore.project
 
 import io.lexstore.common.ProjectAccess
+import io.lexstore.common.RelativeTime
 import io.lexstore.common.TranslationStatus
 import io.lexstore.language.LanguageRepository
 import io.lexstore.term.TermRepository
@@ -56,7 +57,7 @@ class ProjectService(
                     untranslated = (slots - (tr?.filled ?: 0)).coerceAtLeast(0),
                     newTerms = t?.newTerms ?: 0,
                     needsReview = tr?.fuzzy ?: 0,
-                    updated = p.updatedLabel,
+                    updated = RelativeTime.format(p.updatedAt),
                 )
             }
     }
@@ -81,7 +82,7 @@ class ProjectService(
                 code = req.code,
                 sourceLang = req.sourceLang ?: "en",
                 mark = req.mark ?: "#3a5bff",
-                updatedLabel = "just now",
+                updatedLabel = null,
             ),
         )
         return detailOf(saved)
