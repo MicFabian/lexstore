@@ -31,6 +31,6 @@ class ProjectAccessInterceptor(private val access: ProjectAccess) : HandlerInter
 @Configuration
 class ProjectAccessConfig(private val interceptor: ProjectAccessInterceptor) : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(interceptor).addPathPatterns("/api/projects/**")
+        registry.addInterceptor(interceptor).addPathPatterns("/api/**")
     }
 }

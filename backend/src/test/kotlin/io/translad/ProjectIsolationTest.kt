@@ -7,6 +7,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 
 private const val MOSAIC_WEB = "35f54c71-131a-cc6e-aad2-f22b0eca789f"
@@ -52,6 +53,15 @@ class ProjectIsolationTest : IntegrationTestBase() {
             .andReturn().response.contentAsString
         assertThat(body).contains(MOSAIC_IOS)
         assertThat(body).doesNotContain(MOSAIC_WEB)
+    }
+
+    @Test
+    fun `a project scoped route outside the projects prefix is guarded too`() {
+        mvc.post("/api/poeditor/projects/$MOSAIC_WEB/import") {
+            with(asGiulia())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"apiToken":"x","poeditorProjectId":1,"languages":["de"]}"""
+        }.andExpect { status { isForbidden() } }
     }
 
     @Test

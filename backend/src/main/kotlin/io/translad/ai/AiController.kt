@@ -22,12 +22,14 @@ class AiController(private val service: AiTranslationService) {
     @PostMapping("/translate")
     fun translate(@Valid @RequestBody req: TranslateRequest): TranslateResponse = service.translate(req)
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/requests")
     fun requests(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "50") size: Int,
     ): List<RequestLogView> = service.requests(page, size.coerceIn(1, 200))
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/cache")
     fun cache(
         @RequestParam(required = false) q: String?,
@@ -35,14 +37,17 @@ class AiController(private val service: AiTranslationService) {
         @RequestParam(defaultValue = "50") size: Int,
     ): List<CacheEntryView> = service.cacheEntries(q, page, size.coerceIn(1, 200))
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/cache/stats")
     fun stats(): CacheStats = service.stats()
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @DeleteMapping("/cache/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteEntry(@PathVariable id: UUID) = service.deleteCacheEntry(id)
 
     /** Invalidate every cached translation for a given source content. */
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @DeleteMapping("/cache")
     fun invalidate(
         @RequestParam(required = false) sourceText: String?,
@@ -59,6 +64,7 @@ class AiController(private val service: AiTranslationService) {
     @GetMapping("/settings")
     fun settings(): AiSettingsView = service.settingsView()
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @PutMapping("/settings")
     fun updateSettings(@RequestBody req: UpdateAiSettings): AiSettingsView = service.updateSettings(req)
 }
