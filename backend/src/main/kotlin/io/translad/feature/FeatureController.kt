@@ -37,6 +37,7 @@ class FeatureController(private val service: FeatureService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun create(
         @PathVariable projectId: UUID,
         @Valid @RequestBody req: CreateFeatureRequest,
@@ -44,6 +45,7 @@ class FeatureController(private val service: FeatureService) {
 
     @PatchMapping("/{featureId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable featureId: UUID,
@@ -53,12 +55,14 @@ class FeatureController(private val service: FeatureService) {
     @DeleteMapping("/{featureId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun delete(@PathVariable projectId: UUID, @PathVariable featureId: UUID) =
         service.delete(projectId, featureId)
 
     /** Move terms into this feature. */
     @PostMapping("/{featureId}/terms")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun assign(
         @PathVariable projectId: UUID,
         @PathVariable featureId: UUID,
@@ -69,6 +73,7 @@ class FeatureController(private val service: FeatureService) {
     @DeleteMapping("/terms")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun unassign(@PathVariable projectId: UUID, @RequestBody req: AssignTermsRequest) =
         service.unassign(projectId, req)
 }

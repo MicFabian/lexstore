@@ -24,6 +24,7 @@ class ContributorController(private val service: ContributorService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun invite(
         @PathVariable projectId: UUID,
         @Valid @RequestBody req: InviteContributorRequest,
@@ -32,6 +33,7 @@ class ContributorController(private val service: ContributorService) {
     /** Change a contributor's role or the languages they may work on. */
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable id: UUID,
@@ -41,5 +43,6 @@ class ContributorController(private val service: ContributorService) {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun remove(@PathVariable projectId: UUID, @PathVariable id: UUID) = service.remove(projectId, id)
 }

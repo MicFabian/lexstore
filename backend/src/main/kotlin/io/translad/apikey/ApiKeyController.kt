@@ -23,6 +23,7 @@ class ApiKeyController(private val service: ApiKeyService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun generate(
         @PathVariable projectId: UUID,
         @Valid @RequestBody req: GenerateApiKeyRequest,
@@ -31,5 +32,6 @@ class ApiKeyController(private val service: ApiKeyService) {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun revoke(@PathVariable projectId: UUID, @PathVariable id: UUID) = service.revoke(projectId, id)
 }

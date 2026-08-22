@@ -26,10 +26,12 @@ class ProjectController(private val service: ProjectService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('OWNER')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER)
     fun create(@Valid @RequestBody req: CreateProjectRequest): ProjectDetail = service.create(req)
 
     @PatchMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun update(@PathVariable projectId: UUID, @RequestBody req: UpdateProjectRequest): ProjectDetail =
         service.update(projectId, req)
 }

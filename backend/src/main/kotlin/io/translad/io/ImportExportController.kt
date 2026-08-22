@@ -20,6 +20,7 @@ class ImportExportController(private val service: ImportExportService) {
     /** Import a JSON object of key→value translations for one language. */
     @PostMapping("/import")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun import(
         @PathVariable projectId: UUID,
         @RequestParam lang: String,

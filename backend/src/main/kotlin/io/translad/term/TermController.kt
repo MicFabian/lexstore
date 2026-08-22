@@ -33,11 +33,13 @@ class TermController(private val service: TermService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun create(@PathVariable projectId: UUID, @Valid @RequestBody req: CreateTermRequest): TermView =
         service.create(projectId, req)
 
     @PatchMapping("/{termId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable termId: UUID,
@@ -47,6 +49,7 @@ class TermController(private val service: TermService) {
     @DeleteMapping("/{termId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun delete(@PathVariable projectId: UUID, @PathVariable termId: UUID) =
         service.delete(projectId, termId)
 
@@ -67,6 +70,7 @@ class TermController(private val service: TermService) {
     @DeleteMapping("/{termId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR','PROOFREADER')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR, io.translad.common.ContributorRole.PROOFREADER)
     fun deleteComment(
         @PathVariable projectId: UUID,
         @PathVariable termId: UUID,

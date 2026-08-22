@@ -25,6 +25,7 @@ data class PoeditorPreviewRequest(
 @RestController
 @RequestMapping("/api/poeditor")
 @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+@io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
 class PoeditorController(private val service: PoeditorImportService) {
 
     @PostMapping("/projects")
@@ -50,6 +51,7 @@ class PoeditorController(private val service: PoeditorImportService) {
     /** Import a whole POEditor project into a newly created one. */
     @PostMapping("/import")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun importAsNewProject(@RequestBody req: PoeditorImportAsProjectRequest): PoeditorImportResult =
         service.importAsNewProject(req)
 }

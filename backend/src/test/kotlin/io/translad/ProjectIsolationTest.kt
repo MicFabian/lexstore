@@ -65,6 +65,20 @@ class ProjectIsolationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `a realm role does not grant what the project role withholds`() {
+        val asGiuliaWithHighRealmRole = jwt().jwt { it.claim("email", "giulia@translad.io") }
+            .authorities(
+                org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_OWNER"),
+                org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TRANSLATOR"),
+            )
+        mvc.post("/api/projects/$MOSAIC_IOS/terms") {
+            with(asGiuliaWithHighRealmRole)
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"key":"escalation.probe","sourceText":"hi"}"""
+        }.andExpect { status { isForbidden() } }
+    }
+
+    @Test
     fun `a platform admin still reaches every project`() {
         mvc.get("/api/projects/$MOSAIC_WEB/terms") { with(asPlatformAdmin()) }
             .andExpect { status { isOk() } }

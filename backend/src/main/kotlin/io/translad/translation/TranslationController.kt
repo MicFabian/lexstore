@@ -40,6 +40,7 @@ class TranslationController(private val service: EditorService) {
     /** PUT is an idempotent upsert of the translation for (term, language). */
     @PutMapping("/{termId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR','PROOFREADER')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR, io.translad.common.ContributorRole.PROOFREADER)
     fun upsert(
         @PathVariable projectId: UUID,
         @PathVariable code: String,
@@ -58,6 +59,7 @@ class TranslationController(private val service: EditorService) {
     /** Auto-translate every untranslated term in this language. */
     @org.springframework.web.bind.annotation.PostMapping("/auto")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN, io.translad.common.ContributorRole.TRANSLATOR)
     fun auto(
         @PathVariable projectId: UUID,
         @PathVariable code: String,

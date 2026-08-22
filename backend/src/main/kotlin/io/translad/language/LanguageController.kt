@@ -23,12 +23,14 @@ class LanguageController(private val service: LanguageService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun add(@PathVariable projectId: UUID, @Valid @RequestBody req: AddLanguageRequest): LanguageView =
         service.add(projectId, req)
 
     @DeleteMapping("/{code}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    @io.translad.common.RequiresProjectRole(io.translad.common.ContributorRole.OWNER, io.translad.common.ContributorRole.ADMIN)
     fun remove(@PathVariable projectId: UUID, @PathVariable code: String) =
         service.remove(projectId, code)
 }
