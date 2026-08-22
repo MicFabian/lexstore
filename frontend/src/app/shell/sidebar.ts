@@ -94,8 +94,19 @@ interface QuickItem {
           <span>Translation AI</span>
         </a>
 
-        <div class="rail__group">Project</div>
-        @for (n of nav(); track n.path) {
+        <div class="rail__group">Work</div>
+        @for (n of workNav(); track n.path) {
+          <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
+            <tl-icon [name]="n.icon" [size]="17" />
+            <span>{{ n.label }}</span>
+            @if (n.count != null) {
+              <span class="count">{{ n.count.toLocaleString() }}</span>
+            }
+          </a>
+        }
+
+        <div class="rail__group">Manage</div>
+        @for (n of manageNav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
             <tl-icon [name]="n.icon" [size]="17" />
             <span>{{ n.label }}</span>
@@ -198,12 +209,20 @@ export class Sidebar {
   protected readonly projects = this.state.projects;
   protected readonly current = this.state.current;
 
-  protected readonly nav = computed<NavItem[]>(() => {
+  /** What a translator opens to get work done. */
+  protected readonly workNav = computed<NavItem[]>(() => {
     const c = this.current();
     return [
       { path: 'editor', icon: 'Languages', label: 'Translations', count: c?.terms },
       { path: 'terms', icon: 'FileText', label: 'Terms', count: c?.terms },
       { path: 'features', icon: 'LayoutGrid', label: 'Features' },
+    ];
+  });
+
+  /** What an owner or admin configures, rather than works in. */
+  protected readonly manageNav = computed<NavItem[]>(() => {
+    const c = this.current();
+    return [
       { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },
       { path: 'contributors', icon: 'Users', label: 'Contributors' },
       { path: 'settings', icon: 'Settings', label: 'Settings' },

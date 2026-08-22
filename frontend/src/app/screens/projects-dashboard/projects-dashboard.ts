@@ -44,6 +44,31 @@ import { ProjectSummary } from '../../core/models';
           </div>
         </div>
 
+        @if (needsWork().length > 0) {
+          <div class="eyebrow" style="margin-bottom:6px">Pick up where the work is</div>
+          <div class="worklist">
+            @for (p of needsWork(); track p.id) {
+              <button class="lrow work-row" (click)="continueWork(p)">
+                <span class="pmark" [style.background]="p.image ? 'none' : p.mark">
+                  @if (p.image; as img) {
+                    <img class="pimg" [src]="img" alt="" />
+                  } @else {
+                    <tl-icon name="ArrowRightLeft" [size]="15" color="#fff" />
+                  }
+                </span>
+                <span class="work-name">{{ p.name }}</span>
+                <span class="work-open">
+                  <span class="cap" style="color:var(--tl-st-untranslated)">{{ p.untranslated }} untranslated</span>
+                  @if (p.needsReview > 0) {
+                    <span class="cap" style="color:var(--tl-st-fuzzy)">{{ p.needsReview }} need review</span>
+                  }
+                </span>
+                <span class="work-go">Continue<tl-icon name="ArrowRight" [size]="15" /></span>
+              </button>
+            }
+          </div>
+        }
+
         <div class="eyebrow" style="margin-bottom:6px">All projects</div>
         <div>
           @for (p of filtered(); track p.id) {
@@ -114,6 +139,41 @@ import { ProjectSummary } from '../../core/models';
     .statnum {
       font-size: 40px;
       margin-top: 8px;
+    }
+    .worklist {
+      margin-bottom: 34px;
+      border-top: 1px solid var(--tl-line);
+    }
+    .work-row {
+      width: 100%;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      padding: 14px 0;
+    }
+    .work-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--tl-ink);
+      flex: 1;
+    }
+    .work-open {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .work-go {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: 110px;
+      justify-content: flex-end;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tl-accent-text);
     }
     .proj-row {
       width: 100%;
@@ -210,6 +270,14 @@ export class ProjectsDashboard implements OnInit {
     this.projects().reduce((a, p) => a + p.newTerms, 0),
   );
 
+  /** Projects with open work, worst first — the answer to "what now?". */
+  protected readonly needsWork = computed(() =>
+    this.projects()
+      .filter((p) => p.untranslated > 0 || p.needsReview > 0)
+      .sort((a, b) => b.untranslated + b.needsReview - (a.untranslated + a.needsReview))
+      .slice(0, 3),
+  );
+
   protected readonly filtered = computed(() => {
     const q = this.query().toLowerCase();
     if (!q) return this.projects();
@@ -218,6 +286,14 @@ export class ProjectsDashboard implements OnInit {
 
   ngOnInit(): void {
     if (!this.state.loaded()) this.state.load();
+  }
+
+  /** Opens the project on the work that is actually outstanding. */
+  protected continueWork(p: ProjectSummary): void {
+    this.state.select(p.id);
+    this.router.navigate(['/', 'editor'], {
+      queryParams: { filter: p.untranslated > 0 ? 'untranslated' : 'fuzzy' },
+    });
   }
 
   protected open(p: ProjectSummary): void {

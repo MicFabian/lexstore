@@ -79,6 +79,24 @@ test.describe('dialogs', () => {
 });
 
 // ----------------------------------------------------------------------------
+test.describe('work queue', () => {
+  test('continue opens the project on its open work', async ({ page }) => {
+    await page.goto('/projects');
+    await expect(page.locator('.proj-row').first()).toBeVisible();
+
+    // The queue leads with whichever project has the most outstanding work.
+    const queue = page.locator('.work-row');
+    await expect(queue.first()).toContainText('Help center');
+    await queue.first().click();
+
+    // One click lands in the editor of that project, filtered to open work.
+    await expect(page).toHaveURL(/\/editor\?filter=untranslated/);
+    await expect(page.locator('.rail__proj')).toContainText('Help center');
+    await expect(page.locator('.ftab.on')).toContainText('Untranslated');
+  });
+});
+
+// ----------------------------------------------------------------------------
 test.describe('content states', () => {
   test('a failed load offers a retry instead of an empty table', async ({ page }) => {
     // Fail the first terms request, then let the retry through.

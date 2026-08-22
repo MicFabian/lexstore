@@ -273,6 +273,14 @@ export class EditorScreen implements OnInit {
   /** Optional ?filter= deep link (sidebar quick filters); bound by the router. */
   readonly filterParam = input<string | undefined>(undefined, { alias: 'filter' });
 
+  /** Optional ?lang= deep link, so other screens can open a specific language. */
+  readonly langParam = input<string | undefined>(undefined, { alias: 'lang' });
+
+  private readonly applyLangParam = effect(() => {
+    const l = this.langParam();
+    if (l && this.languages().some((x) => x.code === l)) this.langs.set([l]);
+  });
+
   private readonly applyFilterParam = effect(() => {
     const f = this.filterParam();
     if (f && ['all', 'untranslated', 'new', 'fuzzy', 'proofread'].includes(f)) {
