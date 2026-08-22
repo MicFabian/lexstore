@@ -13,14 +13,18 @@ import io.translad.project.ProjectNotFoundException
 import io.translad.term.DuplicateTermKeyException
 import io.translad.term.TermNotFoundException
 import io.translad.translation.LanguageNotInProjectException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 class ApiExceptionHandler {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @ExceptionHandler(
         ProjectNotFoundException::class,
@@ -44,6 +48,15 @@ class ApiExceptionHandler {
     fun badRequest(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.message)
 
+    /**
+     * A body that cannot become the expected type — malformed JSON, or a
+     * required field left out of a Kotlin non-null parameter — is the caller's
+     * mistake, so it must not surface as a server error.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun unreadableBody(ex: HttpMessageNotReadableException): ProblemDetail =
+        problem(HttpStatus.BAD_REQUEST, "Invalid request", "The request body is missing a required field or is not valid JSON.")
+
     @ExceptionHandler(AiTranslationException::class)
     fun aiFailure(ex: AiTranslationException): ProblemDetail =
         problem(HttpStatus.BAD_GATEWAY, "Translation provider error", ex.message)
@@ -60,6 +73,22 @@ class ApiExceptionHandler {
     fun validation(ex: MethodArgumentNotValidException): ProblemDetail {
         val detail = ex.bindingResult.fieldErrors.joinToString("; ") { "${it.field}: ${it.defaultMessage}" }
         return problem(HttpStatus.BAD_REQUEST, "Validation failed", detail)
+    }
+
+    /**
+     * Programming errors that would otherwise surface their message to the
+     * client. Spring's own request exceptions keep their proper 4xx handling.
+     * The client gets a generic message; the cause goes to the log, since an
+     * exception message can carry SQL, hostnames, or user data.
+     */
+    @ExceptionHandler(IllegalStateException::class, NullPointerException::class)
+    fun unexpected(ex: RuntimeException): ProblemDetail {
+        log.error("Unhandled exception", ex)
+        return problem(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Something went wrong",
+            "The request could not be completed. If it keeps happening, contact an administrator.",
+        )
     }
 
     private fun problem(status: HttpStatus, title: String, detail: String?): ProblemDetail =

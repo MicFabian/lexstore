@@ -28,7 +28,9 @@ services:
       KC_DB_PASSWORD: ${DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: "true"
     volumes:
-      - ./backend/keycloak:/opt/keycloak/data/import:ro
+      # The production realm carries no seeded users and requires TLS; the
+      # development one (realm-translad.json) is deliberately not mounted here.
+      - ./backend/keycloak/realm-translad.prod.json:/opt/keycloak/data/import/realm.json:ro
     depends_on:
       postgres:
         condition: service_healthy

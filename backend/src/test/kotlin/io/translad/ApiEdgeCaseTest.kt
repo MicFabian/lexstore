@@ -463,4 +463,42 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
         assertThat(rows.any { it["target"] != null }).isTrue()
         assertThat(rows.any { it["target"] == null }).isTrue()
     }
+
+    // ---------------- Upload limits ----------------
+
+    @Test
+    fun `an oversized project image is rejected by the server, not just the browser`() {
+        val id = mosaicId()
+        val huge = "data:image/png;base64," + "A".repeat(800_000)
+        expectStatus(HttpStatus.BAD_REQUEST) {
+            client.patch().uri("/api/projects/$id")
+                .body(mapOf("image" to huge))
+                .retrieve().toBodilessEntity()
+        }
+    }
+
+    @Test
+    fun `a project image that is not an image data URI is rejected`() {
+        val id = mosaicId()
+        expectStatus(HttpStatus.BAD_REQUEST) {
+            client.patch().uri("/api/projects/$id")
+                .body(mapOf("image" to "https://example.com/logo.png"))
+                .retrieve().toBodilessEntity()
+        }
+    }
+
+    @Test
+    fun `a valid image is stored and can be cleared`() {
+        val id = mosaicId()
+        val png = "data:image/png;base64,iVBORw0KGgo="
+        val saved = client.patch().uri("/api/projects/$id")
+            .body(mapOf("image" to png))
+            .retrieve().body(mapType)!!
+        assertThat(saved["image"]).isEqualTo(png)
+
+        val cleared = client.patch().uri("/api/projects/$id")
+            .body(mapOf("image" to ""))
+            .retrieve().body(mapType)!!
+        assertThat(cleared["image"]).isNull()
+    }
 }

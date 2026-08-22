@@ -131,6 +131,12 @@ things that only make sense on a laptop:
 | `ALLOWED_ORIGINS` | Browser origins allowed to call the API |
 | `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | Optional; the mock translator is used when unset |
 
+Two realm files exist on purpose: `realm-translad.json` seeds owner,
+translator, and proofreader accounts with matching passwords for local work,
+and is never mounted by the compose file. `realm-translad.prod.json` has no
+users and sets `sslRequired: external` — create the first account through the
+Keycloak admin console after the stack is up.
+
 `frontend/public/config.json` carries the browser's half — the Keycloak
 authority and client id. Replace it at deploy time; it is served with
 `Cache-Control: no-store` so a redeploy takes effect immediately.

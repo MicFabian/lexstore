@@ -14,6 +14,8 @@ class ProjectNotFoundException(idOrCode: String) :
 class DuplicateProjectCodeException(code: String) :
     RuntimeException("A project with slug '$code' already exists. Slugs must be unique.")
 
+private const val MAX_IMAGE_CHARS = 700_000
+
 @Service
 @Transactional(readOnly = true)
 class ProjectService(
@@ -56,9 +58,21 @@ class ProjectService(
         req.name?.let { p.name = it }
         req.mark?.let { p.mark = it }
         req.sourceLang?.let { p.sourceLang = it }
-        req.image?.let { p.image = it.ifBlank { null } }
+        req.image?.let { p.image = validatedImage(it) }
         req.translationContext?.let { p.translationContext = it.ifBlank { null } }
         return detailOf(p)
+    }
+
+    /**
+     * The browser also checks this, but a client is not a boundary: an image is
+     * stored as a data URI, so an unchecked one is unbounded text in a column.
+     */
+    private fun validatedImage(raw: String): String? {
+        val value = raw.trim()
+        if (value.isEmpty()) return null
+        require(value.startsWith("data:image/")) { "A project image must be an image data URI." }
+        require(value.length <= MAX_IMAGE_CHARS) { "That image is larger than 512 KB." }
+        return value
     }
 
     private fun detailOf(p: Project) = ProjectDetail(

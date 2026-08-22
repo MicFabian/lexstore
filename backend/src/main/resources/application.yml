@@ -43,6 +43,12 @@ gemini:
 
 server:
   port: 8088
+  # A request larger than this is never legitimate here; the biggest payload is
+  # a project image, capped well below it.
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-swallow-size: 2MB
+    max-http-form-post-size: 2MB
 
 management:
   endpoints:
