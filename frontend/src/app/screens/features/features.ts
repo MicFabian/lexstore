@@ -138,6 +138,9 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                       @if (openRows().length > 0) {
                         <div class="eyebrow" style="margin:18px 0 8px">
                           Open in {{ openLang() }} · {{ openRows().length }}
+                          @if (openRows().length >= 500) {
+                            <span style="color:var(--tl-slate)"> · first 500 shown</span>
+                          }
                         </div>
                         <div class="open-list">
                           @for (r of openRows(); track r.termId + r.languageCode) {

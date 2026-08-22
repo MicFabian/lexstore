@@ -21,21 +21,17 @@ class LanguageService(
 ) {
     fun list(projectId: UUID): List<LanguageView> {
         val langs = languages.findByProjectIdOrderByName(projectId)
-        val termIds = terms.findByProjectIdOrderByCreatedAtDesc(projectId).map { it.id }
-        val termCount = termIds.size
-        val byLang = if (termIds.isEmpty()) emptyMap()
-        else translations.findByTermIdIn(termIds).groupBy { it.languageCode }
+        val termCount = terms.countByProjectId(projectId).toInt()
+        val byLang = translations.statusCountsByLanguage(projectId).associateBy { it.languageCode }
         val contribByLang = contributors.findByProjectIdOrderByName(projectId)
             .flatMap { c -> c.languageList.map { it to c } }
             .groupBy({ it.first }, { it.second })
 
         return langs.map { l ->
-            val tr = byLang[l.code].orEmpty()
+            val counts = byLang[l.code]
             fun pct(n: Int) = if (termCount == 0) 0 else ((n * 100.0) / termCount).toInt()
-            val translated = tr.count {
-                it.status == TranslationStatus.TRANSLATED || it.status == TranslationStatus.PROOFREAD
-            }
-            val fuzzy = tr.count { it.status == TranslationStatus.FUZZY }
+            val translated = (counts?.translated ?: 0).toInt()
+            val fuzzy = (counts?.fuzzy ?: 0).toInt()
             val translatedPct = pct(translated)
             val fuzzyPct = pct(fuzzy)
             LanguageView(

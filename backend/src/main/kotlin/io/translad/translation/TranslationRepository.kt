@@ -4,6 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.UUID
 
+interface LanguageStatusCounts {
+    val languageCode: String
+    val translated: Long
+    val fuzzy: Long
+}
+
 interface ProjectTranslationCounts {
     val projectId: UUID
     val done: Long
@@ -14,6 +20,7 @@ interface ProjectTranslationCounts {
 interface TranslationRepository : JpaRepository<Translation, UUID> {
     fun findByTermId(termId: UUID): List<Translation>
     fun findByTermIdIn(termIds: Collection<UUID>): List<Translation>
+    fun findByTermIdInAndLanguageCode(termIds: Collection<UUID>, languageCode: String): List<Translation>
     fun findByTermIdAndLanguageCode(termId: UUID, languageCode: String): Translation?
 
     @Query(
@@ -32,4 +39,19 @@ interface TranslationRepository : JpaRepository<Translation, UUID> {
         """,
     )
     fun countsByProject(): List<ProjectTranslationCounts>
+
+    @Query(
+        """
+        select tr.languageCode as languageCode,
+               sum(case when tr.status in (io.translad.common.TranslationStatus.TRANSLATED,
+                                           io.translad.common.TranslationStatus.PROOFREAD)
+                        then 1 else 0 end) as translated,
+               sum(case when tr.status = io.translad.common.TranslationStatus.FUZZY
+                        then 1 else 0 end) as fuzzy
+        from Translation tr join Term t on t.id = tr.termId
+        where t.projectId = :projectId
+        group by tr.languageCode
+        """,
+    )
+    fun statusCountsByLanguage(projectId: UUID): List<LanguageStatusCounts>
 }

@@ -140,13 +140,18 @@ class AiTranslationService(
     }
 
     @Transactional(readOnly = true)
+    /**
+     * Counted in the database: the entries carry the full source and target
+     * text, so loading them all to sum one column reads megabytes to produce
+     * two numbers.
+     */
     fun stats(): CacheStats {
-        val entries = cache.findAll()
-        val totalHits = entries.sumOf { it.hits }
+        val entryCount = cache.count()
+        val totalHits = cache.totalHits()
         val total = requests.count()
         val hits = requests.countByCacheHit(true)
         val rate = if (total == 0L) 0 else ((hits * 100.0) / total).toInt()
-        return CacheStats(entries.size.toLong(), totalHits, total, hits, rate)
+        return CacheStats(entryCount, totalHits, total, hits, rate)
     }
 
     @Transactional

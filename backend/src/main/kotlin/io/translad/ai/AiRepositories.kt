@@ -12,6 +12,9 @@ interface TranslationCacheRepository : JpaRepository<TranslationCacheEntry, UUID
 
     fun findAllByOrderByLastUsedAtDesc(pageable: Pageable): List<TranslationCacheEntry>
 
+    @Query("select coalesce(sum(c.hits), 0) from TranslationCacheEntry c")
+    fun totalHits(): Long
+
     @Query(
         """
         select c from TranslationCacheEntry c

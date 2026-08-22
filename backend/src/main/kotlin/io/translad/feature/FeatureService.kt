@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private const val MAX_OPEN_TRANSLATIONS = 500
+
 @Service
 @Transactional(readOnly = true)
 class FeatureService(
@@ -51,8 +53,10 @@ class FeatureService(
     }
 
     /**
-     * Every translation slot of this feature that still needs work: missing,
-     * empty, or flagged for review. One row per term and language.
+     * Translation slots of this feature that still need work: missing, empty,
+     * or flagged for review. One row per term and language, capped — a feature
+     * holding every term of a large project would otherwise return terms ×
+     * languages rows for a list nobody reads to the end.
      */
     fun openTranslations(projectId: UUID, featureId: UUID, languageCode: String?): List<OpenTranslationView> {
         owned(projectId, featureId)
@@ -62,7 +66,7 @@ class FeatureService(
         if (featureTerms.isEmpty() || langs.isEmpty()) return emptyList()
 
         val byTerm = translationsByTerm(featureTerms)
-        return featureTerms.flatMap { term ->
+        return featureTerms.asSequence().flatMap { term ->
             langs.mapNotNull { lang ->
                 val tr = byTerm[term.id]?.get(lang.code)
                 val status = tr?.status ?: TranslationStatus.UNTRANSLATED
@@ -79,7 +83,7 @@ class FeatureService(
                     value = tr?.value,
                 )
             }
-        }
+        }.take(MAX_OPEN_TRANSLATIONS).toList()
     }
 
     @Transactional

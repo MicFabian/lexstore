@@ -32,6 +32,9 @@ class TranslationConflictException :
 
 private const val MAX_AUTO_TRANSLATE_BATCH = 200
 
+/** A term's history panel shows the recent past; the full audit lives in the events table. */
+private const val MAX_HISTORY_ENTRIES = 100
+
 @Service
 @Transactional(readOnly = true)
 class EditorService(
@@ -55,8 +58,7 @@ class EditorService(
 
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
         val byTerm = if (projTerms.isEmpty()) emptyMap()
-        else translations.findByTermIdIn(projTerms.map { it.id })
-            .filter { it.languageCode == languageCode }
+        else translations.findByTermIdInAndLanguageCode(projTerms.map { it.id }, languageCode)
             .associateBy { it.termId }
 
         val rows = projTerms.map { t -> editorRow(t, byTerm[t.id]) }
@@ -194,8 +196,8 @@ class EditorService(
 
     private fun pendingTermIds(projectId: UUID, languageCode: String): List<UUID> {
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
-        val existing = translations.findByTermIdIn(projTerms.map { it.id })
-            .filter { it.languageCode == languageCode }
+        val existing = translations
+            .findByTermIdInAndLanguageCode(projTerms.map { it.id }, languageCode)
             .associateBy { it.termId }
         return projTerms.filter { existing[it.id]?.value.isNullOrBlank() }.map { it.id }
     }
@@ -204,7 +206,10 @@ class EditorService(
     fun history(projectId: UUID, termId: UUID): List<TranslationHistoryEntry> {
         val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
         require(term.projectId == projectId) { "Term does not belong to this project." }
-        return events.findByTermIdOrderByCreatedAtDesc(termId).map {
+        return events.findByTermIdOrderByCreatedAtDesc(
+            termId,
+            org.springframework.data.domain.PageRequest.of(0, MAX_HISTORY_ENTRIES),
+        ).map {
             TranslationHistoryEntry(
                 languageCode = it.languageCode,
                 action = it.action,

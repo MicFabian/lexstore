@@ -69,8 +69,7 @@ class ImportExportService(
         val termsByKey = existingTerms + terms.saveAll(newTerms).associateBy { it.key }
 
         val existingTranslations = translations
-            .findByTermIdIn(termsByKey.values.map { it.id })
-            .filter { it.languageCode == languageCode }
+            .findByTermIdInAndLanguageCode(termsByKey.values.map { it.id }, languageCode)
             .associateBy { it.termId }
 
         var updated = 0
@@ -108,8 +107,10 @@ class ImportExportService(
     fun export(projectId: UUID, languageCode: String): LinkedHashMap<String, String> {
         projects.findById(projectId).orElseThrow { ProjectNotFoundException(projectId.toString()) }
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId).sortedBy { it.key }
-        val byTerm = translations.findByTermIdIn(projTerms.map { it.id })
-            .filter { it.languageCode == languageCode }
+        // Filtered by the database: reading every language to keep one means a
+        // twenty-language project fetches twenty times the rows it exports.
+        val byTerm = translations
+            .findByTermIdInAndLanguageCode(projTerms.map { it.id }, languageCode)
             .associateBy { it.termId }
         return projTerms.associateTo(LinkedHashMap()) { it.key to (byTerm[it.id]?.value ?: "") }
     }
