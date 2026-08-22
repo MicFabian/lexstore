@@ -16,6 +16,10 @@ import java.util.UUID
 
 data class ImportResult(val created: Int, val updated: Int, val total: Int)
 
+private const val MAX_IMPORT_ENTRIES = 20_000
+private const val MAX_IMPORT_KEY_CHARS = 512
+private const val MAX_IMPORT_VALUE_CHARS = 10_000
+
 @Service
 @Transactional
 class ImportExportService(
@@ -30,6 +34,17 @@ class ImportExportService(
         projects.findById(projectId).orElseThrow { ProjectNotFoundException(projectId.toString()) }
         require(languages.findByProjectIdAndCode(projectId, languageCode) != null) {
             "Language '$languageCode' is not part of this project."
+        }
+        require(entries.size <= MAX_IMPORT_ENTRIES) {
+            "An import carries at most $MAX_IMPORT_ENTRIES entries; this one has ${entries.size}."
+        }
+        entries.forEach { (key, value) ->
+            require(key.length <= MAX_IMPORT_KEY_CHARS) {
+                "The key '${key.take(60)}…' is longer than $MAX_IMPORT_KEY_CHARS characters."
+            }
+            require(value.length <= MAX_IMPORT_VALUE_CHARS) {
+                "The value for '$key' is longer than $MAX_IMPORT_VALUE_CHARS characters."
+            }
         }
 
         val me = currentUser.identity()

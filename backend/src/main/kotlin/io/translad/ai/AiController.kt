@@ -14,7 +14,19 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-/** Project-independent AI translation surface: translate, request log, cache, settings. */
+/**
+ * AI translation surface: translate, request log, cache, settings.
+ *
+ * The cache and the request log span every project, which is deliberate — a
+ * shared cache is what makes a repeated string free the second time. They
+ * therefore carry source and translated text from all projects, so reading or
+ * changing them is restricted to owners and admins, who already see every
+ * project. Translating stays open to any member, since that is the work.
+ *
+ * This holds because TransLad is one organisation with many projects. Serving
+ * separate tenants would require partitioning both tables, and the cost of a
+ * partitioned cache is that the same string is paid for once per tenant.
+ */
 @RestController
 @RequestMapping("/api/ai")
 class AiController(private val service: AiTranslationService) {

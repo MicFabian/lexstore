@@ -27,6 +27,8 @@ import java.util.UUID
 class LanguageNotInProjectException(code: String) :
     RuntimeException("Language '$code' is not part of this project.")
 
+private const val MAX_AUTO_TRANSLATE_BATCH = 200
+
 @Service
 @Transactional(readOnly = true)
 class EditorService(
@@ -38,7 +40,10 @@ class EditorService(
     private val events: TranslationEventRepository,
     private val ai: AiTranslationService,
     private val currentUser: CurrentUser,
+    @org.springframework.context.annotation.Lazy private val self: EditorService,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
     fun editor(projectId: UUID, languageCode: String): EditorResponse {
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
@@ -51,7 +56,10 @@ class EditorService(
             .filter { it.languageCode == languageCode }
             .associateBy { it.termId }
 
-        val rows = projTerms.map { t -> editorRow(t, byTerm[t.id], commentsOf(t.id)) }
+        val commentsByTerm = commentsFor(projTerms.map { it.id })
+        val rows = projTerms.map { t ->
+            editorRow(t, byTerm[t.id], commentsByTerm[t.id].orEmpty())
+        }
         return EditorResponse(languageCode, project.sourceLang, rows)
     }
 
@@ -128,29 +136,65 @@ class EditorService(
         return SuggestionResponse(res.text, res.provider, res.model, res.cacheHit)
     }
 
-    /** Auto-translate every untranslated term for a language. Saved as fuzzy when settings ask. */
-    @Transactional
+    /**
+     * Auto-translate the untranslated terms of a language.
+     *
+     * Each term is translated and committed on its own, because every call
+     * costs money at the provider: a failure on term 900 must not roll back
+     * the 899 translations already paid for. The batch is capped so one
+     * request cannot spend without bound; the response reports what is left
+     * so the caller can continue.
+     *
+     * Deliberately not transactional itself: each save commits on its own via
+     * the proxy, and the class default of readOnly would otherwise swallow
+     * those writes.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     fun autoTranslate(projectId: UUID, languageCode: String): AutoTranslateResult {
-        val author = currentUser.name()
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
         languages.findByProjectIdAndCode(projectId, languageCode)
             ?: throw LanguageNotInProjectException(languageCode)
 
         val targetStatus = if (ai.settings().autoFlagFuzzy) "fuzzy" else "translated"
+        val pending = pendingTermIds(projectId, languageCode)
+        val batch = pending.take(MAX_AUTO_TRANSLATE_BATCH)
+
+        var translated = 0
+        var failed = 0
+        for (termId in batch) {
+            val sourceText = terms.findById(termId).orElse(null)?.sourceText ?: continue
+            val text = try {
+                ai.translate(
+                    TranslateRequest(
+                        sourceText,
+                        project.sourceLang,
+                        languageCode,
+                        projectContext = project.translationContext,
+                    ),
+                ).text
+            } catch (ex: Exception) {
+                log.warn("Auto-translate failed for term {} in {}", termId, languageCode, ex)
+                failed++
+                continue
+            }
+            self.save(projectId, termId, languageCode, SaveTranslationRequest(text, null, targetStatus))
+            translated++
+        }
+        return AutoTranslateResult(
+            translated = translated,
+            status = targetStatus,
+            failed = failed,
+            remaining = (pending.size - batch.size).coerceAtLeast(0),
+        )
+    }
+
+    private fun pendingTermIds(projectId: UUID, languageCode: String): List<UUID> {
         val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
         val existing = translations.findByTermIdIn(projTerms.map { it.id })
             .filter { it.languageCode == languageCode }
             .associateBy { it.termId }
-
-        var translated = 0
-        for (t in projTerms) {
-            if (!existing[t.id]?.value.isNullOrBlank()) continue // already translated
-            val res = ai.translate(TranslateRequest(t.sourceText, project.sourceLang, languageCode, projectContext = project.translationContext))
-            save(projectId, t.id, languageCode, SaveTranslationRequest(res.text, null, targetStatus))
-            translated++
-        }
-        return AutoTranslateResult(translated, targetStatus)
+        return projTerms.filter { existing[it.id]?.value.isNullOrBlank() }.map { it.id }
     }
 
     /** Full translation history for a term across every language, newest first. */
@@ -170,6 +214,12 @@ class EditorService(
                 at = RelativeTime.format(it.createdAt, withTime = true),
             )
         }
+    }
+
+    private fun commentsFor(termIds: List<UUID>): Map<UUID, List<CommentView>> {
+        if (termIds.isEmpty()) return emptyMap()
+        return comments.findByTermIdInOrderByCreatedAt(termIds)
+            .groupBy({ it.termId }, { it.toView() })
     }
 
     private fun commentsOf(termId: UUID): List<CommentView> =

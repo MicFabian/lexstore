@@ -114,10 +114,19 @@ class TermService(
         if (projTerms.isEmpty()) return emptyList()
         val langs = languages.findByProjectIdOrderByName(projectId)
         val trByTerm = translations.findByTermIdIn(projTerms.map { it.id }).groupBy { it.termId }
-        return projTerms.map { toView(it, langs, trByTerm[it.id].orEmpty()) }
+        val cmtByTerm = comments.findByTermIdInOrderByCreatedAt(projTerms.map { it.id })
+            .groupBy({ it.termId }, { it.toView() })
+        return projTerms.map {
+            toView(it, langs, trByTerm[it.id].orEmpty(), cmtByTerm[it.id].orEmpty())
+        }
     }
 
-    private fun toView(term: Term, langs: List<Language>, tr: List<Translation>): TermView {
+    private fun toView(
+        term: Term,
+        langs: List<Language>,
+        tr: List<Translation>,
+        preloadedComments: List<CommentView>? = null,
+    ): TermView {
         val byCode = tr.associateBy { it.languageCode }
         val trViews = langs.map { l ->
             val t = byCode[l.code]
@@ -131,7 +140,7 @@ class TermService(
                 },
             )
         }
-        val cmts = comments.findByTermIdOrderByCreatedAt(term.id).map(TermComment::toView)
+        val cmts = preloadedComments ?: comments.findByTermIdOrderByCreatedAt(term.id).map(TermComment::toView)
         val creator = AuditEntry("Marcus Hale", 6, "created the term", term.addedLabel)
         val history = buildList {
             add(AuditEntry("Amélie Rousseau", 0, "edited the translation", term.addedLabel))

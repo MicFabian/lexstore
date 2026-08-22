@@ -55,6 +55,10 @@ server:
   tomcat:
     max-swallow-size: 2MB
     max-http-form-post-size: 2MB
+    # Caps the request body itself, which the form/header limits above do not:
+    # without it a chunked upload is bounded only by heap.
+    max-part-count: 32
+    max-part-header-size: 8KB
 
 management:
   endpoints:

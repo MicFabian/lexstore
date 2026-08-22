@@ -19,7 +19,12 @@ class AiTranslationService(
 ) {
     // ---------------- Translate (cache-first) ----------------
 
-    @Transactional
+    /**
+     * Runs in its own transaction: a provider failure must not mark a caller's
+     * transaction rollback-only, or a batch translating term by term would
+     * lose every translation it had already paid for.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     fun translate(req: TranslateRequest): TranslateResponse {
         val settings = settings()
         val model = req.model ?: settings.model

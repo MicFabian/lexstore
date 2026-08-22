@@ -16,7 +16,12 @@ data class SuggestionResponse(
     val cacheHit: Boolean,
 )
 
-data class AutoTranslateResult(val translated: Int, val status: String)
+data class AutoTranslateResult(
+    val translated: Int,
+    val status: String,
+    val failed: Int = 0,
+    val remaining: Int = 0,
+)
 
 /** One audit entry in a term's translation history, newest first. */
 data class TranslationHistoryEntry(
