@@ -2,12 +2,7 @@
 FROM gradle:8.14-jdk24 AS build
 WORKDIR /src
 COPY gradle gradle
-COPY gradlew build.gradle.kts settings.gradle.kts ./
-# gradle.properties pins a developer machine's JDK path, which does not exist
-# here; the image supplies its own toolchain.
-COPY gradle.properties ./gradle.properties.local
-RUN grep -v '^org.gradle.java.home' gradle.properties.local > gradle.properties \
-    && rm gradle.properties.local
+COPY gradlew build.gradle.kts settings.gradle.kts gradle.properties ./
 # Cache dependency resolution before the sources change.
 RUN ./gradlew --no-daemon dependencies > /dev/null 2>&1 || true
 COPY src src

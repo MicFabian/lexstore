@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icon, IconName } from '../../shared/icon';
-import { Btn, Toggle } from '../../shared/primitives';
+import { Btn } from '../../shared/primitives';
 import { AppearanceControls } from '../../shell/appearance-controls';
 import { PoeditorWizard } from './poeditor-wizard';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
@@ -21,7 +21,7 @@ interface IntegrationItem {
 @Component({
   selector: 'lx-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, Btn, Toggle, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
+  imports: [RouterLink, Icon, Btn, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">

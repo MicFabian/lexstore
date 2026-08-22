@@ -65,8 +65,8 @@ jobs:
         run: |
           ./gradlew bootRun -x test &
           for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8088/api/projects || true)
-            [ "$code" != "000" ] && exit 0
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8088/actuator/health || true)
+            [ "$code" = "200" ] && exit 0
             sleep 2
           done
           echo "API did not start" && exit 1
