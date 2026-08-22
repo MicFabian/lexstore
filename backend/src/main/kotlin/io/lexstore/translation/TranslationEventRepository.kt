@@ -8,4 +8,5 @@ interface TranslationEventRepository : JpaRepository<TranslationEvent, UUID> {
     fun findByTermIdOrderByCreatedAtDesc(termId: UUID): List<TranslationEvent>
     fun findByTermIdOrderByCreatedAtDesc(termId: UUID, pageable: Pageable): List<TranslationEvent>
     fun findByTermIdAndLanguageCodeOrderByCreatedAtDesc(termId: UUID, languageCode: String): List<TranslationEvent>
+    fun findByTermIdInOrderByCreatedAtDesc(termIds: Collection<UUID>): List<TranslationEvent>
 }

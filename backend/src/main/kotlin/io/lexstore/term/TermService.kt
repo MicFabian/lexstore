@@ -16,6 +16,8 @@ class TermNotFoundException(id: String) : RuntimeException("No term found for '$
 class DuplicateTermKeyException(key: String) :
     RuntimeException("That key already exists in this project. Keys must be unique.")
 
+private const val MAX_TERM_HISTORY = 20
+
 @Service
 @Transactional(readOnly = true)
 class TermService(
@@ -23,15 +25,16 @@ class TermService(
     private val translations: TranslationRepository,
     private val languages: LanguageRepository,
     private val comments: TermCommentRepository,
+    private val events: io.lexstore.translation.TranslationEventRepository,
     private val currentUser: CurrentUser,
 ) {
     fun list(projectId: UUID): List<TermView> =
-        assemble(projectId, terms.findByProjectIdOrderByCreatedAtDesc(projectId))
+        assemble(projectId, terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId))
 
     /** Page-limited variant — only the requested slice of terms is hydrated. */
     fun listPaged(projectId: UUID, page: Int, size: Int): Page<TermView> {
         val total = terms.countByProjectId(projectId)
-        val slice = terms.findByProjectIdOrderByCreatedAtDesc(projectId, PageRequest.of(page, size))
+        val slice = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId, PageRequest.of(page, size))
         return Page(assemble(projectId, slice), page, size, total)
     }
 
@@ -55,6 +58,8 @@ class TermService(
                 tags = req.tags?.joinToString(",") ?: "",
                 isNew = true,
                 addedLabel = "Today",
+                createdByName = currentUser.identity().name,
+                createdByAvatar = currentUser.identity().avatar,
             ),
         )
         return toView(saved, languages.findByProjectIdOrderByName(projectId), emptyList())
@@ -116,8 +121,23 @@ class TermService(
         val trByTerm = translations.findByTermIdIn(projTerms.map { it.id }).groupBy { it.termId }
         val cmtByTerm = comments.findByTermIdInOrderByCreatedAt(projTerms.map { it.id })
             .groupBy({ it.termId }, { it.toView() })
+        val evByTerm = events.findByTermIdInOrderByCreatedAtDesc(projTerms.map { it.id })
+            .groupBy({ it.termId }) {
+                AuditEntry(
+                    it.authorName,
+                    it.authorAvatar,
+                    "${it.action} ${it.languageCode}",
+                    RelativeTime.format(it.createdAt),
+                )
+            }
         return projTerms.map {
-            toView(it, langs, trByTerm[it.id].orEmpty(), cmtByTerm[it.id].orEmpty())
+            toView(
+                it,
+                langs,
+                trByTerm[it.id].orEmpty(),
+                cmtByTerm[it.id].orEmpty(),
+                evByTerm[it.id].orEmpty().take(MAX_TERM_HISTORY),
+            )
         }
     }
 
@@ -126,6 +146,7 @@ class TermService(
         langs: List<Language>,
         tr: List<Translation>,
         preloadedComments: List<CommentView>? = null,
+        preloadedEvents: List<AuditEntry>? = null,
     ): TermView {
         val byCode = tr.associateBy { it.languageCode }
         val trViews = langs.map { l ->
@@ -141,11 +162,19 @@ class TermService(
             )
         }
         val cmts = preloadedComments ?: comments.findByTermIdOrderByCreatedAt(term.id).map(TermComment::toView)
-        val creator = AuditEntry("Marcus Hale", 6, "created the term", term.addedLabel)
+        // Real events only: an invented author reads as fact to whoever opens the term.
         val history = buildList {
-            add(AuditEntry("Amélie Rousseau", 0, "edited the translation", term.addedLabel))
+            preloadedEvents?.let { addAll(it) }
+                ?: events.findByTermIdOrderByCreatedAtDesc(
+                    term.id,
+                    org.springframework.data.domain.PageRequest.of(0, MAX_TERM_HISTORY),
+                ).forEach {
+                    add(AuditEntry(it.authorName, it.authorAvatar, "${it.action} ${it.languageCode}", RelativeTime.format(it.createdAt)))
+                }
             cmts.lastOrNull()?.let { add(AuditEntry(it.authorName, it.authorAvatar, "commented", it.time)) }
-            add(creator)
+            term.createdByName?.let {
+                add(AuditEntry(it, term.createdByAvatar ?: 0, "created the term", term.addedLabel))
+            }
         }
         return TermView(
             id = term.id,
@@ -157,7 +186,9 @@ class TermService(
             isNew = term.isNew,
             added = term.addedLabel,
             createdAt = term.addedLabel,
-            createdBy = creator,
+            createdBy = term.createdByName?.let {
+                AuditEntry(it, term.createdByAvatar ?: 0, "created the term", term.addedLabel)
+            },
             modifiedAt = cmts.lastOrNull()?.time ?: term.addedLabel,
             modifiedBy = history.firstOrNull(),
             translations = trViews,

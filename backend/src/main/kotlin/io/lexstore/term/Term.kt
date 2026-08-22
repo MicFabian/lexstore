@@ -49,6 +49,12 @@ class Term(
     @Column(name = "added_label", nullable = false)
     var addedLabel: String,
 
+    @Column(name = "created_by_name")
+    var createdByName: String? = null,
+
+    @Column(name = "created_by_avatar")
+    var createdByAvatar: Int? = null,
+
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now(),
 

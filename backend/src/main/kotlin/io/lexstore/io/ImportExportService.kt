@@ -52,7 +52,7 @@ class ImportExportService(
 
         // One lookup for the whole import rather than two per entry: a 5,000
         // entry file otherwise costs 10,000 round trips to the database.
-        val existingTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
+        val existingTerms = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId)
             .associateBy { it.key }
         val newTerms = entries.keys
             .filter { it.isNotBlank() && it !in existingTerms }
@@ -106,7 +106,7 @@ class ImportExportService(
     @Transactional(readOnly = true)
     fun export(projectId: UUID, languageCode: String): LinkedHashMap<String, String> {
         projects.findById(projectId).orElseThrow { ProjectNotFoundException(projectId.toString()) }
-        val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId).sortedBy { it.key }
+        val projTerms = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId).sortedBy { it.key }
         // Filtered by the database: reading every language to keep one means a
         // twenty-language project fetches twenty times the rows it exports.
         val byTerm = translations

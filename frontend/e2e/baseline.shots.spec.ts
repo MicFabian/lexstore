@@ -49,12 +49,16 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   // Inspector translation helper on an untranslated row. Earlier specs may have
   // auto-translated this language, so add a term that is certainly untranslated.
   await page.locator('.inspector button[aria-label="Close"]').click();
+  const helperKey = `shots.helper.${Date.now()}`;
   await page.locator('.ed-head button', { hasText: 'Add term' }).click();
-  await page.locator('.dlg input').first().fill(`shots.helper.${Date.now()}`);
+  await page.locator('.dlg input').first().fill(helperKey);
   await page.locator('.dlg input').nth(1).fill('Needs a suggestion');
   await page.locator('.dlg button', { hasText: 'Add' }).click();
-  await expect(page.locator('.trow .tgt.empty').first()).toBeVisible();
-  await page.locator('.trow', { has: page.locator('.tgt.empty') }).first().locator('.tgt').first().click();
+
+  // Find that exact term rather than whichever empty row happens to sort first.
+  await page.getByRole('textbox', { name: 'Search keys or text' }).fill(helperKey);
+  await expect(page.locator('.trow')).toHaveCount(1);
+  await page.locator('.trow').first().locator('.tgt').first().click();
   await page.locator('.inspector .helper button', { hasText: 'Suggest' }).click();
   await expect(page.locator('.inspector .helper__text')).toBeVisible();
   await shot(page, '06-editor-inspector-helper');

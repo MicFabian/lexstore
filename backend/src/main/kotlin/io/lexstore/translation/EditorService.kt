@@ -244,7 +244,7 @@ class EditorService(
     }
 
     private fun pendingTermIds(projectId: UUID, languageCode: String): List<UUID> {
-        val projTerms = terms.findByProjectIdOrderByCreatedAtDesc(projectId)
+        val projTerms = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId)
         val existing = translations
             .findByTermIdInAndLanguageCode(projTerms.map { it.id }, languageCode)
             .associateBy { it.termId }

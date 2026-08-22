@@ -141,13 +141,14 @@ test.describe('editor keyboard', () => {
     await expect(rows.first()).toBeVisible();
 
     await rows.first().focus();
+    const secondKey = (await rows.nth(1).locator('.keytag').innerText()).trim();
     await page.keyboard.press('ArrowDown');
     await expect(rows.nth(1)).toBeFocused();
 
     await page.keyboard.press('Enter');
     const inspector = page.locator('.inspector');
     await expect(inspector).toBeVisible();
-    await expect(inspector.locator('.keytag')).toContainText('nav.projects');
+    await expect(inspector.locator('.keytag')).toContainText(secondKey);
 
     // The inspector docks beside the table rather than covering it.
     await expect(page.locator('.editor--split')).toBeVisible();

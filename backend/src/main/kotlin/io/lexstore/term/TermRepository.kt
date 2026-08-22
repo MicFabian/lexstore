@@ -12,8 +12,13 @@ interface ProjectTermCounts {
 }
 
 interface TermRepository : JpaRepository<Term, UUID> {
-    fun findByProjectIdOrderByCreatedAtDesc(projectId: UUID): List<Term>
-    fun findByProjectIdOrderByCreatedAtDesc(projectId: UUID, pageable: Pageable): List<Term>
+    /**
+     * Ordered by id as well as time: seeded and imported terms share a
+     * timestamp, and without a unique tiebreaker paging can repeat or skip
+     * rows between requests.
+     */
+    fun findByProjectIdOrderByCreatedAtDescIdAsc(projectId: UUID): List<Term>
+    fun findByProjectIdOrderByCreatedAtDescIdAsc(projectId: UUID, pageable: Pageable): List<Term>
     fun findByProjectIdAndKey(projectId: UUID, key: String): Term?
     fun existsByProjectIdAndKey(projectId: UUID, key: String): Boolean
     fun countByProjectId(projectId: UUID): Long
@@ -56,7 +61,7 @@ interface TermRepository : JpaRepository<Term, UUID> {
             or (:status = 'fuzzy' and tr.status = io.lexstore.common.TranslationStatus.FUZZY)
             or (:status = 'proofread' and tr.status = io.lexstore.common.TranslationStatus.PROOFREAD)
           )
-        order by t.createdAt desc
+        order by t.createdAt desc, t.id
         """,
     )
     fun editorPageIds(

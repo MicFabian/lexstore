@@ -23,7 +23,13 @@ class ConcurrentEditTest : IntegrationTestBase() {
     fun `a save carrying a stale version is refused instead of overwriting`() {
         val row = firstRow()
         val termId = row["id"] as String
-        val staleVersion = row["version"] as? Int ?: 0
+
+        // Establish a stored row first, then capture the version both editors
+        // would have been looking at.
+        client.put().uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId")
+            .body(mapOf("value" to "Ausgangsfassung", "status" to "translated"))
+            .retrieve().toBodilessEntity()
+        val staleVersion = firstRow()["version"] as Int
 
         client.put().uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId")
             .body(mapOf("value" to "Erste Fassung", "status" to "translated", "version" to staleVersion))
