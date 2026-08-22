@@ -20,16 +20,16 @@ class ProjectController(private val service: ProjectService) {
     @GetMapping
     fun list(): List<ProjectSummary> = service.list()
 
-    @GetMapping("/{id}")
-    fun get(@PathVariable id: UUID): ProjectDetail = service.detail(id)
+    @GetMapping("/{projectId}")
+    fun get(@PathVariable projectId: UUID): ProjectDetail = service.detail(projectId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('OWNER')")
     fun create(@Valid @RequestBody req: CreateProjectRequest): ProjectDetail = service.create(req)
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
-    fun update(@PathVariable id: UUID, @RequestBody req: UpdateProjectRequest): ProjectDetail =
-        service.update(id, req)
+    fun update(@PathVariable projectId: UUID, @RequestBody req: UpdateProjectRequest): ProjectDetail =
+        service.update(projectId, req)
 }

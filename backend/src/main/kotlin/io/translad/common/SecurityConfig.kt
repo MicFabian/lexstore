@@ -26,7 +26,46 @@ class SecurityConfig(
     /** Comma-separated origin patterns; local dev by default. */
     @Value("\${translad.allowed-origins:http://localhost:[*],http://127.0.0.1:[*]}")
     private val allowedOrigins: String,
+    /** The OIDC client this API accepts tokens for. */
+    @Value("\${translad.client-id:translad-spa}")
+    private val clientId: String,
+    @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private val issuerUri: String,
 ) {
+
+    /**
+     * Keycloak issues these tokens without an `aud` claim, so the audience is
+     * carried by `azp`: a token minted for a different client of the same
+     * realm carries matching realm roles and would otherwise be accepted here.
+     */
+    @Bean
+    fun jwtDecoder(): org.springframework.security.oauth2.jwt.JwtDecoder {
+        val decoder = org.springframework.security.oauth2.jwt.JwtDecoders
+            .fromIssuerLocation(issuerUri) as org.springframework.security.oauth2.jwt.NimbusJwtDecoder
+        val withIssuer = org.springframework.security.oauth2.core.OAuth2TokenValidator<
+            org.springframework.security.oauth2.jwt.Jwt,
+            > { jwt ->
+            val authorized = jwt.getClaimAsString("azp") ?: jwt.audience?.firstOrNull()
+            if (authorized == clientId) {
+                org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success()
+            } else {
+                org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.failure(
+                    org.springframework.security.oauth2.core.OAuth2Error(
+                        "invalid_token",
+                        "The token was not issued for this application.",
+                        null,
+                    ),
+                )
+            }
+        }
+        decoder.setJwtValidator(
+            org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator(
+                org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer(issuerUri),
+                withIssuer,
+            ),
+        )
+        return decoder
+    }
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {

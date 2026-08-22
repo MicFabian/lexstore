@@ -13,7 +13,8 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
     private val rng = SecureRandom()
 
     private fun parseScope(raw: String?): ApiKeyScope {
-        val normalized = raw.orEmpty().trim().lowercase()
+        if (raw.isNullOrBlank()) return ApiKeyScope.READ_WRITE
+        val normalized = raw.trim().lowercase()
             .replace('-', ' ').replace('_', ' ').replace("&", "and")
             .split(" ").filter { it.isNotBlank() }.joinToString(" ")
         return when (normalized) {

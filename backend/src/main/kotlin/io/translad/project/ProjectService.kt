@@ -1,5 +1,6 @@
 package io.translad.project
 
+import io.translad.common.ProjectAccess
 import io.translad.common.TranslationStatus
 import io.translad.language.LanguageRepository
 import io.translad.term.TermRepository
@@ -23,8 +24,14 @@ class ProjectService(
     private val languages: LanguageRepository,
     private val terms: TermRepository,
     private val translations: TranslationRepository,
+    private val access: ProjectAccess,
 ) {
-    fun list(): List<ProjectSummary> = projects.findAll().map { summarize(it) }
+    fun list(): List<ProjectSummary> {
+        val visible = access.visibleProjectIds()
+        return projects.findAll()
+            .filter { visible == null || it.id in visible }
+            .map { summarize(it) }
+    }
 
     fun get(id: UUID): Project = projects.findById(id)
         .orElseThrow { ProjectNotFoundException(id.toString()) }

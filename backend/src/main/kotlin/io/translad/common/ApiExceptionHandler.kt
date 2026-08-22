@@ -57,6 +57,10 @@ class ApiExceptionHandler {
     fun unreadableBody(ex: HttpMessageNotReadableException): ProblemDetail =
         problem(HttpStatus.BAD_REQUEST, "Invalid request", "The request body is missing a required field or is not valid JSON.")
 
+    @ExceptionHandler(ProjectAccessDeniedException::class)
+    fun forbidden(ex: ProjectAccessDeniedException): ProblemDetail =
+        problem(HttpStatus.FORBIDDEN, "Forbidden", "You do not have access to this project.")
+
     @ExceptionHandler(AiTranslationException::class)
     fun aiFailure(ex: AiTranslationException): ProblemDetail =
         problem(HttpStatus.BAD_GATEWAY, "Translation provider error", ex.message)

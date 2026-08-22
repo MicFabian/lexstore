@@ -19,7 +19,7 @@ class ClaudeTranslator(
 
     val available: Boolean get() = apiKey.isNotBlank()
 
-    private val client = RestClient.builder().baseUrl(baseUrl).build()
+    private val client = io.translad.common.OutboundHttp.client(baseUrl)
 
     override fun translate(input: TranslateInput): TranslateOutput {
         require(available) { "Anthropic API key is not configured." }

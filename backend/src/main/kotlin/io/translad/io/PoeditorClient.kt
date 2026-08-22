@@ -35,7 +35,7 @@ class PoeditorClient(
     @Value("\${poeditor.max-retries:3}") private val maxRetries: Int,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
-    private val client = RestClient.builder().baseUrl(baseUrl).build()
+    private val client = io.translad.common.OutboundHttp.client(baseUrl)
 
     /** Serializes calls across all imports so one account never bursts. */
     private val throttle = ReentrantLock()

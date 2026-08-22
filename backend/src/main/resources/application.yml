@@ -10,9 +10,12 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8089/realms/translad}
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5442/translad}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5442/translad?socketTimeout=30&loginTimeout=10}
     username: ${DATABASE_USER:translad}
     password: ${DATABASE_PASSWORD:translad}
+    hikari:
+      connection-timeout: 10000
+      validation-timeout: 5000
   jpa:
     hibernate:
       ddl-auto: validate
