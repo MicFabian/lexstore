@@ -39,6 +39,10 @@ class Translation(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
 
+    @jakarta.persistence.Version
+    @Column(nullable = false)
+    var version: Long = 0,
+
     @Column(name = "modified_by_name")
     var modifiedByName: String? = null,
 

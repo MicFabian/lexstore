@@ -27,6 +27,9 @@ import java.util.UUID
 class LanguageNotInProjectException(code: String) :
     RuntimeException("Language '$code' is not part of this project.")
 
+class TranslationConflictException :
+    RuntimeException("Someone else saved this translation while you were editing it. Reload to see their version.")
+
 private const val MAX_AUTO_TRANSLATE_BATCH = 200
 
 @Service
@@ -77,6 +80,9 @@ class EditorService(
         val now = Instant.now()
 
         val existing = translations.findByTermIdAndLanguageCode(termId, languageCode)
+        if (req.version != null && existing != null && existing.version != req.version) {
+            throw TranslationConflictException()
+        }
         val oldValue = existing?.value
         val oldStatus = existing?.status
 
@@ -236,6 +242,7 @@ class EditorService(
             isNew = term.isNew,
             featureId = term.featureId,
             target = tr?.value,
+            version = tr?.version,
             status = (tr?.status?.name ?: "UNTRANSLATED").lowercase(),
             comments = comments,
             modifiedBy = tr?.modifiedByName?.let {

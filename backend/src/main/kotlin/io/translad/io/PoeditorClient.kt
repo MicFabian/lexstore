@@ -89,7 +89,7 @@ class PoeditorClient(
                         "POEditor rate limit reached. Wait a minute and import fewer languages at a time.",
                     )
                 }
-                val backoff = minIntervalMs * (1L shl (attempt - 1))
+                val backoff = res.retryAfterMs ?: backoffFor(attempt)
                 log.info("POEditor rate limited on {}; retrying in {}ms (attempt {})", path, backoff, attempt)
                 Thread.sleep(backoff)
                 continue
@@ -100,7 +100,7 @@ class PoeditorClient(
             if (status != "success") {
                 val message = body.path("response").path("message").asText("POEditor request failed")
                 if (message.contains("limit", ignoreCase = true) && attempt <= maxRetries) {
-                    Thread.sleep(minIntervalMs * (1L shl (attempt - 1)))
+                    Thread.sleep(backoffFor(attempt))
                     continue
                 }
                 throw PoeditorException(message)
@@ -109,9 +109,18 @@ class PoeditorClient(
         }
     }
 
-    private data class Response(val body: JsonNode?, val rateLimited: Boolean)
+    private data class Response(
+        val body: JsonNode?,
+        val rateLimited: Boolean,
+        val retryAfterMs: Long? = null,
+    )
 
     /** One throttled call: never faster than [minIntervalMs] since the previous one. */
+    private fun backoffFor(attempt: Int): Long {
+        val base = minIntervalMs * (1L shl (attempt - 1))
+        return base + java.util.concurrent.ThreadLocalRandom.current().nextLong(0, minIntervalMs)
+    }
+
     private fun exchange(path: String, form: LinkedMultiValueMap<String, String>): Response {
         throttle.lock()
         try {
@@ -119,6 +128,7 @@ class PoeditorClient(
             if (since < minIntervalMs) Thread.sleep(minIntervalMs - since)
 
             var limited = false
+            var retryAfterMs: Long? = null
             val body = client.post()
                 .uri(path)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -126,14 +136,25 @@ class PoeditorClient(
                 .exchange { _, response ->
                     val code: HttpStatusCode = response.statusCode
                     limited = code.value() == 429
+                    if (limited) retryAfterMs = retryAfterOf(response.headers.getFirst("Retry-After"))
                     if (limited || code.isError) null else response.bodyTo(JsonNode::class.java)
                 }
             lastCallAt = System.currentTimeMillis()
-            return Response(body, limited)
+            return Response(body, limited, retryAfterMs)
         } finally {
             throttle.unlock()
         }
     }
+}
+
+/**
+ * The provider's own delay wins when it states one; otherwise back off
+ * exponentially with jitter, so several imports that were rate limited at the
+ * same moment do not retry in lockstep.
+ */
+private fun retryAfterOf(header: String?): Long? {
+    val seconds = header?.trim()?.toLongOrNull() ?: return null
+    return (seconds * 1000).coerceIn(0, 60_000)
 }
 
 class PoeditorRateLimitException(message: String) : RuntimeException(message)

@@ -34,14 +34,14 @@ class AiTranslationService(
         val translator = translatorFor(settings.provider)
         val key = cacheKey(
             req.sourceText, req.sourceLang, req.targetLang,
-            translator.provider, model, tone, formality, req.projectContext,
+            translator.provider, model, tone, formality, req.projectContext, temperature,
         )
 
         val start = System.nanoTime()
 
         // Cache hit (unless explicitly bypassed).
         if (!req.noCache) {
-            val hit = cache.findByCacheKey(key)
+            val hit = cache.findByCacheKey(key)?.takeUnless { expired(it, settings.cacheTtlHours) }
             if (hit != null) {
                 hit.hits += 1
                 hit.lastUsedAt = Instant.now()
@@ -204,13 +204,26 @@ class AiTranslationService(
 
     private fun cacheKey(
         src: String, srcLang: String, tgtLang: String, provider: String, model: String,
-        tone: String?, formality: String?, projectContext: String?,
+        tone: String?, formality: String?, projectContext: String?, temperature: Double,
     ): String {
+        // v2 includes temperature, which changes the output: without it a
+        // creative request could be answered from a deterministic one's entry.
         val raw = listOf(
-            src, srcLang, tgtLang, provider, model, tone ?: "", formality ?: "", projectContext ?: "",
+            "v2", src, srcLang, tgtLang, provider, model,
+            tone ?: "", formality ?: "", projectContext ?: "", temperature.toString(),
         ).joinToString("\u0000")
         val digest = MessageDigest.getInstance("SHA-256").digest(raw.toByteArray())
         return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * A TTL of zero disables reuse entirely; anything else measures from when
+     * the entry was created, not when it was last read, so a busy entry still
+     * ages out instead of living for ever.
+     */
+    private fun expired(entry: TranslationCacheEntry, ttlHours: Int): Boolean {
+        if (ttlHours <= 0) return true
+        return entry.createdAt.isBefore(Instant.now().minus(java.time.Duration.ofHours(ttlHours.toLong())))
     }
 
     private fun elapsedMs(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000

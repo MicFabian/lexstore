@@ -134,7 +134,12 @@ export class ApiService {
     projectId: string,
     termId: string,
     lang: string,
-    body: { value: string | null; pluralOne?: string | null; status: TranslationStatus },
+    body: {
+      value: string | null;
+      pluralOne?: string | null;
+      status: TranslationStatus;
+      version?: number | null;
+    },
   ): Observable<EditorRow> {
     // Idempotent upsert of the (term, language) translation.
     return this.http.put<EditorRow>(

@@ -55,6 +55,8 @@ data class EditorRow(
     @get:JsonProperty("isNew") val isNew: Boolean,
     val featureId: UUID?,
     val target: String?,
+    /** Row version of the stored translation; echo it back when saving. */
+    val version: Long?,
     val status: String,
     val comments: List<CommentView>,
     /** Who last changed this translation, and when (null if never edited). */

@@ -95,6 +95,7 @@ export interface EditorRow {
   isNew: boolean;
   featureId: string | null;
   target: string | null;
+  version: number | null;
   status: TranslationStatus;
   comments: CommentView[];
   modifiedBy: AuditEntry | null;

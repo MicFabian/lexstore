@@ -7,6 +7,13 @@ data class SaveTranslationRequest(
     val pluralOne: String? = null,
     /** untranslated | translated | fuzzy | proofread */
     @field:NotBlank val status: String,
+    /**
+     * Version the client last saw. When it is older than the stored row the
+     * save is refused, so a slower editor cannot silently overwrite a newer
+     * translation. Omitted means "no opinion", which keeps single-editor and
+     * scripted callers working.
+     */
+    val version: Long? = null,
 )
 
 data class SuggestionResponse(

@@ -13,6 +13,7 @@ import { Avatar, Btn, StatusChip } from '../../shared/primitives';
 import { HistoryModal } from '../../shared/history-modal';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
+import { ToastService } from '../../core/toast.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 
@@ -348,6 +349,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
 export class Inspector {
   private readonly api = inject(ApiService);
   private readonly state = inject(ProjectStateService);
+  private readonly toast = inject(ToastService);
 
   readonly row = input.required<EditorRow>();
   /** The language column this inspector opened on — editable via the picker. */
@@ -481,8 +483,21 @@ export class Inspector {
     if (!pid) return;
     const val = this.value() || null;
     this.api
-      .saveTranslation(pid, this.row().id, this.lang(), { value: val, status })
-      .subscribe((updated) => this.saved.emit(updated));
+      .saveTranslation(pid, this.row().id, this.lang(), {
+        value: val,
+        status,
+        version: this.row().version,
+      })
+      .subscribe({
+        next: (updated) => this.saved.emit(updated),
+        error: (err) => {
+          const message =
+            err?.status === 409
+              ? 'Someone else saved this translation. Reload to see their version.'
+              : 'That translation could not be saved.';
+          this.toast.show({ message, tone: 'error' });
+        },
+      });
   }
 
   protected onCommentKey(e: KeyboardEvent): void {

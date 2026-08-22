@@ -36,6 +36,17 @@ class ApiExceptionHandler {
         problem(HttpStatus.NOT_FOUND, "Not found", ex.message)
 
     @ExceptionHandler(
+        io.translad.translation.TranslationConflictException::class,
+        org.springframework.orm.ObjectOptimisticLockingFailureException::class,
+    )
+    fun staleWrite(ex: Exception): ProblemDetail =
+        problem(
+            HttpStatus.CONFLICT,
+            "Conflict",
+            "Someone else saved this translation while you were editing it. Reload to see their version.",
+        )
+
+    @ExceptionHandler(
         DuplicateProjectCodeException::class,
         DuplicateTermKeyException::class,
         DuplicateLanguageException::class,
