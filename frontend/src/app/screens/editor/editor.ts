@@ -8,6 +8,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { forkJoin, map, of, catchError } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
@@ -495,28 +496,42 @@ export class EditorScreen implements OnInit {
   protected autoTranslate(): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
-    this.autoBusy.set(true);
     const codes = this.langs();
-    let done = 0;
-    let total = 0;
-    for (const code of codes) {
-      this.api.autoTranslate(pid, code).subscribe({
-        next: (r) => {
-          total += r.translated;
-          this.loadEditor(pid, [code]);
-          if (++done === codes.length) {
-            this.autoBusy.set(false);
-            this.toast.show(
-              total === 0 ? 'Nothing left to translate' : `Auto-translated ${total} translations`,
-            );
-          }
-        },
-        error: () => {
-          this.autoBusy.set(false);
-          this.toast.show({ message: 'Auto-translate failed', tone: 'error' });
-        },
+    if (!codes.length) return;
+    this.autoBusy.set(true);
+
+    forkJoin(
+      codes.map((code) =>
+        this.api.autoTranslate(pid, code).pipe(
+          map((r) => ({ code, translated: r.translated, remaining: r.remaining, failed: r.failed })),
+          catchError(() => of({ code, translated: 0, remaining: 0, failed: -1 })),
+        ),
+      ),
+    ).subscribe((results) => {
+      this.autoBusy.set(false);
+      this.loadEditor(pid, codes);
+
+      const translated = results.reduce((n, r) => n + r.translated, 0);
+      const remaining = results.reduce((n, r) => n + Math.max(r.remaining, 0), 0);
+      const broken = results.filter((r) => r.failed !== 0);
+
+      if (broken.length === results.length) {
+        this.toast.show({ message: 'Auto-translate failed', tone: 'error' });
+        return;
+      }
+      if (translated === 0 && !broken.length) {
+        this.toast.show('Nothing left to translate');
+        return;
+      }
+
+      const parts = [`Auto-translated ${translated} ${translated === 1 ? 'translation' : 'translations'}`];
+      if (remaining > 0) parts.push(`${remaining} still to go — run it again`);
+      if (broken.length) parts.push(`${broken.map((r) => r.code).join(', ')} failed`);
+      this.toast.show({
+        message: parts.join(' · '),
+        tone: broken.length ? 'error' : 'success',
       });
-    }
+    });
   }
 
   protected createTerm(values: Record<string, string>): void {

@@ -24,6 +24,7 @@ import {
   PoeditorLanguage,
   PoeditorImportResult,
   PoeditorPreview,
+  AutoTranslateResult,
   FeatureView,
   OpenTranslationView,
 } from './models';
@@ -291,8 +292,8 @@ export class ApiService {
       `${BASE}/projects/${projectId}/languages/${lang}/translations/${termId}/suggestion`,
     );
   }
-  autoTranslate(projectId: string, lang: string): Observable<{ translated: number; status: string }> {
-    return this.http.post<{ translated: number; status: string }>(
+  autoTranslate(projectId: string, lang: string): Observable<AutoTranslateResult> {
+    return this.http.post<AutoTranslateResult>(
       `${BASE}/projects/${projectId}/languages/${lang}/translations/auto`,
       {},
     );

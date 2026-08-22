@@ -322,8 +322,23 @@ test.describe('editor — language switch + AI suggestion', () => {
 
     await page.locator('.ed-tabs button', { hasText: 'Auto-translate' }).click();
     await expect(page.locator('.toast')).toContainText('Auto-translated', { timeout: 15000 });
-    // Fewer empty targets afterwards.
     await expect(page.locator('.trow .tgt.empty')).toHaveCount(0);
+  });
+
+  test('auto-translate fills every visible language, not just the first', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+
+    await page.locator('.ed-head .btn--ghost').first().click();
+    await page.locator('.menu__item', { hasText: 'Japanese' }).click();
+    await page.locator('.menu-backdrop').click();
+    await expect(page.locator('th', { hasText: 'Translation' })).toHaveCount(2);
+
+    await expect(page.locator('.trow .tgt.empty').first()).toBeVisible();
+    await page.locator('.ed-tabs button', { hasText: 'Auto-translate' }).click();
+    await expect(page.locator('.toast')).toContainText('Auto-translated', { timeout: 20000 });
+
+    await expect(page.locator('.trow .tgt.empty')).toHaveCount(0, { timeout: 20000 });
   });
 });
 

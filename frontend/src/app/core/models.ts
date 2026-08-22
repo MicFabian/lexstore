@@ -231,6 +231,13 @@ export interface FeatureLanguageCoverage {
   percent: number;
 }
 
+export interface AutoTranslateResult {
+  translated: number;
+  status: string;
+  failed: number;
+  remaining: number;
+}
+
 export interface FeatureView {
   id: string;
   name: string;
