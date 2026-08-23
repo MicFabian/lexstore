@@ -9,7 +9,7 @@ import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
-import { ApiKeyView } from '../../core/models';
+import { ApiKeyView, GlossaryEntryView } from '../../core/models';
 
 interface IntegrationItem {
   icon: IconName;
@@ -169,6 +169,78 @@ interface IntegrationItem {
                 </div>
               </div>
             }
+            @case ('glossary') {
+              <div class="panel">
+                <h2 class="ptitle">Glossary</h2>
+                <p class="hint">
+                  Terms this project insists on. They are given to the translator as
+                  instructions, and a translation that ignores one is flagged by the
+                  proofreader.
+                </p>
+
+                <form class="gform" (submit)="addGlossary($event)">
+                  <input
+                    class="input"
+                    placeholder="Source term, e.g. Dashboard"
+                    [value]="gTerm()"
+                    (input)="gTerm.set($any($event.target).value)"
+                  />
+                  <input
+                    class="input"
+                    placeholder="Must be translated as…"
+                    [disabled]="gKeep()"
+                    [value]="gTranslation()"
+                    (input)="gTranslation.set($any($event.target).value)"
+                  />
+                  <select [value]="gLang()" (change)="gLang.set($any($event.target).value)">
+                    <option value="">All languages</option>
+                    @for (l of languages(); track l.code) {
+                      <option [value]="l.code">{{ l.name }}</option>
+                    }
+                  </select>
+                  <label class="gkeep">
+                    <input type="checkbox" [checked]="gKeep()" (change)="gKeep.set($any($event.target).checked)" />
+                    Never translate
+                  </label>
+                  <lx-btn variant="primary" [disabled]="!gTerm()">Add</lx-btn>
+                </form>
+
+                @if (glossary().length) {
+                  <table class="gtable">
+                    <thead><tr><th>Term</th><th>Rule</th><th>Language</th><th></th></tr></thead>
+                    <tbody>
+                      @for (g of glossary(); track g.id) {
+                        <tr>
+                          <td><b>{{ g.term }}</b></td>
+                          <td>
+                            @if (g.doNotTranslate) {
+                              <span class="chip chip--neutral">leave untranslated</span>
+                            } @else {
+                              {{ g.translation }}
+                            }
+                          </td>
+                          <td>
+                            @if (g.languageCode) {
+                              <span class="locale">{{ g.languageCode }}</span>
+                            } @else {
+                              <span class="muted">all</span>
+                            }
+                          </td>
+                          <td style="text-align:right">
+                            <button class="btn btn--subtle btn--sm" (click)="removeGlossary(g)">
+                              <lx-icon name="Trash2" [size]="14" />Remove
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="muted">No terms yet.</p>
+                }
+              </div>
+            }
+
             @case ('integrations') {
               <div class="two-col">
                 @for (it of integrations; track it.name) {
@@ -246,6 +318,40 @@ interface IntegrationItem {
     }
   `,
   styles: `
+    .gform {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 14px 0 18px;
+    }
+    .gform .input { flex: 1; min-width: 180px; }
+    .gform select {
+      padding: 8px 10px;
+      border: 1px solid var(--lx-line);
+      border-radius: 8px;
+      background: var(--lx-card);
+      color: var(--lx-ink);
+      font-size: 13.5px;
+    }
+    .gkeep {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--lx-slate);
+    }
+    .gtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .gtable th {
+      text-align: left;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--lx-slate);
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--lx-line);
+    }
+    .gtable td { padding: 10px; border-bottom: 1px solid var(--lx-line); }
     .proj-image {
       width: 44px;
       height: 44px;
@@ -310,7 +416,7 @@ export class SettingsScreen implements OnInit {
   protected readonly toast = inject(ToastService);
   protected readonly project = this.state.current;
 
-  protected readonly tab = signal<'general' | 'appearance' | 'api' | 'integrations' | 'export'>('api');
+  protected readonly tab = signal<'general' | 'appearance' | 'glossary' | 'api' | 'integrations' | 'export'>('api');
   protected readonly keys = signal<ApiKeyView[]>([]);
   protected readonly saving = signal(false);
   protected readonly draftName = signal('');
@@ -322,9 +428,14 @@ export class SettingsScreen implements OnInit {
     { name: 'label', label: 'Key label', placeholder: 'CI / GitHub Actions', hint: 'Name it after where it will be used.' },
   ];
 
-  protected readonly tabs: { id: 'general' | 'appearance' | 'api' | 'integrations' | 'export'; icon: IconName; label: string }[] = [
+  protected readonly tabs: {
+    id: 'general' | 'appearance' | 'glossary' | 'api' | 'integrations' | 'export';
+    icon: IconName;
+    label: string;
+  }[] = [
     { id: 'general', icon: 'Settings2', label: 'General' },
     { id: 'appearance', icon: 'Settings2', label: 'Appearance' },
+    { id: 'glossary', icon: 'FileText', label: 'Glossary' },
     { id: 'api', icon: 'KeyRound', label: 'API keys' },
     { id: 'integrations', icon: 'GitBranch', label: 'Integrations' },
     { id: 'export', icon: 'FileUp', label: 'Import / Export' },
@@ -337,9 +448,60 @@ export class SettingsScreen implements OnInit {
     { icon: 'MessageSquare', name: 'Slack', desc: 'Post when a language reaches 100%.', on: false },
   ];
 
+  protected readonly glossary = signal<GlossaryEntryView[]>([]);
+  protected readonly languages = signal<{ code: string; name: string }[]>([]);
+  protected readonly gTerm = signal('');
+  protected readonly gTranslation = signal('');
+  protected readonly gLang = signal('');
+  protected readonly gKeep = signal(false);
+
+  protected addGlossary(e: Event): void {
+    e.preventDefault();
+    const pid = this.state.current()?.id;
+    const term = this.gTerm().trim();
+    if (!pid || !term) return;
+    this.api
+      .addGlossaryEntry(pid, {
+        term,
+        languageCode: this.gLang() || null,
+        translation: this.gKeep() ? null : this.gTranslation().trim() || null,
+        doNotTranslate: this.gKeep(),
+      })
+      .subscribe({
+        next: () => {
+          this.gTerm.set('');
+          this.gTranslation.set('');
+          this.loadGlossary(pid);
+          this.toast.show('Glossary updated');
+        },
+        error: (err) =>
+          this.toast.show({
+            message: err?.error?.detail ?? 'That term could not be added.',
+            tone: 'error',
+          }),
+      });
+  }
+
+  protected removeGlossary(g: GlossaryEntryView): void {
+    const pid = this.state.current()?.id;
+    if (!pid) return;
+    this.api.deleteGlossaryEntry(pid, g.id).subscribe({
+      next: () => this.loadGlossary(pid),
+      error: () => this.toast.show({ message: 'That term could not be removed.', tone: 'error' }),
+    });
+  }
+
+  private loadGlossary(pid: string): void {
+    this.api.glossary(pid).subscribe((g) => this.glossary.set(g));
+  }
+
   ngOnInit(): void {
     this.state.whenReady((pid) => {
       this.api.listApiKeys(pid).subscribe((k) => this.keys.set(k));
+      this.loadGlossary(pid);
+      this.api
+        .listLanguages(pid)
+        .subscribe((l) => this.languages.set(l.map((x) => ({ code: x.code, name: x.name }))));
       this.api.getProject(pid).subscribe((p) => {
         this.draftName.set(p.name);
         this.draftImage.set(p.image);

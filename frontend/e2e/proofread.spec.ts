@@ -92,3 +92,38 @@ test.describe('proofreader', () => {
     await expect(inspector.locator('.proofread .issue')).toContainText('Bauteil', { timeout: 15000 });
   });
 });
+
+test.describe('glossary settings', () => {
+  test('a term can be added and removed in project settings', async ({ page }) => {
+    const term = `Widget${Date.now()}`;
+    await page.goto('/settings');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'Glossary' }).click();
+
+    await page.locator('.gform .input').first().fill(term);
+    await page.locator('.gform .input').nth(1).fill('Bauteil');
+    await page.locator('.gform lx-btn button').click();
+
+    await expect(page.locator('.gtable')).toContainText(term);
+    await expect(page.locator('.gtable')).toContainText('Bauteil');
+
+    await page
+      .locator('.gtable tr', { hasText: term })
+      .locator('button', { hasText: 'Remove' })
+      .click();
+    await expect(page.locator('.gtable, .muted').first()).not.toContainText(term);
+  });
+
+  test('a do-not-translate term is shown as such', async ({ page }) => {
+    const term = `Brand${Date.now()}`;
+    await page.goto('/settings');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'Glossary' }).click();
+
+    await page.locator('.gform .input').first().fill(term);
+    await page.locator('.gkeep input').check();
+    await page.locator('.gform lx-btn button').click();
+
+    await expect(page.locator('.gtable tr', { hasText: term })).toContainText('leave untranslated');
+  });
+});
