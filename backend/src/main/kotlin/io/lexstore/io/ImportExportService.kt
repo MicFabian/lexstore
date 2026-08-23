@@ -27,8 +27,30 @@ class ImportExportService(
     private val languages: LanguageRepository,
     private val terms: TermRepository,
     private val translations: TranslationRepository,
+    private val events: io.lexstore.translation.TranslationEventRepository,
     private val currentUser: CurrentUser,
 ) {
+    private fun event(
+        projectId: UUID,
+        termId: UUID,
+        languageCode: String,
+        oldValue: String?,
+        newValue: String?,
+        me: io.lexstore.common.UserIdentity,
+        at: Instant,
+    ) = io.lexstore.translation.TranslationEvent(
+        projectId = projectId,
+        termId = termId,
+        languageCode = languageCode,
+        action = "imported",
+        oldValue = oldValue,
+        newValue = newValue,
+        newStatus = TranslationStatus.TRANSLATED,
+        authorName = me.name,
+        authorAvatar = me.avatar,
+        createdAt = at,
+    )
+
     /** Import a flat key→value map into a language, creating missing terms. */
     fun import(projectId: UUID, languageCode: String, entries: Map<String, String>): ImportResult {
         projects.findById(projectId).orElseThrow { ProjectNotFoundException(projectId.toString()) }
@@ -74,17 +96,24 @@ class ImportExportService(
 
         var updated = 0
         val fresh = mutableListOf<Translation>()
+        // An import changes translations like any other edit, so it belongs in
+        // the history: without this a value changes with no trace of who or when.
+        val history = mutableListOf<io.lexstore.translation.TranslationEvent>()
         for ((key, value) in entries) {
             if (key.isBlank()) continue
             val term = termsByKey.getValue(key)
             val existing = existingTranslations[term.id]
             if (existing != null) {
+                val before = existing.value
                 existing.apply {
                     this.value = value
                     status = TranslationStatus.TRANSLATED
                     updatedAt = now
                     modifiedByName = me.name
                     modifiedByAvatar = me.avatar
+                }
+                if (before != value) {
+                    history += event(projectId, term.id, languageCode, before, value, me, now)
                 }
                 updated++
             } else {
@@ -99,6 +128,10 @@ class ImportExportService(
             }
         }
         translations.saveAll(fresh)
+        fresh.forEach {
+            history += event(projectId, it.termId, languageCode, null, it.value, me, now)
+        }
+        events.saveAll(history)
         projects.touch(projectId, now)
         return ImportResult(created, updated + fresh.size, entries.size)
     }
