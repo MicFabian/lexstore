@@ -105,5 +105,5 @@ class AiController(
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @PutMapping("/settings")
-    fun updateSettings(@RequestBody req: UpdateAiSettings): AiSettingsView = service.updateSettings(req)
+    fun updateSettings(@Valid @RequestBody req: UpdateAiSettings): AiSettingsView = service.updateSettings(req)
 }

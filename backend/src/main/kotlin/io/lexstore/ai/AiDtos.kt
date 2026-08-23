@@ -1,19 +1,27 @@
 package io.lexstore.ai
 
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.util.UUID
 
+/**
+ * Every field here reaches a paid provider, so each one is bounded: an
+ * unbounded prompt is an unbounded bill, and a non-finite temperature is a
+ * request no provider can answer.
+ */
 data class TranslateRequest(
-    @field:NotBlank val sourceText: String,
-    @field:NotBlank val sourceLang: String,
-    @field:NotBlank val targetLang: String,
+    @field:NotBlank @field:Size(max = 4000) val sourceText: String,
+    @field:NotBlank @field:Size(max = 16) val sourceLang: String,
+    @field:NotBlank @field:Size(max = 16) val targetLang: String,
     /** Optional overrides; otherwise the saved AI settings are used. */
-    val model: String? = null,
-    val temperature: Double? = null,
-    val tone: String? = null,
-    val formality: String? = null,
+    @field:Size(max = 100) val model: String? = null,
+    @field:DecimalMin("0.0") @field:DecimalMax("2.0") val temperature: Double? = null,
+    @field:Size(max = 500) val tone: String? = null,
+    @field:Size(max = 32) val formality: String? = null,
     /** Domain and glossary guidance, usually the calling project's context. */
-    val projectContext: String? = null,
+    @field:Size(max = 4000) val projectContext: String? = null,
     /** Skip the cache and force a fresh translation. */
     val noCache: Boolean = false,
     /** Whose key and budget this call uses; null falls back to the environment. */
@@ -81,11 +89,13 @@ data class AiSettingsView(
 )
 
 data class UpdateAiSettings(
-    val provider: String?,
-    val model: String?,
-    val temperature: Double?,
-    val formality: String?,
-    val tone: String?,
+    @field:Size(max = 32) val provider: String?,
+    @field:Size(max = 100) val model: String?,
+    @field:DecimalMin("0.0") @field:DecimalMax("2.0") val temperature: Double?,
+    @field:Size(max = 32) val formality: String?,
+    @field:Size(max = 500) val tone: String?,
     val autoFlagFuzzy: Boolean?,
+    @field:jakarta.validation.constraints.Min(0)
+    @field:jakarta.validation.constraints.Max(8760)
     val cacheTtlHours: Int?,
 )

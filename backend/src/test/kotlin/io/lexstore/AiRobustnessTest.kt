@@ -15,6 +15,42 @@ class AiRobustnessTest : IntegrationTestBase() {
         object : org.springframework.core.ParameterizedTypeReference<Map<String, Any?>>() {}
 
     @Test
+    fun `input that would reach a paid provider is bounded`() {
+        // An unbounded prompt is an unbounded bill.
+        org.junit.jupiter.api.assertThrows<org.springframework.web.client.HttpClientErrorException.BadRequest> {
+            client.post().uri("/api/ai/translate")
+                .body(
+                    mapOf(
+                        "sourceText" to "x".repeat(5000),
+                        "sourceLang" to "en",
+                        "targetLang" to "de",
+                    ),
+                )
+                .retrieve().body(mapType)
+        }
+
+        // A temperature no provider accepts is refused before the call is made.
+        org.junit.jupiter.api.assertThrows<org.springframework.web.client.HttpClientErrorException.BadRequest> {
+            client.post().uri("/api/ai/translate")
+                .body(
+                    mapOf(
+                        "sourceText" to "Probe",
+                        "sourceLang" to "en",
+                        "targetLang" to "de",
+                        "temperature" to 9.0,
+                    ),
+                )
+                .retrieve().body(mapType)
+        }
+
+        // An ordinary request still goes through.
+        val ok = client.post().uri("/api/ai/translate")
+            .body(mapOf("sourceText" to "Bounded probe", "sourceLang" to "en", "targetLang" to "de"))
+            .retrieve().body(mapType)!!
+        assertThat(ok["text"]).isNotNull()
+    }
+
+    @Test
     fun `two requests missing the same key both get an answer`() {
         val text = "Race probe ${System.nanoTime()}"
         val pool = Executors.newFixedThreadPool(2)
