@@ -152,14 +152,19 @@ class ApiEdgeCaseTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `an unknown status string defaults to untranslated`() {
+    fun `an unknown status string is refused, not quietly downgraded`() {
         val id = mosaicId()
         val termId = (getMap("/api/projects/$id/terms?size=50")["content"] as List<*>)
             .map { it as Map<*, *> }.first { it["key"] == "auth.forgot" }["id"] as String
-        val saved = client.put().uri("/api/projects/$id/languages/de/translations/$termId")
-            .body(mapOf("value" to "x", "status" to "banana"))
-            .retrieve().body(mapType)!!
-        assertThat(saved["status"]).isEqualTo("untranslated")
+
+        // Accepting it as "untranslated" turned a typo into a change of state,
+        // and reported success while doing it.
+        val ex = org.junit.jupiter.api.assertThrows<HttpClientErrorException.BadRequest> {
+            client.put().uri("/api/projects/$id/languages/de/translations/$termId")
+                .body(mapOf("value" to "x", "status" to "banana"))
+                .retrieve().body(mapType)
+        }
+        assertThat(ex.responseBodyAsString).contains("Unknown status")
     }
 
     // ---------------- Plurals ----------------

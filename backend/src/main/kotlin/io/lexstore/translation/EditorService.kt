@@ -123,7 +123,7 @@ class EditorService(
         languages.findByProjectIdAndCode(projectId, languageCode)
             ?: throw LanguageNotInProjectException(languageCode)
 
-        val newStatus = TranslationStatus.from(req.status)
+        val newStatus = TranslationStatus.parse(req.status)
         val me = currentUser.identity()
         val author = me.name
         val avatar = me.avatar

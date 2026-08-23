@@ -57,6 +57,23 @@ class InputLimitsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `a misspelled status is refused rather than silently downgraded`() {
+        @Suppress("UNCHECKED_CAST")
+        val rows = client.get().uri("/api/projects/$MOSAIC_WEB/languages/de/translations?size=1")
+            .retrieve()
+            .body(object : org.springframework.core.ParameterizedTypeReference<Map<String, Any?>>() {})!!["rows"]
+            as List<Map<String, Any?>>
+        val termId = rows.first()["id"] as String
+
+        val ex = assertThrows<HttpClientErrorException.BadRequest> {
+            client.put().uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId")
+                .body(mapOf("value" to "Wert", "status" to "proofred"))
+                .retrieve().toBodilessEntity()
+        }
+        assertThat(ex.responseBodyAsString).contains("proofread")
+    }
+
+    @Test
     fun `a value within the limit is still accepted`() {
         client.post().uri("/api/projects/$MOSAIC_WEB/terms")
             .body(mapOf("key" to "limits.ok", "source" to "A normal source string"))
