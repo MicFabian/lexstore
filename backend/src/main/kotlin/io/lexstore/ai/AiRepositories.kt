@@ -15,6 +15,33 @@ interface TranslationCacheRepository : JpaRepository<TranslationCacheEntry, UUID
     @Query("select coalesce(sum(c.hits), 0) from TranslationCacheEntry c")
     fun totalHits(): Long
 
+    /**
+     * Inserts only when the key is still free. Two callers can miss the same
+     * key at once; letting the second one collide would abort its transaction
+     * over a translation that is already bought and already stored.
+     */
+    @Modifying
+    @Query(
+        nativeQuery = true,
+        value = """
+        insert into translation_cache
+            (id, cache_key, source_text, source_lang, target_lang, provider, model, target_text,
+             hits, created_at, last_used_at)
+        values (gen_random_uuid(), :cacheKey, :sourceText, :sourceLang, :targetLang, :provider,
+                :model, :targetText, 0, now(), now())
+        on conflict (cache_key) do nothing
+        """,
+    )
+    fun insertIfAbsent(
+        cacheKey: String,
+        sourceText: String,
+        sourceLang: String,
+        targetLang: String,
+        provider: String,
+        model: String,
+        targetText: String,
+    ): Int
+
     @Query(
         """
         select c from TranslationCacheEntry c

@@ -18,7 +18,10 @@ class AiTranslationService(
     private val gemini: GeminiTranslator,
     private val openai: OpenAiTranslator,
     private val credentials: io.lexstore.org.CredentialResolver,
+    @org.springframework.context.annotation.Lazy private val self: AiTranslationService,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
     // ---------------- Translate (cache-first) ----------------
 
     /**
@@ -75,16 +78,13 @@ class AiTranslationService(
                 entry.targetText = out.text
                 entry.lastUsedAt = Instant.now()
             } else {
-                cache.save(
-                    TranslationCacheEntry(
-                        cacheKey = key,
-                        sourceText = req.sourceText,
-                        sourceLang = req.sourceLang,
-                        targetLang = req.targetLang,
-                        provider = translator.provider,
-                        model = out.model,
-                        targetText = out.text,
-                    ),
+                // Two callers can miss the same key at once. The write goes in
+                // its own transaction so losing that race cannot poison this
+                // one — the translation is already paid for, and the winner
+                // stored the same answer.
+                cache.insertIfAbsent(
+                    key, req.sourceText, req.sourceLang, req.targetLang,
+                    translator.provider, out.model, out.text,
                 )
             }
             val latency = elapsedMs(start)

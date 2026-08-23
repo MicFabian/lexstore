@@ -49,6 +49,10 @@ class GeminiTranslator(
             ?.path("content")?.path("parts")?.firstOrNull()
             ?.path("text")?.asText()?.trim().orEmpty()
         val usage = res.path("usageMetadata")
+        // An empty answer is a failure, not a translation: saved as one it
+        // would blank the string and count as done.
+        require(text.isNotBlank()) { "Gemini returned no translation." }
+
         return TranslateOutput(
             text = text,
             model = res.path("modelVersion").asText(input.model),
