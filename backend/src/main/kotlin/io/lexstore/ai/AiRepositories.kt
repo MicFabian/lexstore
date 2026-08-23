@@ -58,6 +58,10 @@ interface TranslationRequestRepository : JpaRepository<TranslationRequestLog, UU
 
     fun findByOrgIdOrderByCreatedAtDesc(orgId: UUID, pageable: Pageable): List<TranslationRequestLog>
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("delete from TranslationRequestLog r where r.createdAt < :cutoff")
+    fun deleteByCreatedAtBefore(cutoff: java.time.Instant): Int
+
     @Query(
         """
         select coalesce(count(r), 0) as requests,

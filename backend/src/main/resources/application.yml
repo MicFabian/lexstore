@@ -49,6 +49,11 @@ lexstore:
   # Encrypts stored provider keys. Without it, keys cannot be saved through the
   # UI and the app falls back to the environment-supplied ones.
   secret-key: ${LEXSTORE_SECRET_KEY:}
+  retention:
+    # The AI request log records every translation with its text. Nothing else
+    # removes those rows, so they are pruned on a schedule; 0 keeps them.
+    request-log-days: ${LEXSTORE_REQUEST_LOG_DAYS:90}
+    cron: ${LEXSTORE_RETENTION_CRON:0 30 3 * * *}
   agent:
     # The platform's own provider key, used by organisations on an agent plan.
     anthropic-key: ${LEXSTORE_AGENT_KEY:}
