@@ -59,8 +59,8 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await page.getByRole('textbox', { name: 'Search keys or text' }).fill(helperKey);
   await expect(page.locator('.trow')).toHaveCount(1);
   await page.locator('.trow').first().locator('.tgt').first().click();
-  await page.locator('.inspector .helper button', { hasText: 'Suggest' }).click();
-  await expect(page.locator('.inspector .helper__text')).toBeVisible();
+  await page.locator('.inspector .suggestor button', { hasText: 'Suggest' }).click();
+  await expect(page.locator('.inspector .suggestor .helper__text')).toBeVisible();
   await shot(page, '06-editor-inspector-helper');
 
   // Several languages compared side by side

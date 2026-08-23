@@ -15,6 +15,7 @@ const LABELS: Record<string, string> = {
   features: 'Features',
   languages: 'Languages',
   contributors: 'Contributors',
+  organisation: 'Organisation',
   settings: 'Settings',
   projects: 'Projects',
   ai: 'Translation AI',

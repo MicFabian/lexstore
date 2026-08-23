@@ -520,10 +520,17 @@ export class EditorScreen implements OnInit {
     });
   }
 
-  private loadEditor(pid: string, codes = this.langs()): void {
+  /**
+   * Loads page one for the given languages.
+   *
+   * `replacing` distinguishes the two callers: a filter or language change
+   * starts a new view and must invalidate slower earlier loads, while adding a
+   * column only fills a gap and must not cancel the load already in flight.
+   */
+  private loadEditor(pid: string, codes = this.langs(), replacing = true): void {
     if (!codes.length) return;
-    this.nextPage = 1;
-    const generation = ++this.loadGeneration;
+    if (replacing) this.nextPage = 1;
+    const generation = replacing ? ++this.loadGeneration : this.loadGeneration;
     forkJoin(
       codes.map((code) =>
         this.api.editor(pid, code, this.queryOptions(0)).pipe(map((res) => ({ code, res }))),
@@ -554,10 +561,19 @@ export class EditorScreen implements OnInit {
     this.filter();
     this.query();
     this.featureParam();
+    // The language set is a dependency too: a ?lang= deep link changes it after
+    // the first load. Adding a column already fetches just that column, so only
+    // languages with nothing loaded need a fetch here.
+    const codes = this.langs();
     untracked(() => {
       const pid = this.state.current()?.id;
-      const codes = this.langs();
       if (!pid || !codes.length || !this.languages().length) return;
+      const loaded = this.byLang();
+      const missing = codes.filter((c) => !loaded[c]);
+      if (missing.length && missing.length < codes.length) {
+        this.loadEditor(pid, missing, false);
+        return;
+      }
       clearTimeout(this.reloadTimer);
       this.reloadTimer = setTimeout(() => this.loadEditor(pid, codes), 200);
     });
@@ -577,14 +593,14 @@ export class EditorScreen implements OnInit {
     }
     this.langs.set([...current, code]);
     const pid = this.state.current()?.id;
-    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code]);
+    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code], false);
   }
 
   protected selectLangInInspector(code: string): void {
     const s = this.sel();
     if (!s) return;
     const pid = this.state.current()?.id;
-    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code]);
+    if (pid && !this.byLang()[code]) this.loadEditor(pid, [code], false);
     this.sel.set({ termId: s.termId, lang: code });
   }
 

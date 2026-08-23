@@ -225,6 +225,7 @@ export class Sidebar {
     return [
       { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },
       { path: 'contributors', icon: 'Users', label: 'Contributors' },
+      { path: 'organisation', icon: 'Users', label: 'Organisation' },
       { path: 'settings', icon: 'Settings', label: 'Settings' },
     ];
   });

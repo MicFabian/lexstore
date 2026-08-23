@@ -42,6 +42,10 @@ export const routes: Routes = [
           import('./screens/contributors/contributors').then((m) => m.ContributorsScreen),
       },
       {
+        path: 'organisation',
+        loadComponent: () => import('./screens/org/org-screen').then((m) => m.OrgScreen),
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./screens/settings/settings').then((m) => m.SettingsScreen),
       },

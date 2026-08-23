@@ -292,3 +292,100 @@ export const STATUS_LABEL: Record<TranslationStatus, string> = {
   fuzzy: 'Needs review',
   proofread: 'Proofread',
 };
+
+export interface AgentPlanView {
+  plan: string;
+  monthlyQuota: number;
+  used: number;
+  remaining: number;
+  percentUsed: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export interface OrganisationView {
+  id: string;
+  name: string;
+  slug: string;
+  projects: number;
+  members: number;
+  agent: AgentPlanView | null;
+}
+
+export interface OrgMemberView {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface CredentialView {
+  id: string;
+  provider: string;
+  label: string;
+  tail: string;
+  scope: 'organisation' | 'project';
+  projectName: string | null;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+export interface ProviderUsage {
+  provider: string;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface DailyUsage {
+  day: string;
+  requests: number;
+  tokens: number;
+}
+
+export interface UsageSummary {
+  totalRequests: number;
+  cacheHits: number;
+  cacheHitRate: number;
+  inputTokens: number;
+  outputTokens: number;
+  failures: number;
+  byProvider: ProviderUsage[];
+  byDay: DailyUsage[];
+}
+
+export interface AgentActivityRow {
+  at: string;
+  projectName: string | null;
+  languageCode: string | null;
+  sourceText: string;
+  provider: string;
+  model: string;
+  cacheHit: boolean;
+  inputTokens: number;
+  outputTokens: number;
+  status: string;
+}
+
+export interface ProofreadIssue {
+  kind: string;
+  severity: 'minor' | 'major';
+  message: string;
+}
+
+export interface ProofreadResult {
+  verdict: 'good' | 'needs_work' | 'wrong';
+  issues: ProofreadIssue[];
+  suggestion: string | null;
+  provider: string;
+  model: string;
+}
+
+export interface GlossaryEntryView {
+  id: string;
+  term: string;
+  languageCode: string | null;
+  translation: string | null;
+  doNotTranslate: boolean;
+  note: string | null;
+}

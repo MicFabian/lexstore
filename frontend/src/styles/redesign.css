@@ -49,6 +49,7 @@
 .main > lx-features-screen,
 .main > lx-languages-screen,
 .main > lx-contributors-screen,
+.main > lx-org-screen,
 .main > lx-settings-screen,
 .main > lx-editor-screen {
   display: flex;

@@ -25,6 +25,13 @@ import {
   PoeditorImportResult,
   PoeditorPreview,
   AutoTranslateResult,
+  OrganisationView,
+  OrgMemberView,
+  CredentialView,
+  UsageSummary,
+  AgentActivityRow,
+  ProofreadResult,
+  GlossaryEntryView,
   FeatureView,
   OpenTranslationView,
 } from './models';
@@ -184,6 +191,74 @@ export class ApiService {
   deleteTerm(projectId: string, termId: string): Observable<void> {
     return this.http.delete<void>(`${BASE}/projects/${projectId}/terms/${termId}`);
   }
+  // ---- organisation, keys, usage ----
+
+  org(): Observable<OrganisationView> {
+    return this.http.get<OrganisationView>(`${BASE}/org`);
+  }
+
+  orgMembers(): Observable<OrgMemberView[]> {
+    return this.http.get<OrgMemberView[]>(`${BASE}/org/members`);
+  }
+
+  credentials(): Observable<CredentialView[]> {
+    return this.http.get<CredentialView[]>(`${BASE}/org/credentials`);
+  }
+
+  saveCredential(body: {
+    provider: string;
+    apiKey: string;
+    label?: string;
+    projectId?: string;
+  }): Observable<CredentialView> {
+    return this.http.post<CredentialView>(`${BASE}/org/credentials`, body);
+  }
+
+  deleteCredential(id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/org/credentials/${id}`);
+  }
+
+  updateAgentPlan(body: { plan: string | null; monthlyQuota?: number }): Observable<OrganisationView> {
+    return this.http.put<OrganisationView>(`${BASE}/org/agent`, body);
+  }
+
+  usage(days = 30): Observable<UsageSummary> {
+    return this.http.get<UsageSummary>(`${BASE}/org/usage`, { params: { days } });
+  }
+
+  agentActivity(limit = 50): Observable<AgentActivityRow[]> {
+    return this.http.get<AgentActivityRow[]>(`${BASE}/org/activity`, { params: { limit } });
+  }
+
+  // ---- proofreading and glossary ----
+
+  proofread(projectId: string, lang: string, termId: string): Observable<ProofreadResult> {
+    return this.http.get<ProofreadResult>(
+      `${BASE}/projects/${projectId}/languages/${lang}/translations/${termId}/proofread`,
+    );
+  }
+
+  glossary(projectId: string): Observable<GlossaryEntryView[]> {
+    return this.http.get<GlossaryEntryView[]>(`${BASE}/projects/${projectId}/glossary`);
+  }
+
+  addGlossaryEntry(
+    projectId: string,
+    body: {
+      term: string;
+      languageCode?: string | null;
+      translation?: string | null;
+      doNotTranslate?: boolean;
+      note?: string | null;
+    },
+  ): Observable<GlossaryEntryView> {
+    return this.http.post<GlossaryEntryView>(`${BASE}/projects/${projectId}/glossary`, body);
+  }
+
+  deleteGlossaryEntry(projectId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}/glossary/${id}`);
+  }
+
   listComments(projectId: string, termId: string): Observable<CommentView[]> {
     return this.http.get<CommentView[]>(
       `${BASE}/projects/${projectId}/terms/${termId}/comments`,

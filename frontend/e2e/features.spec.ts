@@ -295,7 +295,7 @@ test.describe('editor — language switch + AI suggestion', () => {
     const inspector = page.locator('.inspector');
     await expect(inspector).toBeVisible();
 
-    const helper = inspector.locator('.helper');
+    const helper = inspector.locator('.suggestor');
     await expect(helper).toContainText('Translation helper');
     await helper.locator('button', { hasText: 'Suggest' }).click();
     await expect(helper.locator('.helper__text')).toBeVisible();

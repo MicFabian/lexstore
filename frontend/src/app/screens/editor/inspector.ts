@@ -15,7 +15,7 @@ import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ToastService } from '../../core/toast.service';
 import { ProjectStateService } from '../../core/project-state.service';
-import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
+import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../../core/models';
 
 @Component({
   selector: 'lx-inspector',
@@ -122,7 +122,7 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           </lx-btn>
         </div>
 
-        <div class="helper" aria-live="polite">
+        <div class="helper suggestor" aria-live="polite">
           <div class="helper__head">
             <lx-icon name="WandSparkles" [size]="14" color="var(--lx-slate)" />
             <span class="helper__title">Translation helper</span>
@@ -145,6 +145,50 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
           } @else {
             <div class="helper__hint">
               Machine-translate <span class="locale">{{ lang() }}</span> from the English source, then edit before saving.
+            </div>
+          }
+        </div>
+
+        <div class="helper proofread" aria-live="polite">
+          <div class="helper__head">
+            <lx-icon name="Eye" [size]="14" color="var(--lx-slate)" />
+            <span class="helper__title">Proofreader</span>
+            <div class="spacer"></div>
+            <button
+              class="btn btn--subtle btn--sm"
+              [disabled]="proofBusy() || !value()"
+              (click)="runProofread()"
+            >
+              {{ proofBusy() ? 'Reviewing…' : 'Review' }}
+            </button>
+          </div>
+          @if (proof(); as p) {
+            <div class="helper__body">
+              <div class="verdict" [class.verdict--ok]="p.verdict === 'good'">
+                {{ p.verdict === 'good' ? 'Reads well' : 'Needs work' }}
+                <span class="helper__meta">· checked by {{ p.provider }}</span>
+              </div>
+              @for (i of p.issues; track $index) {
+                <div class="issue" [class.issue--major]="i.severity === 'major'">
+                  <span class="issue__kind">{{ i.kind }}</span>
+                  <span>{{ i.message }}</span>
+                </div>
+              }
+              @if (p.issues.length === 0) {
+                <div class="helper__hint">Nothing to flag.</div>
+              }
+              @if (p.suggestion; as fix) {
+                <div class="helper__text" style="margin-top:10px">{{ fix }}</div>
+                <div class="row" style="gap:8px;margin-top:8px">
+                  <lx-btn variant="ghost" [sm]="true" icon="Check" (clicked)="applySuggestion(fix)">
+                    Use correction
+                  </lx-btn>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="helper__hint">
+              Check placeholders, glossary terms, grammar and tone against the source.
             </div>
           }
         </div>
@@ -233,6 +277,34 @@ import { CommentView, EditorRow, TranslationStatus } from '../../core/models';
     }
   `,
   styles: `
+    .verdict {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--lx-st-fuzzy);
+      margin-bottom: 8px;
+    }
+    .verdict--ok {
+      color: var(--lx-st-translated);
+    }
+    .issue {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      font-size: 12.5px;
+      padding: 6px 0;
+      border-top: 1px solid var(--lx-line);
+    }
+    .issue--major .issue__kind {
+      color: var(--lx-danger);
+    }
+    .issue__kind {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--lx-slate);
+      flex: none;
+      min-width: 76px;
+    }
     .insp-actions {
       flex-wrap: wrap;
       row-gap: 8px;
@@ -369,6 +441,8 @@ export class Inspector {
   protected readonly value = signal('');
   protected readonly draft = signal('');
   protected readonly comments = signal<CommentView[]>([]);
+  protected readonly proof = signal<ProofreadResult | null>(null);
+  protected readonly proofBusy = signal(false);
   protected readonly showHistory = signal(false);
   protected readonly suggestion = signal<string | null>(null);
   protected readonly suggestionMeta = signal<string | null>(null);
@@ -398,6 +472,7 @@ export class Inspector {
       this.showHistory.set(false);
       this.suggestion.set(null);
       this.suggestionMeta.set(null);
+      this.proof.set(null);
     });
   }
 
@@ -502,6 +577,23 @@ export class Inspector {
           this.toast.show({ message, tone: 'error' });
         },
       });
+  }
+
+  /** Review what is stored, not what is typed but unsaved. */
+  protected runProofread(): void {
+    const pid = this.state.current()?.id;
+    if (!pid || this.proofBusy()) return;
+    this.proofBusy.set(true);
+    this.api.proofread(pid, this.lang(), this.row().id).subscribe({
+      next: (r) => {
+        this.proof.set(r);
+        this.proofBusy.set(false);
+      },
+      error: () => {
+        this.proofBusy.set(false);
+        this.toast.show({ message: 'That review could not be run.', tone: 'error' });
+      },
+    });
   }
 
   protected onCommentKey(e: KeyboardEvent): void {

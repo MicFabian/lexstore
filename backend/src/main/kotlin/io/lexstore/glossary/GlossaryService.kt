@@ -7,6 +7,9 @@ import java.util.UUID
 
 class GlossaryEntryNotFoundException(id: UUID) : RuntimeException("No glossary entry with id $id.")
 
+class DuplicateGlossaryTermException(term: String) :
+    RuntimeException("\"$term\" already has a rule for that language. Remove it first, or edit that one.")
+
 private const val MAX_PROMPT_TERMS = 40
 
 @Service
@@ -21,11 +24,16 @@ class GlossaryService(private val entries: GlossaryRepository) {
         require(req.doNotTranslate || !req.translation.isNullOrBlank()) {
             "Give the translation to use, or mark the term as do-not-translate."
         }
+        val language = req.languageCode?.trim()?.takeIf { it.isNotBlank() }
+        val clash = entries.findByProjectIdAndTermIgnoreCase(projectId, req.term.trim())
+            .any { it.languageCode.equals(language, ignoreCase = true) }
+        if (clash) throw DuplicateGlossaryTermException(req.term.trim())
+
         val saved = entries.save(
             GlossaryEntry(
                 projectId = projectId,
                 term = req.term.trim(),
-                languageCode = req.languageCode?.trim()?.takeIf { it.isNotBlank() },
+                languageCode = language,
                 translation = req.translation?.trim()?.takeIf { it.isNotBlank() },
                 doNotTranslate = req.doNotTranslate,
                 note = req.note?.trim()?.takeIf { it.isNotBlank() },

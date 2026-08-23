@@ -51,6 +51,7 @@ class ApiExceptionHandler {
         DuplicateTermKeyException::class,
         DuplicateLanguageException::class,
         DuplicateFeatureKeyException::class,
+        io.lexstore.glossary.DuplicateGlossaryTermException::class,
     )
     fun conflict(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.CONFLICT, "Conflict", ex.message)
