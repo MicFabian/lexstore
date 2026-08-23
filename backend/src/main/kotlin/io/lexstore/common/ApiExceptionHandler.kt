@@ -31,6 +31,8 @@ class ApiExceptionHandler {
         TermNotFoundException::class,
         ContributorNotFoundException::class,
         FeatureNotFoundException::class,
+        io.lexstore.org.CredentialNotFoundException::class,
+        io.lexstore.glossary.GlossaryEntryNotFoundException::class,
     )
     fun notFound(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.NOT_FOUND, "Not found", ex.message)

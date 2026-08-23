@@ -4,6 +4,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { authInterceptor, provideAuth } from 'angular-auth-oidc-client';
 
 import { routes } from './app.routes';
+import { errorInterceptor } from './core/error.interceptor';
 import { e2eTokenInterceptor } from './core/e2e-token.interceptor';
 import { runtimeConfig } from './core/runtime-config';
 
@@ -11,7 +12,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch(), withInterceptors([e2eTokenInterceptor, authInterceptor()])),
+    provideHttpClient(withFetch(), withInterceptors([e2eTokenInterceptor, errorInterceptor, authInterceptor()])),
     provideAuth({
       config: {
         authority: runtimeConfig().authority,

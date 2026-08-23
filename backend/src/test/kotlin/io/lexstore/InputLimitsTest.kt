@@ -44,6 +44,19 @@ class InputLimitsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `deleting something that does not exist is a not-found, not a server error`() {
+        val missing = "00000000-0000-0000-0000-000000000099"
+        assertThrows<HttpClientErrorException.NotFound> {
+            client.delete().uri("/api/projects/$MOSAIC_WEB/glossary/$missing")
+                .retrieve().toBodilessEntity()
+        }
+        assertThrows<HttpClientErrorException.NotFound> {
+            client.delete().uri("/api/org/credentials/$missing")
+                .retrieve().toBodilessEntity()
+        }
+    }
+
+    @Test
     fun `a value within the limit is still accepted`() {
         client.post().uri("/api/projects/$MOSAIC_WEB/terms")
             .body(mapOf("key" to "limits.ok", "source" to "A normal source string"))

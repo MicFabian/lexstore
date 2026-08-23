@@ -160,3 +160,28 @@ test.describe('accessibility', () => {
     expect(unnamed).toBe(0);
   });
 });
+
+test.describe('failed requests', () => {
+  test('a failed load says so instead of looking empty', async ({ page }) => {
+    await page.route('**/api/org/usage*', (r) => r.fulfill({ status: 500, body: '{}' }));
+    await page.goto('/organisation');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('.toast')).toContainText('went wrong', { timeout: 10000 });
+  });
+
+  test('a screen that reports failure itself does not say it twice', async ({ page }) => {
+    await page.goto('/editor');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.trow .tgt').first().click();
+    await expect(page.locator('.inspector')).toBeVisible();
+
+    // Save enables itself only once there is something to save.
+    await page.locator('.inspector textarea').first().fill('Etwas zum Speichern');
+    await page.route('**/languages/*/translations/*', (r) =>
+      r.fulfill({ status: 500, body: '{}' }),
+    );
+    await page.locator('.inspector').getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(page.locator('.toast')).toHaveCount(1, { timeout: 10000 });
+  });
+});
