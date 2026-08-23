@@ -30,6 +30,7 @@ import {
   CredentialView,
   UsageSummary,
   AgentActivityRow,
+  OrgApiKeyCreated,
   ProofreadResult,
   GlossaryEntryView,
   FeatureView,
@@ -220,6 +221,22 @@ export class ApiService {
 
   updateAgentPlan(body: { plan: string | null; monthlyQuota?: number }): Observable<OrganisationView> {
     return this.http.put<OrganisationView>(`${BASE}/org/agent`, body);
+  }
+
+  orgApiKeys(): Observable<ApiKeyView[]> {
+    return this.http.get<ApiKeyView[]>(`${BASE}/org/api-keys`);
+  }
+
+  createOrgApiKey(body: {
+    label: string;
+    scope: string;
+    test: boolean;
+  }): Observable<OrgApiKeyCreated> {
+    return this.http.post<OrgApiKeyCreated>(`${BASE}/org/api-keys`, body);
+  }
+
+  revokeOrgApiKey(id: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/org/api-keys/${id}`);
   }
 
   usage(days = 30): Observable<UsageSummary> {

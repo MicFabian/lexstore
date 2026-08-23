@@ -31,6 +31,7 @@ class SecurityConfig(
     private val clientId: String,
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private val issuerUri: String,
+    private val apiKeyAuthFilter: io.lexstore.apikey.ApiKeyAuthFilter,
 ) {
 
     /**
@@ -82,6 +83,12 @@ class SecurityConfig(
             .oauth2ResourceServer { rs ->
                 rs.jwt { it.jwtAuthenticationConverter(jwtAuthConverter()) }
             }
+            // Runs before the bearer-token filter so a request carrying only an
+            // X-API-Key is authenticated rather than rejected.
+            .addFilterBefore(
+                apiKeyAuthFilter,
+                org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter::class.java,
+            )
         return http.build()
     }
 

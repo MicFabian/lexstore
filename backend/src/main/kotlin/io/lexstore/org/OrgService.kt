@@ -27,6 +27,7 @@ class OrgService(
     private val projects: ProjectRepository,
     private val requests: TranslationRequestRepository,
     private val cipher: SecretCipher,
+    private val apiKeys: io.lexstore.apikey.ApiKeyService,
     private val access: OrgAccess,
     private val currentUser: CurrentUser,
 ) {
@@ -143,6 +144,26 @@ class OrgService(
             org.agentUsedThisPeriod = 0
         }
         return current()
+    }
+
+    fun apiKeys(): List<io.lexstore.apikey.ApiKeyView> {
+        val orgId = access.currentOrgId()
+        access.assertAdmin(orgId)
+        return apiKeys.listForOrg(orgId)
+    }
+
+    @Transactional
+    fun createApiKey(req: io.lexstore.apikey.GenerateApiKeyRequest): io.lexstore.apikey.ApiKeyCreated {
+        val orgId = access.currentOrgId()
+        access.assertAdmin(orgId)
+        return apiKeys.generateForOrg(orgId, req)
+    }
+
+    @Transactional
+    fun revokeApiKey(id: UUID) {
+        val orgId = access.currentOrgId()
+        access.assertAdmin(orgId)
+        apiKeys.revokeForOrg(orgId, id)
     }
 
     /** What the organisation's AI spend was used for, newest first. */

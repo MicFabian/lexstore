@@ -66,3 +66,53 @@ test.describe('organisation', () => {
     await expect(page.locator('.otable')).toContainText('@lexstore.io');
   });
 });
+
+test.describe('organisation API access', () => {
+  test('an org-wide key is created, shown once, and revocable', async ({ page }) => {
+    await page.goto('/organisation');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'API access' }).click();
+
+    const label = `Pipeline ${Date.now()}`;
+    await page.locator('.keyform .input').fill(label);
+    await page.locator('.keyform lx-btn button').click();
+
+    // The secret appears once, in full, and only here.
+    const secret = await page.locator('.newkey code').innerText();
+    expect(secret).toMatch(/^tl_(live|test)_/);
+
+    // The table lists it masked, never in full.
+    await expect(page.locator('.otable')).toContainText(label);
+    await expect(page.locator('.otable')).not.toContainText(secret);
+
+    await page
+      .locator('.otable tr', { hasText: label })
+      .locator('button', { hasText: 'Revoke' })
+      .click();
+    await expect(page.locator('.otable, .muted').first()).not.toContainText(label);
+  });
+
+  test('an org key reads a project it was never named on', async ({ page }) => {
+    await page.goto('/organisation');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'API access' }).click();
+
+    await page.locator('.keyform .input').fill(`Reach ${Date.now()}`);
+    await page.locator('.keyform lx-btn button').click();
+    const secret = await page.locator('.newkey code').innerText();
+
+    const reach = await page.evaluate(async (secret) => {
+      const token = localStorage.getItem('lx.e2e.token');
+      const projects = await (
+        await fetch('/api/projects', { headers: { authorization: `Bearer ${token}` } })
+      ).json();
+      const other = projects.find((p: { code: string }) => p.code === 'mosaic-ios');
+      const res = await fetch(`/api/projects/${other.id}/languages/de/translations`, {
+        headers: { 'X-API-Key': secret },
+      });
+      return res.status;
+    }, secret);
+
+    expect(reach).toBe(200);
+  });
+});

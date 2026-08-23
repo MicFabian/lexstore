@@ -35,8 +35,24 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
     fun list(projectId: UUID): List<ApiKeyView> =
         keys.findByProjectIdOrderByCreatedLabel(projectId).map(::toView)
 
+    /** A key for every project the organisation owns, rather than just one. */
     @Transactional
-    fun generate(projectId: UUID, req: GenerateApiKeyRequest): ApiKeyCreated {
+    fun generateForOrg(orgId: UUID, req: GenerateApiKeyRequest): ApiKeyCreated =
+        create(projectId = null, orgId = orgId, req = req)
+
+    fun listForOrg(orgId: UUID): List<ApiKeyView> =
+        keys.findByOrgId(orgId).map { toView(it).copy(reach = "organisation") }
+
+    @Transactional
+    fun revokeForOrg(orgId: UUID, id: UUID) {
+        keys.findById(id).ifPresent { if (it.orgId == orgId) keys.delete(it) }
+    }
+
+    @Transactional
+    fun generate(projectId: UUID, req: GenerateApiKeyRequest): ApiKeyCreated =
+        create(projectId = projectId, orgId = null, req = req)
+
+    private fun create(projectId: UUID?, orgId: UUID?, req: GenerateApiKeyRequest): ApiKeyCreated {
         val scope = parseScope(req.scope)
         val prefix = if (req.test) "tl_test_" else "tl_live_"
         val body = randomHex(32)
@@ -45,6 +61,7 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
         val saved = keys.save(
             ApiKey(
                 projectId = projectId,
+                orgId = orgId,
                 label = req.label,
                 prefix = prefix,
                 tail = tail,
@@ -73,7 +90,9 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
         tail = k.tail,
         scope = scopeLabel(k.scope),
         created = k.createdLabel,
-        used = k.lastUsedLabel,
+        // Derived from the stamp the auth filter writes, so it reflects real
+        // use rather than a label fixed when the key was made.
+        used = k.lastUsedAt?.let { io.lexstore.common.RelativeTime.format(it) } ?: "Never",
         test = k.prefix.contains("test"),
     )
 }

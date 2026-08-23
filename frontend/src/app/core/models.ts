@@ -319,6 +319,13 @@ export interface OrgMemberView {
   role: string;
 }
 
+export interface OrgApiKeyCreated {
+  id: string;
+  label: string;
+  secret: string;
+  scope: string;
+}
+
 export interface CredentialView {
   id: string;
   provider: string;

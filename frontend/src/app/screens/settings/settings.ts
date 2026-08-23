@@ -67,7 +67,8 @@ interface IntegrationItem {
                           </div>
                         </div>
                         <div style="text-align:right;flex:none;min-width:150px">
-                          <div class="muted" style="font-size:12px">Created {{ k.created }}</div>
+                          <div class="muted" style="font-size:12px">Last used {{ k.used }}</div>
+                          <div class="muted" style="font-size:11.5px;margin-top:2px">Created {{ k.created }}</div>
                           <button class="btn btn--subtle btn--sm" style="color:var(--lx-danger);margin-top:4px" (click)="pendingRevoke.set(k)">
                             <lx-icon name="Trash2" [size]="14" />Revoke
                           </button>

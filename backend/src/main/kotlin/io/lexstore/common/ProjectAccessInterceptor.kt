@@ -24,6 +24,18 @@ class ProjectAccessInterceptor(private val access: ProjectAccess) : HandlerInter
             as? Map<String, String> ?: return true
         val raw = vars["projectId"] ?: return true
         val projectId = runCatching { UUID.fromString(raw) }.getOrNull() ?: return true
+
+        // A read-only key is refused every unsafe method here rather than only
+        // by @PreAuthorize, so the restriction holds wherever method security
+        // is not in play.
+        val auth = org.springframework.security.core.context.SecurityContextHolder
+            .getContext().authentication
+        if (auth is io.lexstore.apikey.ApiKeyAuthentication &&
+            auth.scope == io.lexstore.common.ApiKeyScope.READ_ONLY &&
+            request.method !in SAFE_METHODS
+        ) {
+            throw ProjectAccessDeniedException(projectId)
+        }
         val required = requiredRoles(handler)
         if (required.isEmpty()) access.assertMember(projectId) else access.assertRole(projectId, *required)
         return true
@@ -36,6 +48,8 @@ class ProjectAccessInterceptor(private val access: ProjectAccess) : HandlerInter
         return (onMethod ?: onClass)?.value ?: emptyArray()
     }
 }
+
+private val SAFE_METHODS = setOf("GET", "HEAD", "OPTIONS")
 
 @Configuration
 class ProjectAccessConfig(private val interceptor: ProjectAccessInterceptor) : WebMvcConfigurer {

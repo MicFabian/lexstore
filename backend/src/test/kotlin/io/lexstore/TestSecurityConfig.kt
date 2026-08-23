@@ -13,10 +13,23 @@ import org.springframework.security.web.SecurityFilterChain
  */
 @TestConfiguration
 class TestSecurityConfig {
+    /**
+     * The API-key filter runs here too. Without it a request carrying a key
+     * would arrive unauthenticated, which the access checks treat as a platform
+     * admin — and every API-key restriction would pass its test while being
+     * inert in production.
+     */
     @Bean
-    fun testFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun testFilterChain(
+        http: HttpSecurity,
+        apiKeyAuthFilter: io.lexstore.apikey.ApiKeyAuthFilter,
+    ): SecurityFilterChain {
         http.csrf { it.disable() }
             .authorizeHttpRequests { it.anyRequest().permitAll() }
+            .addFilterBefore(
+                apiKeyAuthFilter,
+                org.springframework.security.web.authentication.AnonymousAuthenticationFilter::class.java,
+            )
         return http.build()
     }
 }

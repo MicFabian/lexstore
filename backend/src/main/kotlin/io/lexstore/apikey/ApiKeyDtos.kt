@@ -12,6 +12,9 @@ data class ApiKeyView(
     val created: String,
     val used: String,
     val test: Boolean,
+    /** "project" or "organisation"; an organisation key reaches every project. */
+    val reach: String = "project",
+    val projectName: String? = null,
 )
 
 /** Returned only once, immediately after generation, with the full secret. */

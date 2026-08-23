@@ -7,13 +7,15 @@ import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
 import {
   AgentActivityRow,
+  ApiKeyView,
+  OrgApiKeyCreated,
   CredentialView,
   OrgMemberView,
   OrganisationView,
   UsageSummary,
 } from '../../core/models';
 
-type Tab = 'overview' | 'keys' | 'activity' | 'members';
+type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
 
 @Component({
   selector: 'lx-org-screen',
@@ -152,6 +154,63 @@ type Tab = 'overview' | 'keys' | 'activity' | 'members';
           }
         }
 
+        @case ('access') {
+          <p class="muted">
+            An organisation key reaches every project here. A key scoped to a single
+            project is created in that project's settings instead.
+          </p>
+
+          @if (newKey(); as k) {
+            <div class="newkey">
+              <div class="eyebrow">Copy this now — it is not shown again</div>
+              <code>{{ k.secret }}</code>
+            </div>
+          }
+
+          <form class="keyform" (submit)="createApiKey($event)">
+            <input
+              class="input"
+              placeholder="What is it for? e.g. Release pipeline"
+              [value]="keyLabel()"
+              (input)="keyLabel.set($any($event.target).value)"
+            />
+            <select [value]="keyScope()" (change)="keyScope.set($any($event.target).value)">
+              <option value="Read only">Read only</option>
+              <option value="Read & write">Read &amp; write</option>
+            </select>
+            <lx-btn variant="primary" [disabled]="!keyLabel() || creatingKey()">
+              {{ creatingKey() ? 'Creating…' : 'Create key' }}
+            </lx-btn>
+          </form>
+
+          @if (apiKeys().length) {
+            <table class="otable">
+              <thead><tr><th>Label</th><th>Scope</th><th>Key</th><th>Last used</th><th></th></tr></thead>
+              <tbody>
+                @for (k of apiKeys(); track k.id) {
+                  <tr>
+                    <td>{{ k.label }}</td>
+                    <td>
+                      <span [class]="'chip ' + (k.scope === 'Read only' ? 'chip--neutral' : 'chip--translated')">
+                        {{ k.scope }}
+                      </span>
+                    </td>
+                    <td><code>{{ k.prefix }}••••{{ k.tail }}</code></td>
+                    <td class="muted">{{ k.used }}<br /><span class="small">added {{ k.created }}</span></td>
+                    <td style="text-align:right">
+                      <button class="btn btn--subtle btn--sm" (click)="revokeApiKey(k)">
+                        <lx-icon name="Trash2" [size]="14" />Revoke
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="muted">No organisation keys yet.</p>
+          }
+        }
+
         @case ('activity') {
           <p class="muted">Every AI request this organisation made, newest first.</p>
           @if (activity().length) {
@@ -234,6 +293,19 @@ type Tab = 'overview' | 'keys' | 'activity' | 'members';
     .spark__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; flex: 1; height: 100%; }
     .spark__col i { display: block; width: 100%; background: var(--lx-accent); border-radius: 3px 3px 0 0; min-height: 2px; }
     .spark__col span { font-size: 10px; color: var(--lx-muted); }
+    .newkey {
+      border: 1px solid var(--lx-accent);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 4px;
+      background: var(--lx-accent-soft);
+    }
+    .newkey code {
+      display: block;
+      margin-top: 6px;
+      font-size: 13px;
+      word-break: break-all;
+    }
   `,
 })
 export class OrgScreen implements OnInit {
@@ -244,6 +316,7 @@ export class OrgScreen implements OnInit {
   protected readonly tabs = [
     { id: 'overview' as const, label: 'Usage' },
     { id: 'keys' as const, label: 'AI keys' },
+    { id: 'access' as const, label: 'API access' },
     { id: 'activity' as const, label: 'Activity' },
     { id: 'members' as const, label: 'Members' },
   ];
@@ -262,6 +335,52 @@ export class OrgScreen implements OnInit {
   protected readonly saving = signal(false);
   protected readonly pendingDelete = signal<CredentialView | null>(null);
 
+  protected readonly apiKeys = signal<ApiKeyView[]>([]);
+  protected readonly keyLabel = signal('');
+  protected readonly keyScope = signal('Read only');
+  protected readonly creatingKey = signal(false);
+  protected readonly newKey = signal<OrgApiKeyCreated | null>(null);
+
+  protected createApiKey(e: Event): void {
+    e.preventDefault();
+    const label = this.keyLabel().trim();
+    if (!label || this.creatingKey()) return;
+    this.creatingKey.set(true);
+    this.api.createOrgApiKey({ label, scope: this.keyScope(), test: false }).subscribe({
+      next: (k) => {
+        this.creatingKey.set(false);
+        this.keyLabel.set('');
+        this.newKey.set(k);
+        this.loadApiKeys();
+      },
+      error: (err) => {
+        this.creatingKey.set(false);
+        this.toast.show({
+          message: err?.error?.detail ?? 'That key could not be created.',
+          tone: 'error',
+        });
+      },
+    });
+  }
+
+  protected revokeApiKey(k: ApiKeyView): void {
+    this.api.revokeOrgApiKey(k.id).subscribe({
+      next: () => {
+        if (this.newKey()?.id === k.id) this.newKey.set(null);
+        this.loadApiKeys();
+        this.toast.show('Key revoked');
+      },
+      error: () => this.toast.show({ message: 'That key could not be revoked.', tone: 'error' }),
+    });
+  }
+
+  private loadApiKeys(): void {
+    this.api.orgApiKeys().subscribe({
+      next: (k) => this.apiKeys.set(k),
+      error: () => this.apiKeys.set([]),
+    });
+  }
+
   private readonly busiestDay = computed(() =>
     Math.max(1, ...(this.usage()?.byDay ?? []).map((d) => d.requests)),
   );
@@ -272,6 +391,7 @@ export class OrgScreen implements OnInit {
     this.api.agentActivity(50).subscribe((a) => this.activity.set(a));
     this.api.orgMembers().subscribe((m) => this.members.set(m));
     this.loadKeys();
+    this.loadApiKeys();
   }
 
   protected barHeight(requests: number): number {

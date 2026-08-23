@@ -44,6 +44,20 @@ class OrgController(private val service: OrgService) {
     fun updateAgentPlan(@RequestBody req: UpdateAgentPlanRequest): OrganisationView =
         service.updateAgentPlan(req)
 
+    /** API keys that reach every project this organisation owns. */
+    @GetMapping("/api-keys")
+    fun apiKeys(): List<io.lexstore.apikey.ApiKeyView> = service.apiKeys()
+
+    @PostMapping("/api-keys")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createApiKey(
+        @Valid @RequestBody req: io.lexstore.apikey.GenerateApiKeyRequest,
+    ): io.lexstore.apikey.ApiKeyCreated = service.createApiKey(req)
+
+    @DeleteMapping("/api-keys/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun revokeApiKey(@PathVariable id: UUID) = service.revokeApiKey(id)
+
     @GetMapping("/usage")
     fun usage(@RequestParam(defaultValue = "30") days: Int): UsageSummary = service.usage(days)
 

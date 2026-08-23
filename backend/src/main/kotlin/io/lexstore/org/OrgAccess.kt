@@ -27,6 +27,7 @@ class OrgAccess(
     }
 
     fun assertAdmin(orgId: UUID) {
+        rejectApiKey()
         if (isPlatformAdmin()) return
         val email = currentUser.identity().email
             ?: throw OrgAccessDeniedException("Sign in to manage an organisation.")
@@ -37,11 +38,24 @@ class OrgAccess(
     }
 
     fun assertMember(orgId: UUID) {
+        rejectApiKey()
         if (isPlatformAdmin()) return
         val email = currentUser.identity().email
             ?: throw OrgAccessDeniedException("Sign in to view this organisation.")
         members.findByOrgIdAndEmailIgnoreCase(orgId, email)
             ?: throw OrgAccessDeniedException("You do not belong to this organisation.")
+    }
+
+    /**
+     * An API key belongs to one project and stands for no person. It must not
+     * reach organisation settings, which hold every stored provider key.
+     */
+    private fun rejectApiKey() {
+        val auth = org.springframework.security.core.context.SecurityContextHolder
+            .getContext().authentication
+        if (auth is io.lexstore.apikey.ApiKeyAuthentication) {
+            throw OrgAccessDeniedException("An API key cannot manage an organisation.")
+        }
     }
 
     /**

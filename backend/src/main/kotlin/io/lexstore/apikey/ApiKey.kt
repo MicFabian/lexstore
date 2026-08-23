@@ -16,7 +16,11 @@ class ApiKey(
     val id: UUID = UUID.randomUUID(),
 
     @Column(name = "project_id", nullable = false)
-    val projectId: UUID,
+    val projectId: UUID? = null,
+
+    /** Set instead of projectId for a key that spans the whole organisation. */
+    @Column(name = "org_id")
+    val orgId: UUID? = null,
 
     @Column(nullable = false)
     var label: String,
@@ -44,4 +48,8 @@ class ApiKey(
 
     @Column(name = "last_used_label", nullable = false)
     var lastUsedLabel: String = "—",
+
+    /** Stamped by the auth filter; null until the key is first used. */
+    @Column(name = "last_used_at")
+    var lastUsedAt: java.time.Instant? = null,
 )
