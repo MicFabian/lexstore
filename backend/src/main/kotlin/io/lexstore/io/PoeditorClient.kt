@@ -37,7 +37,10 @@ class PoeditorClient(
     private val log = LoggerFactory.getLogger(javaClass)
     private val client = io.lexstore.common.OutboundHttp.client(baseUrl)
 
-    /** Serializes calls across all imports so one account never bursts. */
+    /**
+     * Guards the rate-limit bookkeeping — not the calls themselves. Requests
+     * still start at least [minIntervalMs] apart, but they overlap in flight.
+     */
     private val throttle = ReentrantLock()
     private var lastCallAt = 0L
 
@@ -121,12 +124,30 @@ class PoeditorClient(
         return base + java.util.concurrent.ThreadLocalRandom.current().nextLong(0, minIntervalMs)
     }
 
-    private fun exchange(path: String, form: LinkedMultiValueMap<String, String>): Response {
+    /**
+     * Claims the next slot in the rate limit and waits for it.
+     *
+     * The lock covers only the bookkeeping, never the network call: holding it
+     * across the exchange meant one stalled POEditor request blocked every
+     * other import in the process.
+     */
+    private fun awaitSlot() {
+        val waitFor: Long
         throttle.lock()
         try {
-            val since = System.currentTimeMillis() - lastCallAt
-            if (since < minIntervalMs) Thread.sleep(minIntervalMs - since)
+            val now = System.currentTimeMillis()
+            val earliest = lastCallAt + minIntervalMs
+            waitFor = (earliest - now).coerceAtLeast(0)
+            lastCallAt = maxOf(now, earliest)
+        } finally {
+            throttle.unlock()
+        }
+        if (waitFor > 0) Thread.sleep(waitFor)
+    }
 
+    private fun exchange(path: String, form: LinkedMultiValueMap<String, String>): Response {
+        awaitSlot()
+        run {
             var limited = false
             var retryAfterMs: Long? = null
             val body = client.post()
@@ -139,10 +160,7 @@ class PoeditorClient(
                     if (limited) retryAfterMs = retryAfterOf(response.headers.getFirst("Retry-After"))
                     if (limited || code.isError) null else response.bodyTo(JsonNode::class.java)
                 }
-            lastCallAt = System.currentTimeMillis()
             return Response(body, limited, retryAfterMs)
-        } finally {
-            throttle.unlock()
         }
     }
 }
