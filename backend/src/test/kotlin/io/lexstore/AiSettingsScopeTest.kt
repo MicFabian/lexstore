@@ -17,6 +17,7 @@ class AiSettingsScopeTest : IntegrationTestBase() {
     @Autowired private lateinit var ai: AiTranslationService
     @Autowired private lateinit var settings: AiSettingsRepository
     @Autowired private lateinit var organisations: OrganisationRepository
+    @Autowired private lateinit var requests: io.lexstore.ai.TranslationRequestRepository
 
     @Test
     fun `each organisation configures its own provider`() {
@@ -32,6 +33,33 @@ class AiSettingsScopeTest : IntegrationTestBase() {
 
         // Changing one leaves the other on its own value.
         assertThat(ai.settingsFor(second.id).provider).isEqualTo("mock")
+    }
+
+    @Test
+    fun `the request log shows the caller's organisation only`() {
+        val other = organisations.save(
+            Organisation(name = "Other", slug = "other-${System.nanoTime()}"),
+        )
+        requests.save(
+            io.lexstore.ai.TranslationRequestLog(
+                orgId = other.id,
+                sourceText = "Another organisation's string",
+                sourceLang = "en",
+                targetLang = "de",
+                provider = "mock",
+                model = "m",
+                resultText = "Nicht sichtbar",
+                cacheHit = false,
+                latencyMs = 1,
+                inputTokens = 1,
+                outputTokens = 1,
+                status = "ok",
+            ),
+        )
+
+        val visible = ai.requests(0, 200)
+        assertThat(visible.map { it.sourceText })
+            .doesNotContain("Another organisation's string")
     }
 
     @Test

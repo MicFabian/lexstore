@@ -116,8 +116,13 @@ class AiTranslationService(
     // ---------------- Request log ----------------
 
     @Transactional(readOnly = true)
+    /**
+     * The caller's own organisation only. The rows carry source and translated
+     * text, and an admin of one organisation has no business reading another's
+     * even on a shared instance.
+     */
     fun requests(page: Int, size: Int): List<RequestLogView> =
-        requests.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size)).map {
+        requests.findByOrgIdOrderByCreatedAtDesc(orgAccess.currentOrgId(), PageRequest.of(page, size)).map {
             RequestLogView(
                 id = it.id,
                 sourceText = it.sourceText,
