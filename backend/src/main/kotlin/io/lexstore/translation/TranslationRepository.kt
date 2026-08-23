@@ -23,6 +23,17 @@ interface TranslationRepository : JpaRepository<Translation, UUID> {
     fun findByTermIdInAndLanguageCode(termIds: Collection<UUID>, languageCode: String): List<Translation>
     fun findByTermIdAndLanguageCode(termId: UUID, languageCode: String): Translation?
 
+    /** Removes a language's translations across a project, when it is deleted. */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(
+        """
+        delete from Translation tr
+        where tr.languageCode = :languageCode
+          and tr.termId in (select t.id from Term t where t.projectId = :projectId)
+        """,
+    )
+    fun deleteByProjectAndLanguage(projectId: UUID, languageCode: String): Int
+
     @Query(
         """
         select t.projectId as projectId,

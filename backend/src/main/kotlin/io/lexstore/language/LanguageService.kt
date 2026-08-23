@@ -19,6 +19,8 @@ class LanguageService(
     private val translations: TranslationRepository,
     private val contributors: ContributorRepository,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
     fun list(projectId: UUID): List<LanguageView> {
         val langs = languages.findByProjectIdOrderByName(projectId)
         val termCount = terms.countByProjectId(projectId).toInt()
@@ -56,7 +58,18 @@ class LanguageService(
     }
 
     @Transactional
+    /**
+     * Removing a language removes its translations with it.
+     *
+     * They referenced the language by code, not by row, so they survived the
+     * delete and reappeared if the same code was added again — someone
+     * resetting a language got their old values back without asking.
+     */
     fun remove(projectId: UUID, code: String) {
-        languages.findByProjectIdAndCode(projectId, code)?.let { languages.delete(it) }
+        languages.findByProjectIdAndCode(projectId, code)?.let {
+            val removed = translations.deleteByProjectAndLanguage(projectId, code)
+            languages.delete(it)
+            if (removed > 0) log.info("Removed {} translations along with language {}", removed, code)
+        }
     }
 }
