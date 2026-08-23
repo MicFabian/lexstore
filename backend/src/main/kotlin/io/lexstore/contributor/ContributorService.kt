@@ -71,7 +71,9 @@ class ContributorService(
         role = c.role.name.lowercase().replaceFirstChar { it.uppercase() },
         langs = c.languageList,
         avatar = c.avatarIndex,
-        active = c.lastActive,
+        // list() replaces this with real activity; a freshly invited person has
+        // none yet, which is what the stored value says.
+        active = c.lastActive.ifBlank { "No activity yet" },
     )
 }
 

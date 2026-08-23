@@ -46,6 +46,9 @@ class ApiKey(
     @Column(name = "created_label", nullable = false)
     var createdLabel: String,
 
+    @Column(name = "created_at", nullable = false)
+    val createdAt: java.time.Instant = java.time.Instant.now(),
+
     @Column(name = "last_used_label", nullable = false)
     var lastUsedLabel: String = "—",
 

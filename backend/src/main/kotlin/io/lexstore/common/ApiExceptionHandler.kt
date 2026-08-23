@@ -56,6 +56,10 @@ class ApiExceptionHandler {
     fun conflict(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.CONFLICT, "Conflict", ex.message)
 
+    @ExceptionHandler(ApiKeyNotAllowedException::class)
+    fun apiKeyNotAllowed(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.FORBIDDEN, "Not allowed for an API key", ex.message)
+
     @ExceptionHandler(ReadOnlyKeyException::class)
     fun readOnlyKey(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.FORBIDDEN, "Read-only key", ex.message)

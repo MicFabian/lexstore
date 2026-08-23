@@ -86,6 +86,77 @@ class ApiKeyAuthTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `a key must name a project to spend on AI, and cannot read across projects`() {
+        val secret = newKey(MOSAIC_WEB, "Read & write")
+
+        // Spending without naming a project would be unattributed and uncharged.
+        val ex = assertThrows<HttpClientErrorException.Forbidden> {
+            client.post().uri("/api/ai/translate")
+                .header("X-API-Key", secret)
+                .body(mapOf("sourceText" to "Probe", "sourceLang" to "en", "targetLang" to "de"))
+                .retrieve().body(mapType)
+        }
+        assertThat(ex.responseBodyAsString).contains("projectId")
+
+        // Naming its own project works.
+        val ok = client.post().uri("/api/ai/translate")
+            .header("X-API-Key", secret)
+            .body(
+                mapOf(
+                    "sourceText" to "Probe",
+                    "sourceLang" to "en",
+                    "targetLang" to "de",
+                    "projectId" to MOSAIC_WEB,
+                ),
+            )
+            .retrieve().body(mapType)!!
+        assertThat(ok["text"]).isNotNull()
+
+        // Naming someone else's project does not.
+        assertThrows<HttpClientErrorException.Forbidden> {
+            client.post().uri("/api/ai/translate")
+                .header("X-API-Key", secret)
+                .body(
+                    mapOf(
+                        "sourceText" to "Probe",
+                        "sourceLang" to "en",
+                        "targetLang" to "de",
+                        "projectId" to MOSAIC_IOS,
+                    ),
+                )
+                .retrieve().body(mapType)
+        }
+
+        // The cache and settings hold every project's text.
+        for (path in listOf("/api/ai/settings", "/api/ai/cache")) {
+            assertThrows<HttpClientErrorException.Forbidden> {
+                client.get().uri(path).header("X-API-Key", secret).retrieve().body(listType)
+            }
+        }
+    }
+
+    @Test
+    fun `a key reports when it was created and used, not a fixed label`() {
+        val created = client.post().uri("/api/projects/$MOSAIC_WEB/api-keys")
+            .body(mapOf("label" to "Timestamps", "scope" to "Read only", "test" to true))
+            .retrieve().body(mapType)!!
+        val secret = created["secret"] as String
+
+        fun view() = client.get().uri("/api/projects/$MOSAIC_WEB/api-keys")
+            .retrieve().body(listType)!!
+            .first { it["label"] == "Timestamps" }
+
+        assertThat(view()["created"]).isEqualTo("just now")
+        assertThat(view()["used"]).isEqualTo("Never")
+
+        client.get().uri("/api/projects/$MOSAIC_WEB/languages/de/translations")
+            .header("X-API-Key", secret)
+            .retrieve().body(mapType)
+
+        assertThat(view()["used"]).isEqualTo("just now")
+    }
+
+    @Test
     fun `an organisation key reaches every project the organisation owns`() {
         val secret = client.post().uri("/api/org/api-keys")
             .body(mapOf("label" to "Org CI", "scope" to "Read only", "test" to true))

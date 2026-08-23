@@ -9,6 +9,8 @@ import java.util.UUID
 class ProjectAccessDeniedException(projectId: UUID) :
     RuntimeException("You do not have access to project $projectId.")
 
+class ApiKeyNotAllowedException(message: String) : RuntimeException(message)
+
 class ReadOnlyKeyException :
     RuntimeException("This API key is read-only. Create a read & write key to change translations.")
 
@@ -65,6 +67,11 @@ class ProjectAccess(
      * so an unauthenticated context means the security chain is disabled, as
      * it is for the unauthenticated integration tests.
      */
+    /** Refuses a request made with an API key, with a reason the caller can act on. */
+    fun rejectApiKey(reason: String) {
+        if (apiKey() != null) throw ApiKeyNotAllowedException(reason)
+    }
+
     private fun apiKey(): io.lexstore.apikey.ApiKeyAuthentication? =
         SecurityContextHolder.getContext().authentication as? io.lexstore.apikey.ApiKeyAuthentication
 

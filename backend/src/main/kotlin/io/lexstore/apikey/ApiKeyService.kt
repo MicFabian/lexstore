@@ -89,7 +89,7 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
         prefix = k.prefix,
         tail = k.tail,
         scope = scopeLabel(k.scope),
-        created = k.createdLabel,
+        created = io.lexstore.common.RelativeTime.format(k.createdAt),
         // Derived from the stamp the auth filter writes, so it reflects real
         // use rather than a label fixed when the key was made.
         used = k.lastUsedAt?.let { io.lexstore.common.RelativeTime.format(it) } ?: "Never",

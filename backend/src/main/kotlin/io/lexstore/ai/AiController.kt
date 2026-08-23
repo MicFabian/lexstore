@@ -29,17 +29,38 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/api/ai")
-class AiController(private val service: AiTranslationService) {
+class AiController(
+    private val service: AiTranslationService,
+    private val access: io.lexstore.common.ProjectAccess,
+) {
 
+    /**
+     * The playground. An API key must name the project it is spending against,
+     * so the call is attributed and charged like any other; a person may leave
+     * it out and translate against the environment's configuration.
+     */
     @PostMapping("/translate")
-    fun translate(@Valid @RequestBody req: TranslateRequest): TranslateResponse = service.translate(req)
+    fun translate(@Valid @RequestBody req: TranslateRequest): TranslateResponse {
+        req.projectId?.let { access.assertMember(it) } ?: access.rejectApiKey(
+            "An API key must include projectId when translating, so the cost is attributed.",
+        )
+        return service.translate(req)
+    }
 
+    /**
+     * The log and the cache span every project, so an API key — which stands for
+     * one project — must not read them. People see them under the roles they
+     * already hold.
+     */
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/requests")
     fun requests(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "50") size: Int,
-    ): List<RequestLogView> = service.requests(page, size.coerceIn(1, 200))
+    ): List<RequestLogView> {
+        access.rejectApiKey("The request log spans every project; read it as a person.")
+        return service.requests(page, size.coerceIn(1, 200))
+    }
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/cache")
@@ -47,7 +68,10 @@ class AiController(private val service: AiTranslationService) {
         @RequestParam(required = false) q: String?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "50") size: Int,
-    ): List<CacheEntryView> = service.cacheEntries(q, page, size.coerceIn(1, 200))
+    ): List<CacheEntryView> {
+        access.rejectApiKey("The cache spans every project; read it as a person.")
+        return service.cacheEntries(q, page, size.coerceIn(1, 200))
+    }
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @GetMapping("/cache/stats")
@@ -74,7 +98,10 @@ class AiController(private val service: AiTranslationService) {
     }
 
     @GetMapping("/settings")
-    fun settings(): AiSettingsView = service.settingsView()
+    fun settings(): AiSettingsView {
+        access.rejectApiKey("AI settings belong to the workspace, not to a key.")
+        return service.settingsView()
+    }
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @PutMapping("/settings")
