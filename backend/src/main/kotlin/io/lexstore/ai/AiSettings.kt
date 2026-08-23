@@ -13,6 +13,10 @@ class AiSettings(
     @Id
     val id: Int = 1,
 
+    /** Each organisation configures its own provider, model and cache policy. */
+    @Column(name = "org_id")
+    var orgId: java.util.UUID? = null,
+
     @Column(nullable = false)
     var provider: String = "mock",
 
@@ -36,4 +40,9 @@ class AiSettings(
     var cacheTtlHours: Int = 720,
 )
 
-interface AiSettingsRepository : JpaRepository<AiSettings, Int>
+interface AiSettingsRepository : JpaRepository<AiSettings, Int> {
+    fun findByOrgId(orgId: java.util.UUID): AiSettings?
+
+    @org.springframework.data.jpa.repository.Query("select coalesce(max(s.id), 0) from AiSettings s")
+    fun highestId(): Int
+}

@@ -50,7 +50,8 @@ class ProofreadService(
             )
         }
 
-        val settings = settingsSource.settings()
+        val settings = credentials.orgOf(projectId)?.let { settingsSource.settingsFor(it) }
+            ?: settingsSource.settings()
         val resolved = credentials.resolve(projectId, settings.provider)
         val reviewer: Translator? = if (resolved == null) null else when (settings.provider) {
             "claude" -> claude

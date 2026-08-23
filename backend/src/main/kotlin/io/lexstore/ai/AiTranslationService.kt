@@ -18,6 +18,7 @@ class AiTranslationService(
     private val gemini: GeminiTranslator,
     private val openai: OpenAiTranslator,
     private val credentials: io.lexstore.org.CredentialResolver,
+    private val orgAccess: io.lexstore.org.OrgAccess,
     @org.springframework.context.annotation.Lazy private val self: AiTranslationService,
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
@@ -31,7 +32,9 @@ class AiTranslationService(
      */
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     fun translate(req: TranslateRequest): TranslateResponse {
-        val settings = settings()
+        // The project decides whose settings apply: an API key has no person to
+        // read an organisation from.
+        val settings = credentials.orgOf(req.projectId)?.let { settingsFor(it) } ?: settings()
         val model = req.model ?: settings.model
         val temperature = req.temperature ?: settings.temperature
         val tone = req.tone ?: settings.tone
@@ -183,9 +186,18 @@ class AiTranslationService(
 
     // ---------------- Settings ----------------
 
+    /**
+     * Settings for the caller's organisation, created on first use. Sharing one
+     * row would let one organisation change the provider, model and cache
+     * policy of every other on the instance.
+     */
     @Transactional
-    fun settings(): AiSettings =
-        settingsRepo.findById(1).orElseGet { settingsRepo.save(AiSettings()) }
+    fun settings(): AiSettings = settingsFor(orgAccess.currentOrgId())
+
+    @Transactional
+    fun settingsFor(orgId: java.util.UUID): AiSettings =
+        settingsRepo.findByOrgId(orgId)
+            ?: settingsRepo.save(AiSettings(id = settingsRepo.highestId() + 1, orgId = orgId))
 
     fun settingsView(): AiSettingsView {
         val s = settings()
