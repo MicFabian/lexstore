@@ -2,7 +2,7 @@
 
 Translation & localization management platform for software teams. Upload source strings (terms), invite translators per language, track untranslated/translated/fuzzy/proofread status, pull finished translations via API/CLI.
 
-Built to the **Lexstore design system** (dark-first, electric-cobalt accent, editorial-meets-developer). State-of-the-art stack.
+Built to the **Lexstore design system** (light-first editorial, one type family, colour reserved for meaning). Dark mode is a switch, not the default.
 
 ## Stack
 
@@ -29,7 +29,7 @@ frontend/   Angular app. Design tokens in src/styles/, feature screens in
 **1. Postgres + Keycloak**
 ```bash
 cd backend
-docker compose up -d        # Postgres :5432, Keycloak :8089 (realm "lexstore")
+docker compose up -d        # Postgres :5442, Keycloak :8089 (realm "lexstore")
 ```
 Keycloak imports the `lexstore` realm with three test users (password = username):
 `owner` (all roles), `translator`, `proofreader`.
@@ -37,10 +37,13 @@ Keycloak imports the `lexstore` realm with three test users (password = username
 **2. Backend** (Java 25, runs on `:8088`)
 ```bash
 cd backend
-JAVA_HOME=/path/to/jdk25 ./gradlew bootRun
+# LEXSTORE_SECRET_KEY encrypts provider keys stored through the UI. Without it
+# the API refuses to store them and falls back to keys from the environment.
+LEXSTORE_SECRET_KEY=$(openssl rand -base64 32) ./gradlew bootRun
 ```
-Flyway creates the schema and seeds the demo *Mosaic Web App* project (6 languages,
-14 terms, translations, contributors, API keys) on first boot. The API validates
+Flyway creates the schema and seeds five demo projects (Mosaic Web App and four
+others) with languages, terms, translations, contributors and API keys on first
+boot, all belonging to one organisation. The API validates
 Keycloak JWTs and enforces roles (`@PreAuthorize`).
 
 **3. Frontend** (Node ≥22.22.3, runs on `:4300`, proxies `/api` → `:8088`)
@@ -60,13 +63,16 @@ audit history and comments; their roles gate the write actions.
 ## Screens
 
 - **Projects dashboard** — all projects, progress, untranslated/new counts.
-- **Translation editor** — per-language term table, status filters, inspector panel
-  (source, translation, machine suggestion, save/proofread/flag, comments).
+- **Translation editor** — per-language term table paged and filtered on the server,
+  several languages side by side, inspector panel (source, translation, machine
+  suggestion, AI proofreader, save/proofread/flag, comments).
 - **Terms** — source-string manager with expandable rows: per-language translations
   + audit history.
 - **Languages** — per-language progress cards.
 - **Contributors** — team table, roles, language scoping.
-- **Settings** — API keys (reveal/copy/revoke), integrations, import/export, general.
+- **Settings** — project API keys, glossary, integrations, import/export, general.
+- **Organisation** — AI spend and activity, provider keys (Claude, ChatGPT, Gemini),
+  organisation-wide API keys, members, agent plan and quota.
 
 Theme (dark/light), accent, and density are switchable via the appearance panel
 (bottom-right) and persist to `localStorage`.
@@ -75,9 +81,9 @@ Theme (dark/light), accent, and density are switchable via the appearance panel
 
 | Layer | What | Run |
 |---|---|---|
-| Backend | Testcontainers integration tests — happy paths + validation, 404s, full CRUD lifecycles, status transitions, plurals, pagination edges, project isolation. Spins a real Postgres, resets the schema per test. | `cd backend && ./gradlew test` |
-| CLI | 14 smoke + edge-case checks — every command, error paths, JSON validity, unknown-key skip. | `cd cli && bash test.sh` (backend must be running) |
-| Frontend | 50 Playwright E2E specs across every feature — navigation, multi-language editor with keyboard flow and save-and-next, inspector history and AI helper, terms filters and per-translation authors, features coverage and open work, dialogs (focus, Escape), undo, content states, the work queue, POEditor import, Translation AI, search, theming. | `cd frontend && npm run e2e` (backend running; the dev server starts itself) |
+| Backend | Testcontainers integration tests — happy paths + validation, 404s, full CRUD lifecycles, status transitions, plurals, pagination edges, project isolation, API-key scope and reach, optimistic locking, credential resolution. Spins a real Postgres, resets the schema per test. | `cd backend && ./gradlew test` |
+| CLI | 16 smoke + edge-case checks — every command, error paths, JSON validity, unknown-key skip, and API-key auth including a read-only refusal. | `cd cli && bash test.sh` (backend must be running) |
+| Frontend | 66 Playwright E2E specs across every feature — navigation, multi-language editor with keyboard flow and save-and-next, inspector history and AI helper, terms filters and per-translation authors, features coverage and open work, dialogs (focus, Escape), undo, content states, the work queue, POEditor import, Translation AI, search, theming. | `cd frontend && npm run e2e` (backend running; the dev server starts itself) |
 
 The E2E suite resets the backend to its seeded state before every test (a
 global fixture calls `POST /api/dev/reset`), so it is fully order-independent
@@ -88,12 +94,25 @@ endpoint (it is disabled by default and refused in any other configuration).
 
 Base: `http://localhost:8088/api`
 
+Authenticate with a Keycloak bearer token, or with an API key in `X-API-Key`.
+A project key reaches its own project; an organisation key reaches every project
+that organisation owns. A read-only key is refused every unsafe method.
+
 - `GET  /projects` · `GET /projects/{id}`
 - `GET  /projects/{id}/languages` · `POST …/languages`
-- `GET  /projects/{id}/editor?lang=fr` · `PUT …/editor/{termId}?lang=fr`
+- `GET  /projects/{id}/languages/{code}/translations?page=&size=&status=&q=&featureId=`
+- `PUT  …/languages/{code}/translations/{termId}` — send `version` to detect a
+  concurrent edit; a stale one is refused with 409
+- `GET  …/languages/{code}/translations/{termId}/suggestion` · `…/proofread`
 - `GET  /projects/{id}/terms` · `POST …/terms` · `POST …/terms/{id}/comments`
+- `GET  /projects/{id}/glossary` · `POST …/glossary` · `DELETE …/glossary/{id}`
+- `GET  /projects/{id}/features` · `GET …/features/{id}/open`
 - `GET  /projects/{id}/contributors` · `POST …/contributors`
 - `GET  /projects/{id}/api-keys` · `POST …/api-keys`
+- `GET  /org` · `/org/members` · `/org/usage` · `/org/activity`
+- `GET  /org/credentials` · `POST …` — provider keys, stored encrypted
+- `GET  /org/api-keys` · `POST …` — keys that span every project
+- `PUT  /org/agent` — subscribe to the platform agent and set its quota
 
 ## Deploying
 

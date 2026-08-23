@@ -51,6 +51,29 @@ else
   bad "push skips unknown keys"
 fi
 
+# ---- API key authentication ----
+#
+# The key path is what CI actually uses, so it is worth proving rather than
+# assuming: a read & write key works, a read-only one is refused the push.
+if [ -n "${LEXSTORE_TEST_RW_KEY:-}" ]; then
+  if LEXSTORE_USER= LEXSTORE_PASS= LEXSTORE_TOKEN= LEXSTORE_API_KEY="$LEXSTORE_TEST_RW_KEY" \
+     $CLI projects | grep -q "mosaic-web"; then
+    ok "an API key authenticates without a password"
+  else
+    bad "an API key authenticates without a password"
+  fi
+fi
+
+if [ -n "${LEXSTORE_TEST_RO_KEY:-}" ]; then
+  echo '{"nav.dashboard":"Nope"}' > /tmp/lexstore-ro.json
+  if LEXSTORE_USER= LEXSTORE_PASS= LEXSTORE_TOKEN= LEXSTORE_API_KEY="$LEXSTORE_TEST_RO_KEY" \
+     $CLI push --project mosaic-web --lang de --in /tmp/lexstore-ro.json 2>&1 | grep -qi "read-only"; then
+    ok "a read-only key is refused the push, and told why"
+  else
+    bad "a read-only key is refused the push, and told why"
+  fi
+fi
+
 echo ""
 echo "CLI tests: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
