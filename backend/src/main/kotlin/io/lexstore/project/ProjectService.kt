@@ -26,6 +26,7 @@ class ProjectService(
     private val terms: TermRepository,
     private val translations: TranslationRepository,
     private val access: ProjectAccess,
+    private val orgAccess: io.lexstore.org.OrgAccess,
 ) {
     /**
      * Counts come from three grouped queries rather than loading every term and
@@ -78,6 +79,7 @@ class ProjectService(
         if (projects.existsByCode(req.code)) throw DuplicateProjectCodeException(req.code)
         val saved = projects.save(
             Project(
+                orgId = orgAccess.currentOrgId(),
                 name = req.name,
                 code = req.code,
                 sourceLang = req.sourceLang ?: "en",

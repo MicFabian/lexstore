@@ -46,6 +46,12 @@ spring:
 
 # Local-dev convenience: gate POST /api/dev/reset (off by default).
 lexstore:
+  # Encrypts stored provider keys. Without it, keys cannot be saved through the
+  # UI and the app falls back to the environment-supplied ones.
+  secret-key: ${LEXSTORE_SECRET_KEY:}
+  agent:
+    # The platform's own provider key, used by organisations on an agent plan.
+    anthropic-key: ${LEXSTORE_AGENT_KEY:}
   dev-reset: ${LEXSTORE_DEV_RESET:false}
   # Browser origins allowed to call this API. Localhost only by default.
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:[*],http://127.0.0.1:[*]}
@@ -53,6 +59,10 @@ lexstore:
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   base-url: https://api.anthropic.com
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: https://api.openai.com
 
 gemini:
   api-key: ${GEMINI_API_KEY:}

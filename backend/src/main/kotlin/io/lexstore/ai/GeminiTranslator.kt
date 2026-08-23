@@ -19,10 +19,13 @@ class GeminiTranslator(
 
     val available: Boolean get() = apiKey.isNotBlank()
 
+    private fun keyFor(input: TranslateInput): String =
+        input.apiKey?.takeIf { it.isNotBlank() } ?: apiKey
+
     private val client = io.lexstore.common.OutboundHttp.client(baseUrl)
 
     override fun translate(input: TranslateInput): TranslateOutput {
-        require(available) { "Gemini API key is not configured." }
+        require(keyFor(input).isNotBlank()) { "Gemini API key is not configured." }
 
         val body = mapOf(
             "systemInstruction" to mapOf(
@@ -36,7 +39,7 @@ class GeminiTranslator(
 
         val res: JsonNode = client.post()
             .uri("/v1beta/models/{model}:generateContent", input.model)
-            .header("x-goog-api-key", apiKey)
+            .header("x-goog-api-key", keyFor(input))
             .header("content-type", "application/json")
             .body(body)
             .retrieve()

@@ -13,6 +13,12 @@ data class TranslateInput(
     val formality: String? = null,
     /** Domain and glossary of the project this string belongs to. */
     val projectContext: String? = null,
+    /**
+     * Key to call the provider with. Supplied per request because it can come
+     * from the project, its organisation, or the platform — not from a single
+     * value fixed at startup.
+     */
+    val apiKey: String? = null,
 )
 
 /** The system prompt every real translator sends, so they stay comparable. */

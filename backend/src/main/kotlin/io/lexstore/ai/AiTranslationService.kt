@@ -16,6 +16,8 @@ class AiTranslationService(
     private val mock: MockTranslator,
     private val claude: ClaudeTranslator,
     private val gemini: GeminiTranslator,
+    private val openai: OpenAiTranslator,
+    private val credentials: io.lexstore.org.CredentialResolver,
 ) {
     // ---------------- Translate (cache-first) ----------------
 
@@ -31,7 +33,12 @@ class AiTranslationService(
         val temperature = req.temperature ?: settings.temperature
         val tone = req.tone ?: settings.tone
         val formality = req.formality ?: settings.formality
-        val translator = translatorFor(settings.provider)
+        val resolved = credentials.resolve(req.projectId, settings.provider)
+        // Attribution must not depend on a key resolving: work done with the
+        // mock, or with the environment's key, still belongs to the project's
+        // organisation and has to appear in its usage view.
+        val orgId = resolved?.orgId ?: credentials.orgOf(req.projectId)
+        val translator = translatorFor(settings.provider, resolved != null)
         val key = cacheKey(
             req.sourceText, req.sourceLang, req.targetLang,
             translator.provider, model, tone, formality, req.projectContext, temperature,
@@ -46,7 +53,7 @@ class AiTranslationService(
                 hit.hits += 1
                 hit.lastUsedAt = Instant.now()
                 val latency = elapsedMs(start)
-                logRequest(req, translator.provider, model, hit.targetText, true, latency, 0, 0, "ok", null)
+                logRequest(req, translator.provider, model, hit.targetText, true, latency, 0, 0, "ok", null, resolved, orgId)
                 return TranslateResponse(hit.targetText, translator.provider, model, true, latency, 0, 0)
             }
         }
@@ -56,9 +63,12 @@ class AiTranslationService(
             val out = translator.translate(
                 TranslateInput(
                     req.sourceText, req.sourceLang, req.targetLang, model, temperature,
-                    tone, formality, req.projectContext,
+                    tone, formality, req.projectContext, resolved?.apiKey,
                 ),
             )
+            if (resolved?.source == io.lexstore.org.CredentialSource.PLATFORM_AGENT) {
+                resolved.orgId?.let { credentials.chargeAgentUse(it) }
+            }
             // Upsert: a forced (noCache) refresh of an existing key updates it in place.
             val entry = cache.findByCacheKey(key)
             if (entry != null) {
@@ -78,18 +88,25 @@ class AiTranslationService(
                 )
             }
             val latency = elapsedMs(start)
-            logRequest(req, translator.provider, out.model, out.text, false, latency, out.inputTokens, out.outputTokens, "ok", null)
+            logRequest(req, translator.provider, out.model, out.text, false, latency, out.inputTokens, out.outputTokens, "ok", null, resolved, orgId)
             TranslateResponse(out.text, translator.provider, out.model, false, latency, out.inputTokens, out.outputTokens)
         } catch (e: Exception) {
             val latency = elapsedMs(start)
-            logRequest(req, translator.provider, model, null, false, latency, 0, 0, "error", e.message)
+            logRequest(req, translator.provider, model, null, false, latency, 0, 0, "error", e.message, resolved, orgId)
             throw AiTranslationException(e.message ?: "Translation failed")
         }
     }
 
-    private fun translatorFor(provider: String): Translator = when (provider) {
-        "claude" -> if (claude.available) claude else mock
-        "gemini" -> if (gemini.available) gemini else mock
+    /**
+     * A configured provider with no usable key falls back to the mock, which
+     * would silently save invented translations; so the choice is made against
+     * the key that actually resolved for this project.
+     */
+    private fun translatorFor(provider: String, hasKey: Boolean): Translator = when {
+        !hasKey -> mock
+        provider == "claude" -> claude
+        provider == "gemini" -> gemini
+        provider == "openai" -> openai
         else -> mock
     }
 
@@ -197,9 +214,14 @@ class AiTranslationService(
     private fun logRequest(
         req: TranslateRequest, provider: String, model: String, result: String?,
         hit: Boolean, latency: Long, inTok: Int, outTok: Int, status: String, error: String?,
+        resolved: io.lexstore.org.ResolvedCredential? = null,
+        orgId: java.util.UUID? = null,
     ) {
         requests.save(
             TranslationRequestLog(
+                projectId = req.projectId,
+                orgId = orgId,
+                credentialSource = resolved?.source?.name,
                 sourceText = req.sourceText, sourceLang = req.sourceLang, targetLang = req.targetLang,
                 provider = provider, model = model, resultText = result, cacheHit = hit,
                 latencyMs = latency, inputTokens = inTok, outputTokens = outTok, status = status, errorMessage = error,

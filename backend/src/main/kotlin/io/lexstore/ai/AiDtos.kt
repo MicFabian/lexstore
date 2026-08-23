@@ -16,6 +16,8 @@ data class TranslateRequest(
     val projectContext: String? = null,
     /** Skip the cache and force a fresh translation. */
     val noCache: Boolean = false,
+    /** Whose key and budget this call uses; null falls back to the environment. */
+    val projectId: java.util.UUID? = null,
 )
 
 data class TranslateResponse(

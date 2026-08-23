@@ -187,7 +187,15 @@ class EditorService(
         require(term.projectId == projectId) { "Term does not belong to this project." }
         val project = projects.findById(projectId)
             .orElseThrow { ProjectNotFoundException(projectId.toString()) }
-        val res = ai.translate(TranslateRequest(term.sourceText, project.sourceLang, languageCode, projectContext = project.translationContext))
+        val res = ai.translate(
+            TranslateRequest(
+                term.sourceText,
+                project.sourceLang,
+                languageCode,
+                projectContext = project.translationContext,
+                projectId = projectId,
+            ),
+        )
         return SuggestionResponse(res.text, res.provider, res.model, res.cacheHit)
     }
 
@@ -226,6 +234,7 @@ class EditorService(
                         project.sourceLang,
                         languageCode,
                         projectContext = project.translationContext,
+                        projectId = projectId,
                     ),
                 ).text
             } catch (ex: Exception) {

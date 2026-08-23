@@ -14,6 +14,16 @@ class TranslationRequestLog(
     @Id
     val id: UUID = UUID.randomUUID(),
 
+    @Column(name = "project_id")
+    val projectId: java.util.UUID? = null,
+
+    @Column(name = "org_id")
+    val orgId: java.util.UUID? = null,
+
+    /** PROJECT | ORGANISATION | PLATFORM_AGENT | ENVIRONMENT */
+    @Column(name = "credential_source")
+    val credentialSource: String? = null,
+
     @Column(name = "source_text", nullable = false, length = 4000)
     val sourceText: String,
 

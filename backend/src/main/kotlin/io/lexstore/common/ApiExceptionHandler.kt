@@ -55,6 +55,18 @@ class ApiExceptionHandler {
     fun conflict(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.CONFLICT, "Conflict", ex.message)
 
+    @ExceptionHandler(io.lexstore.org.OrgAccessDeniedException::class)
+    fun orgDenied(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.FORBIDDEN, "Forbidden", ex.message)
+
+    @ExceptionHandler(io.lexstore.org.AgentQuotaExceededException::class)
+    fun quotaExceeded(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.PAYMENT_REQUIRED, "Agent quota reached", ex.message)
+
+    @ExceptionHandler(io.lexstore.org.SecretUnavailableException::class)
+    fun secretMissing(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.SERVICE_UNAVAILABLE, "Encryption unavailable", ex.message)
+
     @ExceptionHandler(LanguageNotInProjectException::class, IllegalArgumentException::class)
     fun badRequest(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.message)

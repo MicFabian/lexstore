@@ -19,10 +19,14 @@ class ClaudeTranslator(
 
     val available: Boolean get() = apiKey.isNotBlank()
 
+    private fun keyFor(input: TranslateInput): String =
+        input.apiKey?.takeIf { it.isNotBlank() } ?: apiKey
+
     private val client = io.lexstore.common.OutboundHttp.client(baseUrl)
 
     override fun translate(input: TranslateInput): TranslateOutput {
-        require(available) { "Anthropic API key is not configured." }
+        val key = keyFor(input)
+        require(key.isNotBlank()) { "Anthropic API key is not configured." }
 
         val system = TranslationPrompt.system(input)
 
@@ -36,7 +40,7 @@ class ClaudeTranslator(
 
         val res: JsonNode = client.post()
             .uri("/v1/messages")
-            .header("x-api-key", apiKey)
+            .header("x-api-key", key)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
             .body(body)

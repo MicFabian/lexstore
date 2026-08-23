@@ -12,6 +12,9 @@ class Project(
     @Id
     val id: UUID = UUID.randomUUID(),
 
+    @Column(name = "org_id", nullable = false)
+    var orgId: java.util.UUID,
+
     @Column(nullable = false)
     var name: String,
 

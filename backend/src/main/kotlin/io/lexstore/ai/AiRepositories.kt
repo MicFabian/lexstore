@@ -31,7 +31,71 @@ interface TranslationCacheRepository : JpaRepository<TranslationCacheEntry, UUID
     fun deleteBySourceText(@Param("text") text: String): Int
 }
 
+interface ProviderUsageRow {
+    val provider: String
+    val requests: Long
+    val inputTokens: Long
+    val outputTokens: Long
+}
+
+interface DailyUsageRow {
+    val day: java.time.LocalDate
+    val requests: Long
+    val tokens: Long
+}
+
+interface UsageTotals {
+    val requests: Long
+    val hits: Long
+    val failures: Long
+    val inputTokens: Long
+    val outputTokens: Long
+}
+
 interface TranslationRequestRepository : JpaRepository<TranslationRequestLog, UUID> {
     fun findAllByOrderByCreatedAtDesc(pageable: Pageable): List<TranslationRequestLog>
     fun countByCacheHit(cacheHit: Boolean): Long
+
+    fun findByOrgIdOrderByCreatedAtDesc(orgId: UUID, pageable: Pageable): List<TranslationRequestLog>
+
+    @Query(
+        """
+        select coalesce(count(r), 0) as requests,
+               coalesce(sum(case when r.cacheHit = true then 1 else 0 end), 0) as hits,
+               coalesce(sum(case when r.status <> 'ok' then 1 else 0 end), 0) as failures,
+               coalesce(sum(r.inputTokens), 0) as inputTokens,
+               coalesce(sum(r.outputTokens), 0) as outputTokens
+        from TranslationRequestLog r
+        where (:orgId is null or r.orgId = :orgId) and r.createdAt >= :since
+        """,
+    )
+    fun totalsSince(orgId: UUID?, since: java.time.Instant): UsageTotals
+
+    @Query(
+        """
+        select r.provider as provider,
+               count(r) as requests,
+               coalesce(sum(r.inputTokens), 0) as inputTokens,
+               coalesce(sum(r.outputTokens), 0) as outputTokens
+        from TranslationRequestLog r
+        where (:orgId is null or r.orgId = :orgId) and r.createdAt >= :since
+        group by r.provider
+        """,
+    )
+    fun usageByProvider(orgId: UUID?, since: java.time.Instant): List<ProviderUsageRow>
+
+    @Query(
+        nativeQuery = true,
+        value = """
+        select date(created_at) as day,
+               count(*) as requests,
+               coalesce(sum(input_tokens + output_tokens), 0) as tokens
+        from translation_request
+        where (cast(:orgId as uuid) is null or org_id = cast(:orgId as uuid))
+          and created_at >= :since
+        group by date(created_at)
+        order by day
+        """,
+    )
+    fun usageByDay(orgId: UUID?, since: java.time.Instant): List<DailyUsageRow>
 }

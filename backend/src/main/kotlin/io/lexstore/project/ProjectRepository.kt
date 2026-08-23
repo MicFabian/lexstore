@@ -16,5 +16,7 @@ interface ProjectRepository : JpaRepository<Project, UUID> {
     fun touch(id: UUID, at: java.time.Instant)
 
     fun findByCode(code: String): Project?
+    fun countByOrgId(orgId: UUID): Long
+    fun findByOrgId(orgId: UUID): List<Project>
     fun existsByCode(code: String): Boolean
 }
