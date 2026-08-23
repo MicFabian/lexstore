@@ -8,7 +8,8 @@ export interface ProjectSummary {
   code: string;
   sourceLang: string;
   mark: string;
-  image: string | null;
+  /** Where to fetch the image, not the image itself. */
+  imageUrl: string | null;
   terms: number;
   langs: number;
   progress: number;

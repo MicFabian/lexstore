@@ -23,6 +23,24 @@ class ProjectController(private val service: ProjectService) {
     @GetMapping("/{projectId}")
     fun get(@PathVariable projectId: UUID): ProjectDetail = service.detail(projectId)
 
+    /**
+     * The project's image, served from its own URL so a listing does not carry
+     * up to 512 KB of data URI per project for something drawn at 28 pixels.
+     */
+    @GetMapping("/{projectId}/image")
+    fun image(@PathVariable projectId: UUID): org.springframework.http.ResponseEntity<ByteArray> {
+        val image = service.get(projectId).image
+            ?: return org.springframework.http.ResponseEntity.notFound().build()
+        val mediaType = image.substringAfter("data:").substringBefore(";").ifBlank { "image/png" }
+        val bytes = runCatching {
+            java.util.Base64.getDecoder().decode(image.substringAfter(","))
+        }.getOrElse { return org.springframework.http.ResponseEntity.notFound().build() }
+        return org.springframework.http.ResponseEntity.ok()
+            .header("Content-Type", mediaType)
+            .header("Cache-Control", "public, max-age=3600")
+            .body(bytes)
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('OWNER')")

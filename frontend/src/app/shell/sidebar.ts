@@ -36,8 +36,8 @@ interface QuickItem {
       <!-- Project switcher -->
       <div class="proj-switch">
         <button class="rail__proj" (click)="switcherOpen.set(!switcherOpen())" [attr.aria-expanded]="switcherOpen()">
-          <span class="pmark" [style.background]="current()?.image ? 'none' : current()?.mark">
-            @if (current()?.image; as img) {
+          <span class="pmark" [style.background]="current()?.imageUrl ? 'none' : current()?.mark">
+            @if (current()?.imageUrl; as img) {
               <img class="pimg" [src]="img" alt="" />
             } @else {
               <lx-icon name="ArrowRightLeft" [size]="14" color="#fff" />
@@ -55,8 +55,8 @@ interface QuickItem {
             <div class="menu__label">Switch project</div>
             @for (p of projects(); track p.id) {
               <button class="pm-item" [class.on]="p.id === current()?.id" (click)="pick(p.id)">
-                <span class="pm-mark" [style.background]="p.image ? 'none' : p.mark">
-                  @if (p.image; as img) {
+                <span class="pm-mark" [style.background]="p.imageUrl ? 'none' : p.mark">
+                  @if (p.imageUrl; as img) {
                     <img class="pimg" [src]="img" alt="" />
                   } @else {
                     <lx-icon name="ArrowRightLeft" [size]="12" color="#fff" />

@@ -11,7 +11,12 @@ data class ProjectSummary(
     val code: String,
     val sourceLang: String,
     val mark: String,
-    val image: String?,
+    /**
+     * Where the project's image can be fetched, not the image itself: it is a
+     * data URI of up to 512 KB and the dashboard shows it at 28 pixels, so
+     * inlining it made every listing carry megabytes it draws as an icon.
+     */
+    val imageUrl: String?,
     val terms: Long,
     val langs: Int,
     val progress: Int,

@@ -51,7 +51,7 @@ class ProjectService(
                     code = p.code,
                     sourceLang = p.sourceLang,
                     mark = p.mark,
-                    image = p.image,
+                    imageUrl = p.image?.let { "/api/projects/${'$'}{p.id}/image" },
                     terms = termTotal,
                     langs = langTotal.toInt(),
                     progress = if (slots == 0L) 0 else (((tr?.done ?: 0) * 100.0) / slots).toInt(),

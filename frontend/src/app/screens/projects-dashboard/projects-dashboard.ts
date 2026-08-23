@@ -49,8 +49,8 @@ import { ProjectSummary } from '../../core/models';
           <div class="worklist">
             @for (p of needsWork(); track p.id) {
               <button class="lrow work-row" (click)="continueWork(p)">
-                <span class="pmark" [style.background]="p.image ? 'none' : p.mark">
-                  @if (p.image; as img) {
+                <span class="pmark" [style.background]="p.imageUrl ? 'none' : p.mark">
+                  @if (p.imageUrl; as img) {
                     <img class="pimg" [src]="img" alt="" />
                   } @else {
                     <lx-icon name="ArrowRightLeft" [size]="15" color="#fff" />
@@ -73,8 +73,8 @@ import { ProjectSummary } from '../../core/models';
         <div>
           @for (p of filtered(); track p.id) {
             <button class="lrow proj-row" (click)="open(p)">
-              <span class="pmark" [style.background]="p.image ? 'none' : p.mark">
-                @if (p.image; as img) {
+              <span class="pmark" [style.background]="p.imageUrl ? 'none' : p.mark">
+                @if (p.imageUrl; as img) {
                   <img class="pimg" [src]="img" alt="" />
                 } @else {
                   <lx-icon name="ArrowRightLeft" [size]="17" color="#fff" />
