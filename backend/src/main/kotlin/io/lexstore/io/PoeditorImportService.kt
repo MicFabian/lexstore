@@ -33,6 +33,8 @@ data class PoeditorImportResult(
     val languages: List<PoeditorLanguageImport>,
     val termsCreated: Int,
     val translationsImported: Int,
+    /** Entries POEditor held under a key another entry also used. */
+    val duplicateKeysSkipped: Int = 0,
 )
 
 data class PoeditorLanguageImport(val code: String, val name: String, val imported: Int)
@@ -62,6 +64,7 @@ class PoeditorImportService(
     private val importExport: ImportExportService,
     private val projectService: ProjectService,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
     fun projects(token: String): List<PoeditorProject> = client.projects(token)
 
     fun languages(token: String, poeditorProjectId: Long): List<PoeditorLanguage> =
@@ -132,20 +135,33 @@ class PoeditorImportService(
 
         var created = 0
         var imported = 0
+        var skipped = 0
         val perLanguage = codes.map { code ->
             val remote = available[code] ?: throw PoeditorException("Language '$code' is not in that POEditor project.")
             ensureLanguage(projectId, remote)
 
-            val entries = client.terms(token, poeditorProjectId, code)
+            // Two POEditor entries can share a term text and differ only by
+            // context. toMap() would drop one silently, so the collision is
+            // counted and reported rather than losing a string without a word.
+            val pairs = client.terms(token, poeditorProjectId, code)
                 .mapNotNull { t -> t.translation?.let { t.term to it } }
-                .toMap()
+            val entries = pairs.toMap()
+            val collisions = pairs.size - entries.size
+            if (collisions > 0) {
+                log.warn(
+                    "POEditor language {} has {} terms sharing a key; the last translation of each wins",
+                    code,
+                    collisions,
+                )
+            }
+            skipped += collisions
 
             val result = importExport.import(projectId, code, entries)
             created += result.created
             imported += result.updated
             PoeditorLanguageImport(code, remote.name, result.updated)
         }
-        return PoeditorImportResult(projectId, projectName, perLanguage, created, imported)
+        return PoeditorImportResult(projectId, projectName, perLanguage, created, imported, skipped)
     }
 
     /** A POEditor name becomes a slug; a clash gets a numeric suffix. */

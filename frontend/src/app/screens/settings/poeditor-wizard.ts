@@ -422,7 +422,10 @@ export class PoeditorWizard {
         this.summary.set(
           `Imported ${r.translationsImported} translations into ${r.languages.length} language${r.languages.length === 1 ? '' : 's'} ` +
             `of ${r.projectName}` +
-            (r.termsCreated > 0 ? `, creating ${r.termsCreated} terms.` : '.'),
+            (r.termsCreated > 0 ? `, creating ${r.termsCreated} terms` : '') +
+            (r.duplicateKeysSkipped > 0
+              ? `. ${r.duplicateKeysSkipped} entries shared a key with another — only the last of each was kept.`
+              : '.'),
         );
         this.step.set('done');
         this.state.load();

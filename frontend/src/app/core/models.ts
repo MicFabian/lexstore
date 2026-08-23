@@ -284,6 +284,7 @@ export interface PoeditorImportResult {
   languages: { code: string; name: string; imported: number }[];
   termsCreated: number;
   translationsImported: number;
+  duplicateKeysSkipped: number;
 }
 
 export const STATUS_LABEL: Record<TranslationStatus, string> = {
