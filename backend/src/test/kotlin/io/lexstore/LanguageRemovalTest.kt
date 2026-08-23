@@ -40,3 +40,40 @@ class LanguageRemovalTest : IntegrationTestBase() {
         assertThat(translatedCount("fr")).isEqualTo(frenchBefore)
     }
 }
+
+/** Codes reach URLs and translation providers, so they are checked at the edge. */
+class LanguageValidationTest : IntegrationTestBase() {
+
+    @Test
+    fun `a language code that is not a language tag is refused`() {
+        org.junit.jupiter.api.assertThrows<org.springframework.web.client.HttpClientErrorException.BadRequest> {
+            client.post().uri("/api/projects/$MOSAIC_WEB/languages")
+                .body(mapOf("code" to "not a code!!", "name" to "Nonsense"))
+                .retrieve().toBodilessEntity()
+        }
+    }
+
+    @Test
+    fun `a real tag is still accepted`() {
+        client.post().uri("/api/projects/$MOSAIC_WEB/languages")
+            .body(mapOf("code" to "zh-Hans", "name" to "Chinese (Simplified)"))
+            .retrieve().toBodilessEntity()
+    }
+
+    @Test
+    fun `a contributor cannot be scoped to a language the project lacks`() {
+        val ex = org.junit.jupiter.api.assertThrows<org.springframework.web.client.HttpClientErrorException.BadRequest> {
+            client.post().uri("/api/projects/$MOSAIC_WEB/contributors")
+                .body(
+                    mapOf(
+                        "name" to "Probe",
+                        "email" to "probe@lexstore.io",
+                        "role" to "Translator",
+                        "langs" to listOf("zz-NOPE"),
+                    ),
+                )
+                .retrieve().toBodilessEntity()
+        }
+        assertThat(ex.responseBodyAsString).contains("zz-NOPE")
+    }
+}

@@ -11,6 +11,7 @@ import java.util.UUID
 class ContributorService(
     private val contributors: ContributorRepository,
     private val events: io.lexstore.translation.TranslationEventRepository,
+    private val languages: io.lexstore.language.LanguageRepository,
 ) {
 
     /**
@@ -30,13 +31,14 @@ class ContributorService(
     @Transactional
     fun invite(projectId: UUID, req: InviteContributorRequest): ContributorView {
         val nextAvatar = (contributors.countByProjectId(projectId) % 7).toInt()
+        val langs = validatedLanguages(projectId, req.langs)
         val saved = contributors.save(
             Contributor(
                 projectId = projectId,
                 name = req.name,
                 email = req.email,
                 role = ContributorRole.from(req.role ?: "Translator"),
-                languages = req.langs?.joinToString(",") ?: "",
+                languages = langs,
                 avatarIndex = nextAvatar,
                 lastActive = "Invited",
             ),
@@ -53,7 +55,7 @@ class ContributorService(
             c.role = ContributorRole.parse(it)
                 ?: throw IllegalArgumentException("'$it' is not a contributor role.")
         }
-        req.langs?.let { c.languages = it.joinToString(",") }
+        req.langs?.let { c.languages = validatedLanguages(projectId, it) }
         return toView(contributors.save(c))
     }
 
@@ -62,6 +64,21 @@ class ContributorService(
         contributors.findById(id).ifPresent {
             if (it.projectId == projectId) contributors.delete(it)
         }
+    }
+
+    /**
+     * Scoping someone to a language the project does not have assigns work that
+     * cannot exist, and the screens would show it as a real assignment.
+     */
+    private fun validatedLanguages(projectId: UUID, langs: List<String>?): String {
+        val requested = langs?.map { it.trim() }?.filter { it.isNotEmpty() } ?: return ""
+        if (requested.isEmpty()) return ""
+        val available = languages.findByProjectIdOrderByName(projectId).map { it.code }.toSet()
+        val unknown = requested.filterNot { it in available }
+        require(unknown.isEmpty()) {
+            "This project has no language " + unknown.joinToString(", ") + "."
+        }
+        return requested.joinToString(",")
     }
 
     private fun toView(c: Contributor) = ContributorView(
