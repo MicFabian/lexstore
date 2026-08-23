@@ -48,6 +48,8 @@ class EditorService(
     private val comments: TermCommentRepository,
     private val events: TranslationEventRepository,
     private val ai: AiTranslationService,
+    private val proofreader: io.lexstore.ai.ProofreadService,
+    private val glossary: io.lexstore.glossary.GlossaryService,
     private val currentUser: CurrentUser,
     @org.springframework.context.annotation.Lazy private val self: EditorService,
 ) {
@@ -182,6 +184,25 @@ class EditorService(
     }
 
     /** AI machine-translation suggestion for one term (cached). Does not save. */
+    /** Review what is stored for this term and language, without changing it. */
+    fun proofread(projectId: UUID, termId: UUID, languageCode: String): io.lexstore.ai.ProofreadResult {
+        val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
+        require(term.projectId == projectId) { "Term does not belong to this project." }
+        val project = projects.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId.toString()) }
+        languages.findByProjectIdAndCode(projectId, languageCode)
+            ?: throw LanguageNotInProjectException(languageCode)
+        val stored = translations.findByTermIdAndLanguageCode(termId, languageCode)?.value.orEmpty()
+        return proofreader.proofread(
+            projectId = projectId,
+            languageCode = languageCode,
+            sourceText = term.sourceText,
+            translation = stored,
+            sourceLang = project.sourceLang,
+            projectContext = project.translationContext,
+        )
+    }
+
     fun suggest(projectId: UUID, termId: UUID, languageCode: String): SuggestionResponse {
         val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
         require(term.projectId == projectId) { "Term does not belong to this project." }
@@ -192,7 +213,7 @@ class EditorService(
                 term.sourceText,
                 project.sourceLang,
                 languageCode,
-                projectContext = project.translationContext,
+                projectContext = contextFor(projectId, languageCode, project.translationContext),
                 projectId = projectId,
             ),
         )
@@ -233,7 +254,7 @@ class EditorService(
                         sourceText,
                         project.sourceLang,
                         languageCode,
-                        projectContext = project.translationContext,
+                        projectContext = contextFor(projectId, languageCode, project.translationContext),
                         projectId = projectId,
                     ),
                 ).text
@@ -252,6 +273,12 @@ class EditorService(
             remaining = (pending.size - batch.size).coerceAtLeast(0),
         )
     }
+
+    /** The project's own guidance plus its glossary for this language. */
+    private fun contextFor(projectId: UUID, languageCode: String, projectContext: String?): String? =
+        listOfNotNull(projectContext, glossary.promptFor(projectId, languageCode))
+            .joinToString(". ")
+            .takeIf { it.isNotBlank() }
 
     private fun pendingTermIds(projectId: UUID, languageCode: String): List<UUID> {
         val projTerms = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId)

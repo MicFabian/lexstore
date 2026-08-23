@@ -56,6 +56,14 @@ class TranslationController(private val service: EditorService) {
         @Valid @RequestBody req: SaveTranslationRequest,
     ): EditorRow = service.save(projectId, termId, code, req)
 
+    /** Review the stored translation of one term. Nothing is changed. */
+    @GetMapping("/{termId}/proofread")
+    fun proofread(
+        @PathVariable projectId: UUID,
+        @PathVariable code: String,
+        @PathVariable termId: UUID,
+    ): io.lexstore.ai.ProofreadResult = service.proofread(projectId, termId, code)
+
     /** AI machine-translation suggestion for one term (cached, not saved). */
     @org.springframework.web.bind.annotation.GetMapping("/{termId}/suggestion")
     fun suggestion(
