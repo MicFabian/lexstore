@@ -62,6 +62,9 @@ jobs:
       - name: Start the API
         env:
           LEXSTORE_DEV_RESET: 'true'
+          # Storing a provider key requires this; without it the API refuses,
+          # which is the behaviour a deployment should have.
+          LEXSTORE_SECRET_KEY: ci-encryption-key-not-a-real-secret
         run: |
           ./gradlew bootRun -x test &
           for i in $(seq 1 60); do

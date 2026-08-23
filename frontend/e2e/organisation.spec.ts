@@ -21,13 +21,25 @@ test.describe('organisation', () => {
 
     await page.locator('.keyform .input').fill('sk-test-organisation-key-1111');
     await page.locator('.keyform lx-btn button').click();
+
+    // A missing LEXSTORE_SECRET_KEY makes the server refuse; say so plainly
+    // rather than failing on an element that was never going to appear.
+    const refused = page.locator('.toast', { hasText: 'encryption key' });
+    await expect(
+      refused.or(page.locator('.otable')),
+      'storing a key needs LEXSTORE_SECRET_KEY set on the API',
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.locator('.otable')).toContainText('••••1111');
     await expect(page.locator('.otable')).toContainText('Organisation');
 
-    // The same provider, scoped to one project, is stored alongside it.
+    // The same provider, scoped to one project, is stored alongside it. The
+    // button disables itself while saving, so wait for it to come back.
+    // The button enables itself once the field has content again.
+    const save = page.locator('.keyform lx-btn button');
     await page.locator('.keyform .input').fill('sk-test-project-key-2222');
     await page.locator('.keyform select').nth(1).selectOption({ index: 1 });
-    await page.locator('.keyform lx-btn button').click();
+    await expect(save).toBeEnabled();
+    await save.click();
     await expect(page.locator('.otable')).toContainText('••••2222');
   });
 
