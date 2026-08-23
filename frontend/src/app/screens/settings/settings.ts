@@ -207,7 +207,7 @@ interface IntegrationItem {
                 </form>
 
                 @if (glossary().length) {
-                  <table class="gtable">
+                  <table class="gtable" aria-label="Glossary terms">
                     <thead><tr><th>Term</th><th>Rule</th><th>Language</th><th></th></tr></thead>
                     <tbody>
                       @for (g of glossary(); track g.id) {

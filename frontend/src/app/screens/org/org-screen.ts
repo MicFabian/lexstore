@@ -70,7 +70,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
 
             <h2 class="sect">By provider</h2>
             @if (u.byProvider.length) {
-              <table class="otable">
+              <table class="otable" aria-label="AI usage by provider">
                 <thead><tr><th>Provider</th><th>Requests</th><th>Input tokens</th><th>Output tokens</th></tr></thead>
                 <tbody>
                   @for (p of u.byProvider; track p.provider) {
@@ -131,7 +131,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
           </form>
 
           @if (credentials().length) {
-            <table class="otable">
+            <table class="otable" aria-label="Stored provider keys">
               <thead><tr><th>Provider</th><th>Scope</th><th>Key</th><th>Added</th><th></th></tr></thead>
               <tbody>
                 @for (c of credentials(); track c.id) {
@@ -184,7 +184,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
           </form>
 
           @if (apiKeys().length) {
-            <table class="otable">
+            <table class="otable" aria-label="Organisation API keys">
               <thead><tr><th>Label</th><th>Scope</th><th>Key</th><th>Last used</th><th></th></tr></thead>
               <tbody>
                 @for (k of apiKeys(); track k.id) {
@@ -214,7 +214,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
         @case ('activity') {
           <p class="muted">Every AI request this organisation made, newest first.</p>
           @if (activity().length) {
-            <table class="otable">
+            <table class="otable" aria-label="AI activity">
               <thead><tr><th>When</th><th>Project</th><th>Language</th><th>Source</th><th>Provider</th><th>Tokens</th></tr></thead>
               <tbody>
                 @for (a of activity(); track $index) {
@@ -239,7 +239,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
         }
 
         @case ('members') {
-          <table class="otable">
+          <table class="otable" aria-label="Organisation members">
             <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
             <tbody>
               @for (m of members(); track m.id) {

@@ -96,7 +96,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
             (acted)="reload()"
           />
         } @else {
-        <table class="ttable">
+        <table class="ttable" aria-label="Source strings">
           <thead>
             <tr>
               <th style="width:40px;padding-left:18px">

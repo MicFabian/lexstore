@@ -53,7 +53,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
                 <button class="tag-x" aria-label="Remove tag" (click)="removeTag(t)"><lx-icon name="X" [size]="11" /></button>
               </span>
             }
-            <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" (click)="addingTag.set(true)">
+            <button class="btn btn--subtle btn--sm" style="height:20px;padding:0 6px" aria-label="Add a tag" (click)="addingTag.set(true)">
               <lx-icon name="Plus" [size]="12" />
             </button>
           </div>

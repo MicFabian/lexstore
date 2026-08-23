@@ -106,7 +106,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       </div>
 
       <div class="editor__scroll">
-        <table class="ttable">
+        <table class="ttable" aria-label="Translations">
           <thead>
             <tr>
               <th class="keycell">Key</th>

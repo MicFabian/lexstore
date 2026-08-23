@@ -43,7 +43,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
             (acted)="reload()"
           />
         } @else {
-        <table class="ttable features">
+        <table class="ttable features" aria-label="Features and their translation coverage">
           <thead>
             <tr>
               <th>Feature</th>

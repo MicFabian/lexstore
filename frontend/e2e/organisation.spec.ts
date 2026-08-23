@@ -135,3 +135,28 @@ test.describe('honest surfaces', () => {
     await expect(page.locator('[aria-label="Notifications"]')).toHaveCount(0);
   });
 });
+
+test.describe('accessibility', () => {
+  test('every data table has a name a screen reader can announce', async ({ page }) => {
+    for (const path of ['/editor', '/terms', '/contributors', '/features', '/organisation']) {
+      await page.goto(path);
+      await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+      const tables = page.locator('table');
+      for (let i = 0; i < (await tables.count()); i++) {
+        await expect(tables.nth(i)).toHaveAttribute('aria-label', /.+/);
+      }
+    }
+  });
+
+  test('icon-only controls carry a label', async ({ page }) => {
+    await page.goto('/editor');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.trow .tgt').first().click();
+    await expect(page.locator('.inspector')).toBeVisible();
+
+    const unnamed = await page.locator('.inspector button').evaluateAll((buttons) =>
+      buttons.filter((b) => !b.textContent?.trim() && !b.getAttribute('aria-label')).length,
+    );
+    expect(unnamed).toBe(0);
+  });
+});

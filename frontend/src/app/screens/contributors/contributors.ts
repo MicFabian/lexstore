@@ -27,7 +27,7 @@ import { ContributorView } from '../../core/models';
           </div>
         </div>
 
-        <table class="ttable people">
+        <table class="ttable people" aria-label="Contributors">
           <thead>
             <tr>
               <th>Person</th>

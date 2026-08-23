@@ -135,7 +135,7 @@ type Target = 'existing' | 'new';
               {{ preview()?.totalTerms }} terms · showing the first {{ preview()?.rows?.length }}
             </div>
             <div class="wiz__table">
-              <table class="ttable">
+              <table class="ttable" aria-label="Preview of the strings to import">
                 <thead>
                   <tr>
                     <th>Key</th>

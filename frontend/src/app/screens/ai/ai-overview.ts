@@ -83,7 +83,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                   <div class="spacer"></div>
                   <lx-btn variant="subtle" [sm]="true" icon="Settings2" (clicked)="loadRequests()">Refresh</lx-btn>
                 </div>
-                <table class="ttable">
+                <table class="ttable" aria-label="Recent AI requests">
                   <thead>
                     <tr>
                       <th style="padding-left:18px">Source → Target</th>
@@ -142,7 +142,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                     <lx-icon name="Trash2" [size]="14" />Clear all
                   </button>
                 </div>
-                <table class="ttable">
+                <table class="ttable" aria-label="Cached translations">
                   <thead>
                     <tr>
                       <th style="padding-left:18px">Source</th>
