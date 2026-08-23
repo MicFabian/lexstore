@@ -34,7 +34,9 @@ class ProjectAccessInterceptor(private val access: ProjectAccess) : HandlerInter
             auth.scope == io.lexstore.common.ApiKeyScope.READ_ONLY &&
             request.method !in SAFE_METHODS
         ) {
-            throw ProjectAccessDeniedException(projectId)
+            // Says what is actually wrong: the key reaches this project, it
+            // simply may not write to it.
+            throw ReadOnlyKeyException()
         }
         val required = requiredRoles(handler)
         if (required.isEmpty()) access.assertMember(projectId) else access.assertRole(projectId, *required)

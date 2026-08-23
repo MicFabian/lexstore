@@ -9,16 +9,23 @@
  *   lexstore status      --project <code>
  *
  * Config via flags or env:
- *   LEXSTORE_API   (default http://localhost:8088/api)
+ *   LEXSTORE_API      (default http://localhost:8088/api)
+ *   LEXSTORE_API_KEY  a project or organisation key — preferred for CI
  */
 
 const API = process.env.LEXSTORE_API || 'http://localhost:8088/api';
 const KEYCLOAK = process.env.LEXSTORE_KEYCLOAK || 'http://localhost:8089/realms/lexstore';
 
 // ---------- auth ----------
+//
+// An API key is preferred: it is scoped to one project or organisation, can be
+// revoked on its own, and does not put a person's password in a CI secret.
+const API_KEY = process.env.LEXSTORE_API_KEY || null;
+
 let cachedToken = process.env.LEXSTORE_TOKEN || null;
 
 async function getToken() {
+  if (API_KEY) return null; // the key authenticates instead
   if (cachedToken) return cachedToken;
   const user = process.env.LEXSTORE_USER;
   const pass = process.env.LEXSTORE_PASS;
@@ -65,7 +72,11 @@ function fail(msg) {
 
 async function api(path, init) {
   const token = await getToken();
-  const auth = token ? { Authorization: `Bearer ${token}` } : {};
+  const auth = API_KEY
+    ? { 'X-API-Key': API_KEY }
+    : token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: { 'content-type': 'application/json', ...auth, ...(init?.headers || {}) },

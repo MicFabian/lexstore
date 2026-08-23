@@ -9,6 +9,9 @@ import java.util.UUID
 class ProjectAccessDeniedException(projectId: UUID) :
     RuntimeException("You do not have access to project $projectId.")
 
+class ReadOnlyKeyException :
+    RuntimeException("This API key is read-only. Create a read & write key to change translations.")
+
 @Component
 class ProjectAccess(
     private val contributors: ContributorRepository,

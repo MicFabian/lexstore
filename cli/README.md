@@ -17,7 +17,12 @@ Or run directly: `node cli/lexstore.mjs <command>`.
 export LEXSTORE_API=http://localhost:8088/api          # default
 export LEXSTORE_KEYCLOAK=http://localhost:8089/realms/lexstore  # default
 
-# Authenticate (the API requires a Keycloak token). Either:
+# Authenticate. An API key is the right choice for CI: create one in the
+# project's settings, or an organisation-wide one under Organisation → API
+# access, and revoke it on its own if it leaks.
+export LEXSTORE_API_KEY=tl_live_...                    # preferred
+
+# Or sign in as a person, for interactive use:
 export LEXSTORE_USER=owner LEXSTORE_PASS=owner         # password grant, or
 export LEXSTORE_TOKEN=<access-token>                   # a pre-fetched token
 ```

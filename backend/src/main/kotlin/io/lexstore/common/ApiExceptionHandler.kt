@@ -56,6 +56,10 @@ class ApiExceptionHandler {
     fun conflict(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.CONFLICT, "Conflict", ex.message)
 
+    @ExceptionHandler(ReadOnlyKeyException::class)
+    fun readOnlyKey(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.FORBIDDEN, "Read-only key", ex.message)
+
     @ExceptionHandler(io.lexstore.org.OrgAccessDeniedException::class)
     fun orgDenied(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.FORBIDDEN, "Forbidden", ex.message)

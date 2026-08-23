@@ -43,11 +43,6 @@ const WORKSPACE = new Set(['projects', 'ai']);
         <span class="cmdk__keys"><span class="kbd">⌘</span><span class="kbd">K</span></span>
       </button>
 
-      <button class="btn btn--icon btn--subtle bell" type="button" aria-label="Notifications">
-        <lx-icon name="Bell" [size]="17" color="var(--lx-slate)" />
-        <span class="bell-dot"></span>
-      </button>
-
       <div style="position:relative">
         <lx-btn variant="primary" [sm]="true" icon="UserPlus" (clicked)="openInvite()">Invite</lx-btn>
         @if (inviteOpen()) {
@@ -115,18 +110,6 @@ const WORKSPACE = new Set(['projects', 'ai']);
     .crumb-active {
       color: var(--lx-ink);
       font-weight: 600;
-    }
-    .bell {
-      position: relative;
-    }
-    .bell-dot {
-      position: absolute;
-      top: 7px;
-      right: 8px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--lx-st-untranslated);
     }
   `,
 })

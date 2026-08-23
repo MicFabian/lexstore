@@ -250,13 +250,15 @@ interface IntegrationItem {
                       <span class="int-ico"><lx-icon [name]="it.icon" [size]="18" color="var(--lx-ink)" /></span>
                       <span style="font-weight:700;font-size:14px">{{ it.name }}</span>
                       <div class="spacer"></div>
-                      @if (it.on) {
-                        <span class="chip chip--translated">Connected</span>
-                      } @else {
-                        <button class="btn btn--ghost btn--sm">Connect</button>
-                      }
+                      <span class="chip chip--neutral">Available</span>
                     </div>
                     <p class="muted" style="font-size:12.5px;margin:0;line-height:1.5">{{ it.desc }}</p>
+                    <p class="muted" style="font-size:12.5px;margin:10px 0 0;line-height:1.5">
+                      Create a key under <b>API keys</b> for this project, or under
+                      <a [routerLink]="['/', 'organisation']">Organisation → API access</a>
+                      for one that reaches every project, then set
+                      <code>LEXSTORE_API_KEY</code>.
+                    </p>
                   </div>
                 }
               </div>
@@ -442,11 +444,17 @@ export class SettingsScreen implements OnInit {
     { id: 'export', icon: 'FileUp', label: 'Import / Export' },
   ];
 
+  /**
+   * Only what exists. A tile reading "Connected" for an integration nobody
+   * built says the work is done; the ones that are not built are not listed.
+   */
   protected readonly integrations: IntegrationItem[] = [
-    { icon: 'Github', name: 'GitHub', desc: 'Sync source strings on every push.', on: true },
-    { icon: 'Terminal', name: 'CLI & API', desc: 'Pull and push from CI/CD.', on: true },
-    { icon: 'Webhook', name: 'Webhooks', desc: 'Notify your services on status changes.', on: false },
-    { icon: 'MessageSquare', name: 'Slack', desc: 'Post when a language reaches 100%.', on: false },
+    {
+      icon: 'Terminal',
+      name: 'CLI & API',
+      desc: 'Pull and push translations from your terminal or CI, using an API key.',
+      on: true,
+    },
   ];
 
   protected readonly glossary = signal<GlossaryEntryView[]>([]);

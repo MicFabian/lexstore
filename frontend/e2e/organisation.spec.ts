@@ -116,3 +116,22 @@ test.describe('organisation API access', () => {
     expect(reach).toBe(200);
   });
 });
+
+test.describe('honest surfaces', () => {
+  test('integrations list only what exists, with no dead connect button', async ({ page }) => {
+    await page.goto('/settings');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'Integrations' }).click();
+
+    await expect(page.locator('.two-col .card')).toHaveCount(1);
+    await expect(page.locator('.two-col')).toContainText('CLI & API');
+    await expect(page.locator('.two-col button', { hasText: 'Connect' })).toHaveCount(0);
+    await expect(page.locator('.two-col')).not.toContainText('Connected');
+  });
+
+  test('the top bar has no notification bell promising unread news', async ({ page }) => {
+    await page.goto('/editor');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[aria-label="Notifications"]')).toHaveCount(0);
+  });
+});

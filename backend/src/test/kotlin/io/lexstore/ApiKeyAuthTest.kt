@@ -50,12 +50,14 @@ class ApiKeyAuthTest : IntegrationTestBase() {
             .retrieve().body(mapType)!!["rows"] as List<Map<String, Any?>>
         val termId = rows.first()["id"] as String
 
-        assertThrows<HttpClientErrorException.Forbidden> {
+        val ex = assertThrows<HttpClientErrorException.Forbidden> {
             client.put().uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId")
                 .header("X-API-Key", secret)
                 .body(mapOf("value" to "Von einem Nur-Lese-Schlüssel", "status" to "translated"))
                 .retrieve().toBodilessEntity()
         }
+        // The reason must name the scope, not imply the project is unreachable.
+        assertThat(ex.responseBodyAsString).contains("read-only")
     }
 
     @Test

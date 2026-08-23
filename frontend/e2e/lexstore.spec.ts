@@ -157,7 +157,7 @@ test.describe('languages + contributors + settings', () => {
     await page.goto('/settings');
     await waitShell(page);
     await page.locator('.subnav button', { hasText: 'Integrations' }).click();
-    await expect(page.locator('.card', { hasText: 'GitHub' })).toBeVisible();
+    await expect(page.locator('.card', { hasText: 'CLI & API' })).toBeVisible();
     await page.locator('.subnav button', { hasText: 'Import / Export' }).click();
     await expect(page.locator('.card', { hasText: 'Import strings' })).toBeVisible();
   });
