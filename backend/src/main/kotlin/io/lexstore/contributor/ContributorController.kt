@@ -37,7 +37,7 @@ class ContributorController(private val service: ContributorService) {
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable id: UUID,
-        @RequestBody req: UpdateContributorRequest,
+        @Valid @RequestBody req: UpdateContributorRequest,
     ): ContributorView = service.update(projectId, id, req)
 
     @DeleteMapping("/{id}")

@@ -41,7 +41,7 @@ class OrgController(private val service: OrgService) {
     fun deleteCredential(@PathVariable id: UUID) = service.deleteCredential(id)
 
     @PutMapping("/agent")
-    fun updateAgentPlan(@RequestBody req: UpdateAgentPlanRequest): OrganisationView =
+    fun updateAgentPlan(@Valid @RequestBody req: UpdateAgentPlanRequest): OrganisationView =
         service.updateAgentPlan(req)
 
     /** API keys that reach every project this organisation owns. */

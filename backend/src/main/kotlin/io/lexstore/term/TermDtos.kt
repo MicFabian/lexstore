@@ -2,6 +2,7 @@ package io.lexstore.term
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.util.UUID
 
 data class PluralForms(val one: String?, val other: String?)
@@ -100,18 +101,18 @@ data class Page<T>(
 }
 
 data class CreateTermRequest(
-    @field:NotBlank val key: String,
-    @field:NotBlank val source: String,
-    val ctx: String? = null,
-    val tags: List<String>? = null,
-    val pluralOne: String? = null,
-    val pluralOther: String? = null,
+    @field:NotBlank @field:Size(max = 255) val key: String,
+    @field:NotBlank @field:Size(max = 2000) val source: String,
+    @field:Size(max = 255) val ctx: String? = null,
+    @field:Size(max = 20) val tags: List<String>? = null,
+    @field:Size(max = 255) val pluralOne: String? = null,
+    @field:Size(max = 255) val pluralOther: String? = null,
 )
 
 data class UpdateTermRequest(
-    val source: String?,
-    val ctx: String?,
-    val tags: List<String>?,
+    @field:Size(max = 2000) val source: String?,
+    @field:Size(max = 255) val ctx: String?,
+    @field:Size(max = 20) val tags: List<String>?,
 )
 
 data class AddCommentRequest(

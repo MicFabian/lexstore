@@ -32,6 +32,6 @@ class ProjectController(private val service: ProjectService) {
     @PatchMapping("/{projectId}")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @io.lexstore.common.RequiresProjectRole(io.lexstore.common.ContributorRole.OWNER, io.lexstore.common.ContributorRole.ADMIN)
-    fun update(@PathVariable projectId: UUID, @RequestBody req: UpdateProjectRequest): ProjectDetail =
+    fun update(@PathVariable projectId: UUID, @Valid @RequestBody req: UpdateProjectRequest): ProjectDetail =
         service.update(projectId, req)
 }

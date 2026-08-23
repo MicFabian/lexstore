@@ -49,7 +49,7 @@ class FeatureController(private val service: FeatureService) {
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable featureId: UUID,
-        @RequestBody req: UpdateFeatureRequest,
+        @Valid @RequestBody req: UpdateFeatureRequest,
     ): FeatureView = service.update(projectId, featureId, req)
 
     @DeleteMapping("/{featureId}")

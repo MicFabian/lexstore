@@ -112,6 +112,28 @@ class ApiExceptionHandler {
     }
 
     /**
+     * A value too long for its column, or a duplicate where the schema demands
+     * uniqueness, is the caller's mistake. Reported as such rather than as a
+     * server error, without echoing the SQL that says so.
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException::class)
+    fun dataIntegrity(ex: org.springframework.dao.DataIntegrityViolationException): ProblemDetail {
+        log.warn("Rejected a request that violates a database constraint", ex)
+        val message = ex.mostSpecificCause.message.orEmpty()
+        val detail = when {
+            message.contains("too long", ignoreCase = true) ||
+                message.contains("value too long", ignoreCase = true) ->
+                "One of the values is longer than this field allows."
+            message.contains("duplicate key", ignoreCase = true) ->
+                "That value is already taken."
+            message.contains("not-null", ignoreCase = true) ->
+                "A required value is missing."
+            else -> "The request does not fit what this field accepts."
+        }
+        return problem(HttpStatus.BAD_REQUEST, "Invalid request", detail)
+    }
+
+    /**
      * Programming errors that would otherwise surface their message to the
      * client. Spring's own request exceptions keep their proper 4xx handling.
      * The client gets a generic message; the cause goes to the log, since an

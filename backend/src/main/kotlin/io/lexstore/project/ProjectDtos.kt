@@ -42,7 +42,7 @@ data class CreateProjectRequest(
 )
 
 data class UpdateProjectRequest(
-    val name: String?,
+    @field:jakarta.validation.constraints.Size(max = 255) val name: String?,
     val mark: String?,
     val sourceLang: String?,
     /** Data URI of the uploaded image; blank clears it back to the color mark. */

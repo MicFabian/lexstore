@@ -43,7 +43,7 @@ class TermController(private val service: TermService) {
     fun update(
         @PathVariable projectId: UUID,
         @PathVariable termId: UUID,
-        @RequestBody req: UpdateTermRequest,
+        @Valid @RequestBody req: UpdateTermRequest,
     ): TermView = service.update(projectId, termId, req)
 
     @DeleteMapping("/{termId}")
