@@ -68,6 +68,40 @@ class GlossaryAndProofreadApiTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `a plural term's placeholders are checked, not just its singular`() {
+        val key = "plural.proof.${System.nanoTime()}"
+        client.post().uri("/api/projects/$MOSAIC_WEB/terms")
+            .body(
+                mapOf(
+                    "key" to key,
+                    "source" to "1 item",
+                    "pluralOne" to "1 item",
+                    "pluralOther" to "{count} items",
+                ),
+            )
+            .retrieve().toBodilessEntity()
+
+        @Suppress("UNCHECKED_CAST")
+        val rows = client.get().uri("/api/projects/$MOSAIC_WEB/languages/de/translations?q=$key")
+            .retrieve().body(mapType)!!["rows"] as List<Map<String, Any?>>
+        val termId = rows.first()["id"] as String
+
+        client.put().uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId")
+            .body(mapOf("value" to "{anzahl} Artikel", "status" to "translated"))
+            .retrieve().toBodilessEntity()
+
+        val result = client.get()
+            .uri("/api/projects/$MOSAIC_WEB/languages/de/translations/$termId/proofread")
+            .retrieve().body(mapType)!!
+
+        @Suppress("UNCHECKED_CAST")
+        val messages = (result["issues"] as List<Map<String, Any?>>).map { it["message"] as String }
+        // The singular carries no placeholder; {count} lives in the plural form.
+        assertThat(messages).anyMatch { it.contains("missing {count}") }
+        assertThat(messages).anyMatch { it.contains("adds {anzahl}") }
+    }
+
+    @Test
     fun `a do-not-translate term must survive into the translation`() {
         client.post().uri("/api/projects/$MOSAIC_WEB/glossary")
             .body(mapOf("term" to "Lexstore", "doNotTranslate" to true))

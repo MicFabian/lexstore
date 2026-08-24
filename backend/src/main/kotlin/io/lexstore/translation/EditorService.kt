@@ -202,7 +202,11 @@ class EditorService(
         return proofreader.proofread(
             projectId = projectId,
             languageCode = languageCode,
-            sourceText = term.sourceText,
+            // A plural term keeps its placeholders in the plural forms, so
+            // checking the singular alone would miss {count} entirely.
+            sourceText = listOfNotNull(term.sourceText, term.pluralOne, term.pluralOther)
+                .distinct()
+                .joinToString(" "),
             translation = stored,
             sourceLang = project.sourceLang,
             projectContext = project.translationContext,
