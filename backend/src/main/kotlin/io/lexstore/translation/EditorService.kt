@@ -32,6 +32,7 @@ class TranslationConflictException :
     RuntimeException("Someone else saved this translation while you were editing it. Reload to see their version.")
 
 private const val MAX_AUTO_TRANSLATE_BATCH = 200
+private val EDITOR_FILTERS = setOf("untranslated", "new", "fuzzy", "proofread")
 private const val DEFAULT_EDITOR_PAGE = 100
 private const val MAX_EDITOR_PAGE = 500
 
@@ -77,7 +78,12 @@ class EditorService(
         languages.findByProjectIdAndCode(projectId, languageCode)
             ?: throw LanguageNotInProjectException(languageCode)
 
-        val statusFilter = status?.takeIf { it != "all" }?.trim().orEmpty()
+        // An unrecognised filter would match nothing and read as an empty
+        // project, so a typo is refused rather than answered with silence.
+        val statusFilter = status?.trim()?.takeIf { it.isNotEmpty() && it != "all" }.orEmpty()
+        require(statusFilter.isEmpty() || statusFilter in EDITOR_FILTERS) {
+            "Unknown filter '$statusFilter'. Use one of: " + EDITOR_FILTERS.joinToString(", ") + "."
+        }
         val q = query?.trim().orEmpty()
         val boundedSize = size.coerceIn(1, MAX_EDITOR_PAGE)
 

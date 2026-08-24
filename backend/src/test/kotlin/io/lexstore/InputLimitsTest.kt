@@ -74,6 +74,25 @@ class InputLimitsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `an unknown editor filter is refused rather than matching nothing`() {
+        val ex = assertThrows<HttpClientErrorException.BadRequest> {
+            client.get().uri("/api/projects/$MOSAIC_WEB/languages/de/translations?status=banana")
+                .retrieve()
+                .body(object : org.springframework.core.ParameterizedTypeReference<Map<String, Any?>>() {})
+        }
+        assertThat(ex.responseBodyAsString).contains("untranslated")
+    }
+
+    @Test
+    fun `the real filters still work`() {
+        for (filter in listOf("all", "untranslated", "new", "fuzzy", "proofread")) {
+            client.get().uri("/api/projects/$MOSAIC_WEB/languages/de/translations?status=$filter")
+                .retrieve()
+                .body(object : org.springframework.core.ParameterizedTypeReference<Map<String, Any?>>() {})
+        }
+    }
+
+    @Test
     fun `a value within the limit is still accepted`() {
         client.post().uri("/api/projects/$MOSAIC_WEB/terms")
             .body(mapOf("key" to "limits.ok", "source" to "A normal source string"))
