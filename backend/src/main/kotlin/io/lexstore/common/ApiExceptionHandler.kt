@@ -122,12 +122,18 @@ class ApiExceptionHandler {
     fun dataIntegrity(ex: org.springframework.dao.DataIntegrityViolationException): ProblemDetail {
         log.warn("Rejected a request that violates a database constraint", ex)
         val message = ex.mostSpecificCause.message.orEmpty()
+
+        // A uniqueness clash is a conflict whichever way it is discovered. Two
+        // callers racing must not get a different status from one arriving
+        // second, or a client cannot decide what to do from the code alone.
+        if (message.contains("duplicate key", ignoreCase = true)) {
+            return problem(HttpStatus.CONFLICT, "Conflict", "That value is already taken.")
+        }
+
         val detail = when {
             message.contains("too long", ignoreCase = true) ||
                 message.contains("value too long", ignoreCase = true) ->
                 "One of the values is longer than this field allows."
-            message.contains("duplicate key", ignoreCase = true) ->
-                "That value is already taken."
             message.contains("not-null", ignoreCase = true) ->
                 "A required value is missing."
             else -> "The request does not fit what this field accepts."
