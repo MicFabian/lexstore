@@ -64,6 +64,10 @@ class AiTranslationService(
             }
         }
 
+        if (resolved?.source == io.lexstore.org.CredentialSource.PLATFORM_AGENT) {
+            resolved.orgId?.let { credentials.chargeAgentUse(it) }
+        }
+
         // Miss → translate, store, log.
         return try {
             val out = translator.translate(
@@ -72,9 +76,6 @@ class AiTranslationService(
                     tone, formality, req.projectContext, resolved?.apiKey,
                 ),
             )
-            if (resolved?.source == io.lexstore.org.CredentialSource.PLATFORM_AGENT) {
-                resolved.orgId?.let { credentials.chargeAgentUse(it) }
-            }
             // Upsert: a forced (noCache) refresh of an existing key updates it in place.
             val entry = cache.findByCacheKey(key)
             if (entry != null) {

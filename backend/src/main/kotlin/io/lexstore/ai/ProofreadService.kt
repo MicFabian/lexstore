@@ -77,6 +77,12 @@ class ProofreadService(
             .joinToString(". ")
             .takeIf { it.isNotBlank() }
 
+        // Charged before the call, so an exhausted quota stops the spend rather
+        // than being noticed after the provider has been paid.
+        if (resolved.source == CredentialSource.PLATFORM_AGENT) {
+            resolved.orgId?.let { credentials.chargeAgentUse(it) }
+        }
+
         val out = reviewer.translate(
             TranslateInput(
                 sourceText = ProofreadPrompt.user(sourceText, translation),
@@ -88,10 +94,6 @@ class ProofreadService(
                 apiKey = resolved.apiKey,
             ),
         )
-        if (resolved.source == CredentialSource.PLATFORM_AGENT) {
-            resolved.orgId?.let { credentials.chargeAgentUse(it) }
-        }
-
         val parsed = ProofreadParser.parse(out.text, mapper)
         val modelIssues = parsed?.path("issues")?.mapNotNull { node ->
             val message = node.path("message").asText("").trim()

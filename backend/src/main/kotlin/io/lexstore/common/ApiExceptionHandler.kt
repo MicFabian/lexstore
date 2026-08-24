@@ -70,6 +70,10 @@ class ApiExceptionHandler {
     fun orgDenied(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.FORBIDDEN, "Forbidden", ex.message)
 
+    @ExceptionHandler(io.lexstore.org.AgentUnavailableException::class)
+    fun agentUnavailable(ex: RuntimeException): ProblemDetail =
+        problem(HttpStatus.SERVICE_UNAVAILABLE, "Agent unavailable", ex.message)
+
     @ExceptionHandler(io.lexstore.org.AgentQuotaExceededException::class)
     fun quotaExceeded(ex: RuntimeException): ProblemDetail =
         problem(HttpStatus.PAYMENT_REQUIRED, "Agent quota reached", ex.message)

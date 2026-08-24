@@ -8,6 +8,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
+class AgentUnavailableException(message: String) : RuntimeException(message)
+
 class AgentQuotaExceededException(used: Long, quota: Long) :
     RuntimeException("This organisation has used $used of $quota agent translations this month.")
 
@@ -52,7 +54,14 @@ class CredentialResolver(
             }
         }
         val org = orgId?.let { organisations.findById(it).orElse(null) }
-        if (org?.agentPlan != null && agentKey.isNotBlank()) {
+        if (org?.agentPlan != null) {
+            if (agentKey.isBlank()) {
+                throw AgentUnavailableException(
+                    "This organisation is on the platform agent, but the platform has no " +
+                        "provider key configured. Set LEXSTORE_AGENT_KEY, or store the " +
+                        "organisation's own key.",
+                )
+            }
             return ResolvedCredential("claude", agentKey, CredentialSource.PLATFORM_AGENT, org.id)
         }
         val fromEnv = when (provider) {
