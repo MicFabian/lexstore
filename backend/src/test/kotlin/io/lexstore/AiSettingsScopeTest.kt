@@ -18,6 +18,7 @@ class AiSettingsScopeTest : IntegrationTestBase() {
     @Autowired private lateinit var settings: AiSettingsRepository
     @Autowired private lateinit var organisations: OrganisationRepository
     @Autowired private lateinit var requests: io.lexstore.ai.TranslationRequestRepository
+    @Autowired private lateinit var orgAccess: io.lexstore.org.OrgAccess
 
     @Test
     fun `each organisation configures its own provider`() {
@@ -60,6 +61,15 @@ class AiSettingsScopeTest : IntegrationTestBase() {
         val visible = ai.requests(0, 200)
         assertThat(visible.map { it.sourceText })
             .doesNotContain("Another organisation's string")
+    }
+
+    @Test
+    fun `resolving the caller's organisation gives the same answer every time`() {
+        val access = orgAccess
+        val answers = (1..5).map { access.currentOrgId() }.toSet()
+        // Picking whichever membership row came back first made this depend on
+        // nothing the caller could see.
+        assertThat(answers).hasSize(1)
     }
 
     @Test

@@ -14,16 +14,28 @@ class OrgAccess(
     private val currentUser: CurrentUser,
 ) {
     /**
-     * The caller's organisation. A person belonging to several picks one by
-     * being asked for a specific project; the bare case takes their first,
-     * which is the only one that exists for now.
+     * The caller's organisation.
+     *
+     * Membership decides it, ordered so the answer is the same on every request
+     * — picking whichever row came back first made an endpoint's answer depend
+     * on nothing the caller could see. Someone in several is asked to name one,
+     * rather than being given one at random.
      */
     fun currentOrgId(): UUID {
         val email = currentUser.identity().email
-        val mine = email?.let { members.findByEmailIgnoreCase(it) }.orEmpty()
-        return mine.firstOrNull()?.orgId
-            ?: organisations.findAll().firstOrNull()?.id
-            ?: throw OrgAccessDeniedException("You do not belong to an organisation yet.")
+        val mine = email?.let { members.findByEmailIgnoreCase(it) }
+            .orEmpty()
+            .sortedBy { it.orgId.toString() }
+        mine.firstOrNull()?.let { return it.orgId }
+
+        // A platform admin, or a context with security disabled, has no
+        // membership; the oldest organisation is a stable answer rather than
+        // whichever row the database returned first.
+        if (isPlatformAdmin()) {
+            return organisations.findAll().minByOrNull { it.createdAt }?.id
+                ?: throw OrgAccessDeniedException("No organisation exists yet.")
+        }
+        throw OrgAccessDeniedException("You do not belong to an organisation yet.")
     }
 
     fun assertAdmin(orgId: UUID) {
