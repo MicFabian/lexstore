@@ -28,6 +28,8 @@ class ProjectService(
     private val access: ProjectAccess,
     private val orgAccess: io.lexstore.org.OrgAccess,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
+
     /**
      * Counts come from three grouped queries rather than loading every term and
      * translation of every project: the dashboard only shows the numbers.
@@ -88,6 +90,21 @@ class ProjectService(
             ),
         )
         return detailOf(saved)
+    }
+
+    /**
+     * Removes a project and everything under it.
+     *
+     * Terms, translations, languages, contributors, features, glossary entries
+     * and API keys all reference the project with ON DELETE CASCADE, so the
+     * database does the work; the AI request log keeps its rows with a null
+     * project so past spend stays accountable.
+     */
+    @Transactional
+    fun delete(id: UUID) {
+        val project = get(id)
+        projects.delete(project)
+        log.info("Deleted project {} ({})", project.name, project.code)
     }
 
     @Transactional

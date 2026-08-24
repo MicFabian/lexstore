@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Icon, IconName } from '../../shared/icon';
 import { Btn } from '../../shared/primitives';
 import { AppearanceControls } from '../../shell/appearance-controls';
@@ -144,6 +144,21 @@ interface IntegrationItem {
                     </div>
                     <div><lx-btn variant="primary" [disabled]="saving()" (clicked)="saveProject()">{{ saving() ? 'Saving…' : 'Save changes' }}</lx-btn></div>
                   </div>
+                </div>
+
+                <div class="panel danger">
+                  <div class="panel__head">
+                    <lx-icon name="Trash2" [size]="17" color="var(--lx-danger)" />
+                    <h2 class="ptitle">Delete this project</h2>
+                  </div>
+                  <p class="hint">
+                    Its terms, translations, languages, contributors, features and glossary
+                    go with it. The AI request log keeps its rows, so past spend stays
+                    accountable. This cannot be undone.
+                  </p>
+                  <lx-btn variant="ghost" icon="Trash2" (clicked)="askDelete()">
+                    Delete {{ project()?.name }}
+                  </lx-btn>
                 </div>
 
                 <div class="panel">
@@ -310,6 +325,20 @@ interface IntegrationItem {
       />
     }
 
+    @if (confirmingDelete()) {
+      <lx-prompt-dialog
+        title="Delete this project?"
+        [description]="
+          'Everything in ' + (project()?.name ?? 'this project') +
+          ' goes with it. Type its name to confirm.'
+        "
+        [fields]="[{ name: 'name', label: 'Project name', placeholder: project()?.name ?? '' }]"
+        submitLabel="Delete permanently"
+        (submitted)="confirmDelete($event)"
+        (cancelled)="confirmingDelete.set(false)"
+      />
+    }
+
     @if (pendingRevoke(); as k) {
       <lx-confirm-dialog
         title="Revoke this key?"
@@ -417,6 +446,7 @@ export class SettingsScreen implements OnInit {
   private readonly api = inject(ApiService);
   private readonly state = inject(ProjectStateService);
   protected readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
   protected readonly project = this.state.current;
 
   protected readonly tab = signal<'general' | 'appearance' | 'glossary' | 'api' | 'integrations' | 'export'>('api');
@@ -456,6 +486,39 @@ export class SettingsScreen implements OnInit {
       on: true,
     },
   ];
+
+  protected readonly confirmingDelete = signal(false);
+
+  protected askDelete(): void {
+    this.confirmingDelete.set(true);
+  }
+
+  /**
+   * Typing the name is the guard: a project holds work that cannot be restored,
+   * and a single click is too easy to make by accident.
+   */
+  protected confirmDelete(values: Record<string, string>): void {
+    this.confirmingDelete.set(false);
+    const pid = this.state.current()?.id;
+    const expected = this.project()?.name?.trim();
+    if (!pid || !expected) return;
+    if (values['name']?.trim() !== expected) {
+      this.toast.show({ message: 'That name does not match — nothing was deleted.', tone: 'error' });
+      return;
+    }
+    this.api.deleteProject(pid).subscribe({
+      next: () => {
+        this.toast.show(`Deleted ${expected}`);
+        this.state.load();
+        this.router.navigate(['/', 'projects']);
+      },
+      error: (err) =>
+        this.toast.show({
+          message: err?.error?.detail ?? 'That project could not be deleted.',
+          tone: 'error',
+        }),
+    });
+  }
 
   protected readonly glossary = signal<GlossaryEntryView[]>([]);
   protected readonly languages = signal<{ code: string; name: string }[]>([]);

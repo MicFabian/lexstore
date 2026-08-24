@@ -3,6 +3,7 @@ package io.lexstore.project
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -40,6 +41,13 @@ class ProjectController(private val service: ProjectService) {
             .header("Cache-Control", "public, max-age=3600")
             .body(bytes)
     }
+
+    /** Removing a project takes its terms, translations and members with it. */
+    @DeleteMapping("/{projectId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('OWNER')")
+    @io.lexstore.common.RequiresProjectRole(io.lexstore.common.ContributorRole.OWNER)
+    fun delete(@PathVariable projectId: UUID) = service.delete(projectId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

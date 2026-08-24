@@ -60,6 +60,10 @@ export class ApiService {
   createProject(body: { name: string; code: string; mark?: string }): Observable<ProjectDetail> {
     return this.http.post<ProjectDetail>(`${BASE}/projects`, body);
   }
+  deleteProject(projectId: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/projects/${projectId}`);
+  }
+
   updateProject(
     projectId: string,
     body: { name?: string; mark?: string; sourceLang?: string; image?: string; translationContext?: string },

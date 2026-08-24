@@ -29,11 +29,18 @@ class TermService(
     private val projects: io.lexstore.project.ProjectRepository,
     private val currentUser: CurrentUser,
 ) {
+    private fun requireProject(projectId: UUID) {
+        if (!projects.existsById(projectId)) throw io.lexstore.project.ProjectNotFoundException(projectId.toString())
+    }
+
     fun list(projectId: UUID): List<TermView> =
         assemble(projectId, terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId))
 
     /** Page-limited variant — only the requested slice of terms is hydrated. */
     fun listPaged(projectId: UUID, page: Int, size: Int): Page<TermView> {
+        // A project that does not exist is not an empty project: answering with
+        // an empty page makes a wrong id look like a project with no terms.
+        requireProject(projectId)
         val total = terms.countByProjectId(projectId)
         val slice = terms.findByProjectIdOrderByCreatedAtDescIdAsc(projectId, PageRequest.of(page, size))
         return Page(assemble(projectId, slice), page, size, total)

@@ -185,3 +185,49 @@ test.describe('failed requests', () => {
     await expect(page.locator('.toast')).toHaveCount(1, { timeout: 10000 });
   });
 });
+
+test.describe('project deletion', () => {
+  test('deleting asks for the name and refuses a mismatch', async ({ page }) => {
+    await page.goto('/settings');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+    await page.locator('.subnav button', { hasText: 'General' }).click();
+
+    await page.locator('.danger lx-btn button').click();
+    await expect(page.locator('.dlg')).toBeVisible();
+
+    // A name that does not match must delete nothing.
+    await page.locator('.dlg input').first().fill('definitely not the name');
+    await page.locator('.dlg button', { hasText: 'Delete permanently' }).click();
+    await expect(page.locator('.toast')).toContainText('does not match');
+
+    // The project is still there.
+    await page.goto('/projects');
+    await expect(page.locator('.rail__brand')).toBeVisible();
+    await expect(page.locator('body')).toContainText('Mosaic Web App');
+  });
+
+  test('a project created for this test can be deleted', async ({ page }) => {
+    await page.goto('/projects');
+    await expect(page.locator('.rail__brand')).toBeVisible({ timeout: 15000 });
+
+    const name = `Disposable ${Date.now()}`;
+    const status = await page.evaluate(async (name) => {
+      const token = localStorage.getItem('lx.e2e.token');
+      const auth = { authorization: `Bearer ${token}`, 'content-type': 'application/json' };
+      const created = await (
+        await fetch('/api/projects', {
+          method: 'POST',
+          headers: auth,
+          body: JSON.stringify({ name, code: `disposable-${Date.now()}` }),
+        })
+      ).json();
+      const res = await fetch(`/api/projects/${created.id}`, { method: 'DELETE', headers: auth });
+      return res.status;
+    }, name);
+
+    expect(status).toBe(204);
+    await page.reload();
+    await expect(page.locator('.rail__brand')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText(name);
+  });
+});
