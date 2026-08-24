@@ -14,7 +14,13 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
 
-data class ImportResult(val created: Int, val updated: Int, val total: Int)
+data class ImportResult(
+    val created: Int,
+    val updated: Int,
+    val total: Int,
+    /** Entries whose translation already matched, so nothing was written. */
+    val unchanged: Int = 0,
+)
 
 private const val MAX_IMPORT_ENTRIES = 20_000
 private const val MAX_IMPORT_KEY_CHARS = 512
@@ -95,6 +101,7 @@ class ImportExportService(
             .associateBy { it.termId }
 
         var updated = 0
+        var unchanged = 0
         val fresh = mutableListOf<Translation>()
         // An import changes translations like any other edit, so it belongs in
         // the history: without this a value changes with no trace of who or when.
@@ -105,17 +112,22 @@ class ImportExportService(
             val existing = existingTranslations[term.id]
             if (existing != null) {
                 val before = existing.value
-                existing.apply {
-                    this.value = value
-                    status = TranslationStatus.TRANSLATED
-                    updatedAt = now
-                    modifiedByName = me.name
-                    modifiedByAvatar = me.avatar
-                }
+                // A re-import of unchanged content must not claim the row: it
+                // would make the importer the last editor of every string and
+                // report work that did not happen.
                 if (before != value) {
+                    existing.apply {
+                        this.value = value
+                        status = TranslationStatus.TRANSLATED
+                        updatedAt = now
+                        modifiedByName = me.name
+                        modifiedByAvatar = me.avatar
+                    }
                     history += event(projectId, term.id, languageCode, before, value, me, now)
+                    updated++
+                } else {
+                    unchanged++
                 }
-                updated++
             } else {
                 fresh += Translation(
                     termId = term.id,
@@ -133,7 +145,7 @@ class ImportExportService(
         }
         events.saveAll(history)
         projects.touch(projectId, now)
-        return ImportResult(created, updated + fresh.size, entries.size)
+        return ImportResult(created, updated + fresh.size, entries.size, unchanged)
     }
 
     /** Export a language as an ordered key→value map of all terms. */

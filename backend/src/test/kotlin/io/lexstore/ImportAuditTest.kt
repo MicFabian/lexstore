@@ -37,6 +37,22 @@ class ImportAuditTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `re-importing unchanged content reports nothing changed`() {
+        val entries = mapOf("nav.dashboard" to "Übersicht", "nav.projects" to "Projekte")
+
+        client.post().uri("/api/projects/$MOSAIC_WEB/import?lang=de")
+            .body(entries).retrieve().toBodilessEntity()
+
+        val again = client.post().uri("/api/projects/$MOSAIC_WEB/import?lang=de")
+            .body(entries).retrieve().body(mapType)!!
+
+        // Claiming these as updates would report work nobody did, and make the
+        // importer the last editor of every string.
+        assertThat(again["updated"]).isEqualTo(0)
+        assertThat(again["unchanged"]).isEqualTo(2)
+    }
+
+    @Test
     fun `an import that changes nothing does not invent history`() {
         client.post().uri("/api/projects/$MOSAIC_WEB/import?lang=de")
             .body(mapOf("nav.dashboard" to "Gleicher Wert"))

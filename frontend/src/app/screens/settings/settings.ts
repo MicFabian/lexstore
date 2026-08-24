@@ -600,7 +600,14 @@ export class SettingsScreen implements OnInit {
       try {
         const data = JSON.parse(reader.result as string) as Record<string, string>;
         this.api.importTranslations(pid, this.ioLang(), data).subscribe({
-          next: (r) => this.toast.show(`Imported ${r.total} strings (${r.created} new)`),
+          next: (r) =>
+            this.toast.show(
+              r.updated === 0 && r.created === 0
+                ? `All ${r.total} strings already matched — nothing changed`
+                : `Imported ${r.updated} strings` +
+                    (r.created > 0 ? `, ${r.created} new terms` : '') +
+                    (r.unchanged > 0 ? `, ${r.unchanged} already matched` : ''),
+            ),
           error: () => this.toast.show('Import failed (check the language and file)'),
         });
       } catch {

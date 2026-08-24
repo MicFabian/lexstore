@@ -345,8 +345,8 @@ export class ApiService {
     projectId: string,
     lang: string,
     entries: Record<string, string>,
-  ): Observable<{ created: number; updated: number; total: number }> {
-    return this.http.post<{ created: number; updated: number; total: number }>(
+  ): Observable<{ created: number; updated: number; total: number; unchanged: number }> {
+    return this.http.post<{ created: number; updated: number; total: number; unchanged: number }>(
       `${BASE}/projects/${projectId}/import`,
       entries,
       { params: { lang } },
