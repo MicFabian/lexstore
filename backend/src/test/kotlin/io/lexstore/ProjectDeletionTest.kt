@@ -56,6 +56,16 @@ class ProjectDeletionTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `every sub-resource of an unknown project is a not-found`() {
+        val missing = "00000000-0000-0000-0000-0000000000ee"
+        for (path in listOf("languages", "contributors", "features", "glossary", "api-keys", "terms")) {
+            assertThrows<HttpClientErrorException.NotFound>("GET $path should be 404") {
+                client.get().uri("/api/projects/$missing/$path").retrieve().body(listType)
+            }
+        }
+    }
+
+    @Test
     fun `deleting something that is not there is a not-found`() {
         assertThrows<HttpClientErrorException.NotFound> {
             client.delete().uri("/api/projects/00000000-0000-0000-0000-0000000000ff")

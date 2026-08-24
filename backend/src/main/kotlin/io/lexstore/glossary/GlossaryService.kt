@@ -14,10 +14,15 @@ private const val MAX_PROMPT_TERMS = 40
 
 @Service
 @Transactional(readOnly = true)
-class GlossaryService(private val entries: GlossaryRepository) {
+class GlossaryService(
+    private val entries: GlossaryRepository,
+    private val projects: io.lexstore.project.ProjectRepository,
+) {
 
-    fun list(projectId: UUID): List<GlossaryEntryView> =
-        entries.findByProjectIdOrderByTerm(projectId).map(::toView)
+    fun list(projectId: UUID): List<GlossaryEntryView> {
+        requireProject(projectId)
+        return entries.findByProjectIdOrderByTerm(projectId).map(::toView)
+    }
 
     @Transactional
     fun add(projectId: UUID, req: SaveGlossaryEntryRequest): GlossaryEntryView {
@@ -95,6 +100,17 @@ class GlossaryService(private val entries: GlossaryRepository) {
                     else -> null
                 }
             }
+    }
+
+
+    /**
+     * A missing project is a not-found, not an empty one: answering with an
+     * empty list makes a wrong id in a URL look like real, empty data.
+     */
+    private fun requireProject(projectId: UUID) {
+        if (!projects.existsById(projectId)) {
+            throw io.lexstore.project.ProjectNotFoundException(projectId.toString())
+        }
     }
 
     private fun toView(e: GlossaryEntry) =

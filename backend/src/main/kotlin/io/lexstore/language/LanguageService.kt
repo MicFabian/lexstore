@@ -18,10 +18,12 @@ class LanguageService(
     private val terms: TermRepository,
     private val translations: TranslationRepository,
     private val contributors: ContributorRepository,
+    private val projects: io.lexstore.project.ProjectRepository,
 ) {
     private val log = org.slf4j.LoggerFactory.getLogger(javaClass)
 
     fun list(projectId: UUID): List<LanguageView> {
+        requireProject(projectId)
         val langs = languages.findByProjectIdOrderByName(projectId)
         val termCount = terms.countByProjectId(projectId).toInt()
         val byLang = translations.statusCountsByLanguage(projectId).associateBy { it.languageCode }
@@ -70,6 +72,16 @@ class LanguageService(
             val removed = translations.deleteByProjectAndLanguage(projectId, code)
             languages.delete(it)
             if (removed > 0) log.info("Removed {} translations along with language {}", removed, code)
+        }
+    }
+
+    /**
+     * A missing project is a not-found, not an empty one: answering with an
+     * empty list makes a wrong id in a URL look like real, empty data.
+     */
+    private fun requireProject(projectId: UUID) {
+        if (!projects.existsById(projectId)) {
+            throw io.lexstore.project.ProjectNotFoundException(projectId.toString())
         }
     }
 }

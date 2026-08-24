@@ -8,7 +8,10 @@ import java.util.UUID
 
 @Service
 @Transactional(readOnly = true)
-class ApiKeyService(private val keys: ApiKeyRepository) {
+class ApiKeyService(
+    private val keys: ApiKeyRepository,
+    private val projects: io.lexstore.project.ProjectRepository,
+) {
 
     private val rng = SecureRandom()
 
@@ -32,8 +35,13 @@ class ApiKeyService(private val keys: ApiKeyRepository) {
             .joinToString("") { "%02x".format(it) }
     private val hex = "0123456789abcdef".toCharArray()
 
-    fun list(projectId: UUID): List<ApiKeyView> =
-        keys.findByProjectIdOrderByCreatedLabel(projectId).map(::toView)
+    fun list(projectId: UUID): List<ApiKeyView> {
+        // A missing project is a not-found, not one with no keys.
+        if (!projects.existsById(projectId)) {
+            throw io.lexstore.project.ProjectNotFoundException(projectId.toString())
+        }
+        return keys.findByProjectIdOrderByCreatedLabel(projectId).map(::toView)
+    }
 
     /** A key for every project the organisation owns, rather than just one. */
     @Transactional

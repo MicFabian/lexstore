@@ -12,6 +12,7 @@ class ContributorService(
     private val contributors: ContributorRepository,
     private val events: io.lexstore.translation.TranslationEventRepository,
     private val languages: io.lexstore.language.LanguageRepository,
+    private val projects: io.lexstore.project.ProjectRepository,
 ) {
 
     /**
@@ -20,6 +21,7 @@ class ContributorService(
      * already record who changed what and when.
      */
     fun list(projectId: UUID): List<ContributorView> {
+        requireProject(projectId)
         val lastSeen = events.lastActivityByAuthor(projectId).associate { it.authorName to it.at }
         return contributors.findByProjectIdOrderByName(projectId).map { c ->
             toView(c).copy(
@@ -70,6 +72,17 @@ class ContributorService(
      * Scoping someone to a language the project does not have assigns work that
      * cannot exist, and the screens would show it as a real assignment.
      */
+
+    /**
+     * A missing project is a not-found, not an empty one: answering with an
+     * empty list makes a wrong id in a URL look like real, empty data.
+     */
+    private fun requireProject(projectId: UUID) {
+        if (!projects.existsById(projectId)) {
+            throw io.lexstore.project.ProjectNotFoundException(projectId.toString())
+        }
+    }
+
     private fun validatedLanguages(projectId: UUID, langs: List<String>?): String {
         val requested = langs?.map { it.trim() }?.filter { it.isNotEmpty() } ?: return ""
         if (requested.isEmpty()) return ""
