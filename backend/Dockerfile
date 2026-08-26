@@ -8,10 +8,12 @@ RUN ./gradlew --no-daemon dependencies > /dev/null 2>&1 || true
 COPY src src
 RUN ./gradlew --no-daemon bootJar -x test
 
-FROM eclipse-temurin:24-jre AS runtime
+# Alpine, because its busybox provides the wget the HEALTHCHECK needs;
+# the Ubuntu-based JRE image ships neither wget nor curl.
+FROM eclipse-temurin:24-jre-alpine AS runtime
 WORKDIR /app
 # Run unprivileged: nothing here needs root.
-RUN useradd --system --uid 10001 lexstore
+RUN adduser -S -u 10001 lexstore
 COPY --from=build /src/build/libs/*.jar app.jar
 USER lexstore
 EXPOSE 8088

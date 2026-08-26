@@ -145,16 +145,25 @@ things that only make sense on a laptop:
 
 | Variable | Why |
 |---|---|
-| `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD` | Postgres connection |
-| `KEYCLOAK_ISSUER` | Realm the API validates tokens against |
+| `DATABASE_USER`, `DATABASE_PASSWORD` | Postgres connection |
+| `KEYCLOAK_ISSUER` | Realm the API validates tokens against, and what the browser's `/config.json` points at |
 | `ALLOWED_ORIGINS` | Browser origins allowed to call the API |
-| `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` | Optional; the mock translator is used when unset |
+| `APP_ORIGIN` | The SPA's public origin; substituted into the Keycloak realm at import as the redirect and CORS origin |
+| `LEXSTORE_SECRET_KEY` | Encrypts provider keys stored through the UI; without it they cannot be saved (the API logs a warning at startup) |
+| `LEXSTORE_AGENT_KEY` | The platform's own provider key for organisations on an agent plan |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` | Optional fallback provider keys; the mock translator is used when none is reachable |
+
+TLS terminates at a reverse proxy in front of the frontend and Keycloak
+ports; Keycloak runs with `--proxy-headers xforwarded` and trusts the
+`X-Forwarded-*` headers that proxy sets. Add HSTS at the proxy.
 
 Two realm files exist on purpose: `realm-lexstore.json` seeds owner,
 translator, and proofreader accounts with matching passwords for local work,
 and is never mounted by the compose file. `realm-lexstore.prod.json` has no
-users and sets `sslRequired: external` — create the first account through the
-Keycloak admin console after the stack is up.
+users, disables the password grant, sets `sslRequired: external`, and takes
+its redirect URIs from `APP_ORIGIN` — create the first account through the
+Keycloak admin console after the stack is up. Both realms use the `lexstore`
+login theme, mounted read-only from `backend/keycloak/themes`.
 
 `frontend/public/config.json` carries the browser's half — the Keycloak
 authority and client id. Replace it at deploy time; it is served with

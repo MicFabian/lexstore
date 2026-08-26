@@ -1,5 +1,7 @@
 # The whole stack, as it runs in a deployment. Secrets come from the
 # environment (see .env.example); nothing sensitive is committed here.
+# TLS terminates at a reverse proxy in front of the frontend and keycloak
+# ports; both send X-Forwarded-* and expect the proxy to set them honestly.
 services:
   postgres:
     image: postgres:17-alpine
@@ -9,6 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./backend/keycloak/create-keycloak-db.sql:/docker-entrypoint-initdb.d/create-keycloak-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-lexstore} -d lexstore"]
       interval: 10s
@@ -18,25 +21,53 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
-    command: start --import-realm --hostname-strict=false
+    # The realm template carries __APP_ORIGIN__ placeholders; they are rendered
+    # with the deployment's origin before Keycloak imports the file, because
+    # the import itself performs no substitution.
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - >-
+        mkdir -p /opt/keycloak/data/import &&
+        sed "s|__APP_ORIGIN__|$${APP_ORIGIN}|g"
+        /opt/keycloak/import-template/realm.json
+        > /opt/keycloak/data/import/realm.json &&
+        exec /opt/keycloak/bin/kc.sh start --import-realm --hostname-strict=false --proxy-headers xforwarded
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/lexstore
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${DATABASE_USER:-lexstore}
       KC_DB_PASSWORD: ${DATABASE_PASSWORD}
       KC_HEALTH_ENABLED: "true"
+      # TLS terminates at the reverse proxy; Keycloak itself speaks plain HTTP
+      # on the internal network and trusts the proxy's X-Forwarded-* headers.
+      KC_HTTP_ENABLED: "true"
+      # Substituted into the imported realm: the SPA's redirect and CORS origin.
+      APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN}
     volumes:
       # The production realm carries no seeded users and requires TLS; the
       # development one (realm-lexstore.json) is deliberately not mounted here.
-      - ./backend/keycloak/realm-lexstore.prod.json:/opt/keycloak/data/import/realm.json:ro
+      - ./backend/keycloak/realm-lexstore.prod.json:/opt/keycloak/import-template/realm.json:ro
       - ./backend/keycloak/themes/lexstore:/opt/keycloak/themes/lexstore:ro
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "${KEYCLOAK_PORT:-8089}:8080"
+    healthcheck:
+      # KC 26 has no curl/wget; probe the realm's OIDC config over bash /dev/tcp.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080 &&
+          printf 'GET /realms/lexstore/.well-known/openid-configuration HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          grep -q '200 OK' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     restart: unless-stopped
 
   backend:
@@ -48,10 +79,18 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:?set KEYCLOAK_ISSUER}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?set ALLOWED_ORIGINS}
+      LEXSTORE_SECRET_KEY: ${LEXSTORE_SECRET_KEY:-}
+      LEXSTORE_AGENT_KEY: ${LEXSTORE_AGENT_KEY:-}
+      LEXSTORE_REQUEST_LOG_DAYS: ${LEXSTORE_REQUEST_LOG_DAYS:-90}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       postgres:
+        condition: service_healthy
+      # The JWT decoder fetches the issuer's keys at startup; without a live
+      # Keycloak the process exits and restarts until one appears.
+      keycloak:
         condition: service_healthy
     restart: unless-stopped
 
@@ -59,6 +98,10 @@ services:
     build: ./frontend
     environment:
       API_ORIGIN: http://backend:8088
+      # Written into /config.json at container start; the browser needs the
+      # issuer's public URL, not the internal container address.
+      AUTH_AUTHORITY: ${KEYCLOAK_ISSUER}
+      AUTH_CLIENT_ID: lexstore-spa
     depends_on:
       - backend
     ports:

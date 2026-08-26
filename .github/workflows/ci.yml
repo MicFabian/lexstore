@@ -41,6 +41,17 @@ jobs:
         run: npx ng build
         working-directory: frontend
 
+  # The deployment images must keep building, or the first broken deploy is
+  # discovered on deploy day. Build only — nothing is pushed from CI.
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend image
+        run: docker build backend
+      - name: Frontend image
+        run: docker build frontend
+
   e2e:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,5 @@
+build
+.gradle
+keycloak
+docker-compose.yml
+Dockerfile

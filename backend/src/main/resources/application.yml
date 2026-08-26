@@ -1,6 +1,8 @@
 spring:
   application:
     name: lexstore
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
@@ -36,7 +38,8 @@ spring:
         order_updates: true
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    # No baseline-on-migrate: a non-empty schema must fail loudly instead of
+    # silently skipping V1 — that is exactly how a shared database would break.
     # Demo data is a separate location so a real deployment never loads it;
     # the prod profile drops it and keeps only the schema.
     locations: ${FLYWAY_LOCATIONS:classpath:db/migration,classpath:db/seed}
@@ -75,6 +78,9 @@ gemini:
 
 server:
   port: 8088
+  # In-flight requests get 20 seconds to finish before the process exits, so a
+  # rolling deploy never cuts a save in half.
+  shutdown: graceful
   compression:
     enabled: true
     mime-types: application/json,application/problem+json,text/plain

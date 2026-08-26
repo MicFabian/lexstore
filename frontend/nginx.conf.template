@@ -1,7 +1,17 @@
+# TLS terminates at the reverse proxy in front of this container; add HSTS there.
 server {
     listen 80;
     server_name _;
     root /usr/share/nginx/html;
+
+    gzip on;
+    gzip_types application/json application/javascript text/css image/svg+xml;
+    gzip_min_length 1024;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
     # The API is proxied from the same origin, so no CORS in the browser.
     location /api/ {
@@ -13,14 +23,19 @@ server {
     }
 
     # Deployment settings must never be cached, or a redeploy keeps the old ones.
+    # add_header in a location replaces the server-level set, so repeat them.
     location = /config.json {
         add_header Cache-Control "no-store";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     # Hashed build assets are safe to cache for a long time.
     location ~* \.(js|css|woff2?|png|jpg|svg)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
     }
 
     # Angular owns routing; every unknown path is the app shell.
