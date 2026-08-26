@@ -64,5 +64,8 @@
         }
       ]
     }
-  ]
+  ],
+  "loginTheme": "lexstore",
+  "displayName": "Lexstore",
+  "displayNameHtml": "<span>Lex<b>store</b></span>"
 }

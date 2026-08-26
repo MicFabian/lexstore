@@ -1,0 +1,474 @@
+/* Lexstore login — the Locali design system, applied to Keycloak's base theme.
+   Same tokens as the app: Inter, hairline structure, slate accent,
+   designed dark via prefers-color-scheme. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #14161a;
+  --ink-secondary: #3d434d;
+  --muted: #6b727e;
+  --faint: #9aa1ac;
+  --line: #e4e7ec;
+  --line-strong: #d2d6dd;
+  --line-soft: #eef0f4;
+  --surface: #ffffff;
+  --page: #f7f8fa;
+  --hover: #f2f4f7;
+  --accent: #4e6fa8;
+  --accent-hover: #436198;
+  --accent-active: #3a5486;
+  --accent-soft: #f1f4fa;
+  --accent-on: #ffffff;
+  --danger: #c2261f;
+  --danger-soft: #fdecea;
+  --danger-line: #f0b6b1;
+  --warn: #a2650a;
+  --warn-soft: #fdf3e2;
+  --warn-line: #e8ce9c;
+  --ok: #1a7f4b;
+  --ok-soft: #e8f5ed;
+  --ok-line: #a8d9bd;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #eceef2;
+    --ink-secondary: #c3c8d1;
+    --muted: #949ba6;
+    --faint: #6f7681;
+    --line: #2a2e35;
+    --line-strong: #3a3f47;
+    --line-soft: #22262c;
+    --surface: #181b20;
+    --page: #101216;
+    --hover: #20242a;
+    --accent: #9db4e0;
+    --accent-hover: #b0c3e8;
+    --accent-active: #8ba3d3;
+    --accent-soft: #1e2634;
+    --accent-on: #0d1017;
+    --danger: #f0827a;
+    --danger-soft: #2e1615;
+    --danger-line: #5e2c29;
+    --warn: #e0a445;
+    --warn-soft: #2c2313;
+    --warn-line: #5c4a22;
+    --ok: #4cc183;
+    --ok-soft: #12291d;
+    --ok-line: #265c3d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html.lx-html,
+body.lx-body {
+  margin: 0;
+  height: 100%;
+}
+
+body.lx-body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+.lx-login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 48px 16px;
+}
+
+/* ---------- Brand ---------- */
+.lx-header {
+  display: flex;
+  justify-content: center;
+}
+
+.lx-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.lx-brand::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2727%27%20fill%3D%27%234e6fa8%27/%3E%3Cg%20stroke%3D%27%23ffffff%27%20stroke-width%3D%278%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M34%2047%20H82%27/%3E%3Cpath%20d%3D%27M70%2035%20L83%2047%20L70%2059%27/%3E%3Cpath%20d%3D%27M86%2073%20H38%27/%3E%3Cpath%20d%3D%27M50%2061%20L37%2073%20L50%2085%27/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .lx-brand::before {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2727%27%20fill%3D%27%239db4e0%27/%3E%3Cg%20stroke%3D%27%230d1017%27%20stroke-width%3D%278%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M34%2047%20H82%27/%3E%3Cpath%20d%3D%27M70%2035%20L83%2047%20L70%2059%27/%3E%3Cpath%20d%3D%27M86%2073%20H38%27/%3E%3Cpath%20d%3D%27M50%2061%20L37%2073%20L50%2085%27/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
+.lx-brand b {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ---------- Card ---------- */
+.lx-card {
+  width: 100%;
+  max-width: 384px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 28px 28px 24px;
+}
+
+.lx-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+#kc-page-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* ---------- Form ---------- */
+.lx-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.lx-label {
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.lx-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  transition: border-color 120ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.lx-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.lx-input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.lx-input-group {
+  position: relative;
+  display: flex;
+}
+
+.lx-input-group .lx-input {
+  flex: 1;
+  padding-right: 38px;
+}
+
+.lx-eye {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--faint);
+  border-radius: 0 3px 3px 0;
+}
+
+.lx-eye:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.lx-eye-show::before {
+  content: 'show';
+}
+
+.lx-eye-hide::before {
+  content: 'hide';
+}
+
+.lx-eye i {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.lx-error {
+  font-size: 11px;
+  color: var(--danger);
+  line-height: 1.35;
+}
+
+/* ---------- Options row (remember me / forgot password) ---------- */
+.lx-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.lx-setting .checkbox {
+  margin: 0;
+}
+
+.lx-setting .checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.lx-setting input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.lx-options-wrap span a,
+.lx-setting a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.lx-setting a:hover,
+.lx-options-wrap span a:hover,
+#kc-registration a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Buttons ---------- */
+.lx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 120ms cubic-bezier(0.2, 0, 0.2, 1),
+    border-color 120ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.lx-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+}
+
+.lx-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.lx-btn-primary:active {
+  background: var(--accent-active);
+  border-color: var(--accent-active);
+}
+
+.lx-btn-default {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.lx-btn-default:hover {
+  background: var(--hover);
+}
+
+.lx-btn-block {
+  width: 100%;
+}
+
+.lx-btn:focus-visible,
+.lx-input:focus-visible,
+.lx-eye:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+
+/* ---------- Alerts ---------- */
+.lx-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+  background: var(--page);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.lx-alert .pf-c-alert__icon {
+  display: none;
+}
+
+.alert-error.lx-alert {
+  border-color: var(--danger-line);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.alert-warning.lx-alert {
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.alert-success.lx-alert {
+  border-color: var(--ok-line);
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.lx-alert-title {
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* ---------- Below the card ---------- */
+#kc-info,
+#kc-registration-container {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+#kc-registration a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+#kc-attempted-username {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.lx-locale {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.lx-locale-menu > button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lx-locale-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 4px;
+  background: var(--surface);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(20, 22, 26, 0.1), 0 0 0 1px var(--line);
+}
+
+.lx-locale-list[aria-hidden='true'] {
+  display: none;
+}
+
+.lx-locale-link {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 3px;
+  color: var(--ink);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.lx-locale-link:hover {
+  background: var(--hover);
+}
+
+/* Social providers, if ever enabled, stay in the system too. */
+#kc-social-providers h2 {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 20px 0 10px;
+}
+
+#kc-social-providers li {
+  list-style: none;
+}
+
+#kc-social-providers a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+#kc-social-providers a:hover {
+  background: var(--hover);
+}

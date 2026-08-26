@@ -2,15 +2,30 @@
   "realm": "lexstore",
   "enabled": true,
   "sslRequired": "none",
+  "loginTheme": "lexstore",
+  "displayName": "Lexstore",
+  "displayNameHtml": "<span>Lex<b>store</b></span>",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "accessTokenLifespan": 1800,
   "roles": {
     "realm": [
-      { "name": "owner", "description": "Full control of projects and settings" },
-      { "name": "admin", "description": "Manage languages, contributors, API keys" },
-      { "name": "translator", "description": "Create and edit translations" },
-      { "name": "proofreader", "description": "Review and proofread translations" }
+      {
+        "name": "owner",
+        "description": "Full control of projects and settings"
+      },
+      {
+        "name": "admin",
+        "description": "Manage languages, contributors, API keys"
+      },
+      {
+        "name": "translator",
+        "description": "Create and edit translations"
+      },
+      {
+        "name": "proofreader",
+        "description": "Review and proofread translations"
+      }
     ]
   },
   "clients": [
@@ -27,7 +42,11 @@
         "http://localhost:4300/*",
         "http://localhost:4200/*"
       ],
-      "webOrigins": ["http://localhost:4300", "http://localhost:4200", "+"],
+      "webOrigins": [
+        "http://localhost:4300",
+        "http://localhost:4200",
+        "+"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:4300/*##http://localhost:4200/*"
@@ -57,8 +76,19 @@
       "firstName": "Olivia",
       "lastName": "Owner",
       "email": "owner@lexstore.io",
-      "credentials": [{ "type": "password", "value": "owner", "temporary": false }],
-      "realmRoles": ["owner", "admin", "translator", "proofreader"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "owner",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "owner",
+        "admin",
+        "translator",
+        "proofreader"
+      ]
     },
     {
       "username": "translator",
@@ -67,8 +97,16 @@
       "firstName": "Amélie",
       "lastName": "Rousseau",
       "email": "amelie@lexstore.io",
-      "credentials": [{ "type": "password", "value": "translator", "temporary": false }],
-      "realmRoles": ["translator"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "translator",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "translator"
+      ]
     },
     {
       "username": "proofreader",
@@ -77,8 +115,17 @@
       "firstName": "Sofía",
       "lastName": "Ramírez",
       "email": "sofia@lexstore.io",
-      "credentials": [{ "type": "password", "value": "proofreader", "temporary": false }],
-      "realmRoles": ["proofreader", "translator"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "proofreader",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "proofreader",
+        "translator"
+      ]
     }
   ]
 }

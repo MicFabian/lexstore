@@ -31,6 +31,7 @@ services:
       # The production realm carries no seeded users and requires TLS; the
       # development one (realm-lexstore.json) is deliberately not mounted here.
       - ./backend/keycloak/realm-lexstore.prod.json:/opt/keycloak/data/import/realm.json:ro
+      - ./backend/keycloak/themes/lexstore:/opt/keycloak/themes/lexstore:ro
     depends_on:
       postgres:
         condition: service_healthy

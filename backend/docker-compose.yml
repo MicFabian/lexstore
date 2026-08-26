@@ -32,6 +32,7 @@ services:
       - "8089:8089"
     volumes:
       - ./keycloak/realm-lexstore.json:/opt/keycloak/data/import/realm-lexstore.json:ro
+      - ./keycloak/themes/lexstore:/opt/keycloak/themes/lexstore:ro
     healthcheck:
       # KC 26 has no curl/wget; probe the realm's OIDC config over bash /dev/tcp.
       test:
