@@ -15,10 +15,7 @@ export const routes: Routes = [
             (m) => m.ProjectsDashboard,
           ),
       },
-      {
-        path: 'ai',
-        loadComponent: () => import('./screens/ai/ai-overview').then((m) => m.AiOverview),
-      },
+      { path: 'ai', redirectTo: 'organisation' },
       {
         path: 'editor',
         loadComponent: () => import('./screens/editor/editor').then((m) => m.EditorScreen),

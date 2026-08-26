@@ -168,13 +168,12 @@ export class CommandPalette {
       { id: 'go-langs', label: 'Go to Languages', hint: 'languages', icon: 'Languages', run: () => this.go('/languages') },
       { id: 'go-contrib', label: 'Go to Contributors', hint: 'contributors', icon: 'Users', run: () => this.go('/contributors') },
       { id: 'go-settings', label: 'Go to Settings', hint: 'settings', icon: 'Settings', run: () => this.go('/settings') },
-      { id: 'go-ai', label: 'Open Translation AI', hint: 'ai', icon: 'WandSparkles', run: () => this.go('/ai') },
       { id: 'go-projects', label: 'All projects', hint: 'dashboard', icon: 'LayoutGrid', run: () => this.go('/projects') },
     ];
     const projects: Command[] = this.state.projects().map((p) => ({
       id: 'proj-' + p.id,
       label: `Switch to ${p.name}`,
-      hint: p.code,
+      hint: 'project',
       icon: 'ArrowRightLeft' as IconName,
       run: () => {
         this.state.select(p.id);

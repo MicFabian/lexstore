@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { forkJoin, map, of, catchError } from 'rxjs';
+import { forkJoin, map, of, catchError, switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
@@ -358,6 +358,13 @@ export class EditorScreen implements OnInit {
   protected readonly addTermFields = [
     { name: 'key', label: 'Key', placeholder: 'checkout.button.confirm', mono: true },
     { name: 'source', label: 'Source text (English)', placeholder: 'Confirm order' },
+    {
+      name: 'ai',
+      label: 'Draft translations with AI',
+      type: 'toggle' as const,
+      value: '1',
+      hint: 'Every project language gets a cached machine draft, marked as needing review.',
+    },
   ];
 
   protected readonly features = signal<FeatureView[]>([]);
@@ -648,11 +655,44 @@ export class EditorScreen implements OnInit {
     if (!pid) return;
     this.adding.set(false);
     this.api.createTerm(pid, { key: values['key'], source: values['source'] }).subscribe({
-      next: () => {
-        this.loadEditor(pid);
-        this.toast.show('Term added');
+      next: (term) => {
+        if (values['ai']) {
+          this.draftWithAi(pid, term.id, values['source']);
+        } else {
+          this.loadEditor(pid);
+          this.toast.show('Term added');
+        }
       },
       error: () => this.toast.show({ message: 'That key already exists', tone: 'error' }),
+    });
+  }
+
+  /** One cached AI draft per project language, saved as needing review. */
+  private draftWithAi(pid: string, termId: string, source: string): void {
+    const codes = this.languages().map((l) => l.code);
+    if (codes.length === 0) {
+      this.loadEditor(pid);
+      this.toast.show('Term added');
+      return;
+    }
+    forkJoin(
+      codes.map((code) =>
+        this.api.aiTranslate({ sourceText: source, sourceLang: 'en', targetLang: code }).pipe(
+          switchMap((r) =>
+            this.api.saveTranslation(pid, termId, code, { value: r.text, status: 'fuzzy' }),
+          ),
+          map(() => true),
+          catchError(() => of(false)),
+        ),
+      ),
+    ).subscribe((results) => {
+      const done = results.filter(Boolean).length;
+      this.loadEditor(pid);
+      this.toast.show(
+        done === codes.length
+          ? `Term added · ${done} draft${done === 1 ? '' : 's'} to review`
+          : `Term added · ${done} of ${codes.length} drafts — the rest stay untranslated`,
+      );
     });
   }
 

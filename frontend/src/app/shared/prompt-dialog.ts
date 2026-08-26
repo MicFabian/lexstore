@@ -9,6 +9,8 @@ export interface PromptField {
   value?: string;
   hint?: string;
   mono?: boolean;
+  /** 'toggle' renders a switch whose value is '1' or ''; it is never required. */
+  type?: 'text' | 'toggle';
 }
 
 /**
@@ -22,21 +24,40 @@ export interface PromptField {
   template: `
     <lx-dialog [title]="title()" [description]="description()" [width]="440" (closed)="cancelled.emit()">
       @for (f of fields(); track f.name) {
-        <div class="field">
-          <label [for]="'prompt-' + f.name">{{ f.label }}</label>
-          <input
-            [id]="'prompt-' + f.name"
-            class="input"
-            [class.mono]="f.mono"
-            [value]="values()[f.name] ?? ''"
-            [placeholder]="f.placeholder ?? ''"
-            (input)="set(f.name, $any($event.target).value)"
-            (keydown.enter)="submit()"
-          />
-          @if (f.hint) {
-            <p class="hint">{{ f.hint }}</p>
-          }
-        </div>
+        @if (f.type === 'toggle') {
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <button
+              type="button"
+              [class]="values()[f.name] ? 'toggle on' : 'toggle'"
+              [attr.aria-pressed]="!!values()[f.name]"
+              [attr.aria-label]="f.label"
+              style="margin-top:2px"
+              (click)="set(f.name, values()[f.name] ? '' : '1')"
+            ><i></i></button>
+            <div>
+              <div style="font-size:var(--lx-size-13)">{{ f.label }}</div>
+              @if (f.hint) {
+                <p class="hint" style="margin-top:2px">{{ f.hint }}</p>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="field">
+            <label [for]="'prompt-' + f.name">{{ f.label }}</label>
+            <input
+              [id]="'prompt-' + f.name"
+              class="input"
+              [class.mono]="f.mono"
+              [value]="values()[f.name] ?? ''"
+              [placeholder]="f.placeholder ?? ''"
+              (input)="set(f.name, $any($event.target).value)"
+              (keydown.enter)="submit()"
+            />
+            @if (f.hint) {
+              <p class="hint">{{ f.hint }}</p>
+            }
+          </div>
+        }
       }
       <div dialogActions>
         <lx-btn variant="primary" [sm]="true" [disabled]="!complete() || busy()" (clicked)="submit()">
@@ -79,9 +100,11 @@ export class PromptDialog {
     this.values.update((v) => ({ ...v, [name]: value }));
   }
 
-  /** Every field is required; optional fields belong in a screen's own form. */
+  /** Every text field is required; optional fields belong in a screen's own form. */
   protected complete(): boolean {
-    return this.fields().every((f) => (this.values()[f.name] ?? '').trim().length > 0);
+    return this.fields()
+      .filter((f) => f.type !== 'toggle')
+      .every((f) => (this.values()[f.name] ?? '').trim().length > 0);
   }
 
   protected submit(): void {

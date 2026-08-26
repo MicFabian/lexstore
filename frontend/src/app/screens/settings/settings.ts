@@ -137,8 +137,8 @@ interface IntegrationItem {
                       <div>
                         <div style="font-size:13.5px;font-weight:600">Auto-flag machine translations as fuzzy</div>
                         <div class="muted" style="font-size:12px">
-                          Set for the whole workspace in
-                          <a [routerLink]="['/', 'ai']">Translation AI</a>.
+                          Set for the whole organisation in
+                          <a [routerLink]="['/', 'organisation']" [queryParams]="{ tab: 'ai' }">AI settings</a>.
                         </div>
                       </div>
                     </div>

@@ -45,7 +45,6 @@ interface QuickItem {
           </span>
           <span class="pmeta">
             <span class="pname">{{ current()?.name }}</span>
-            <span class="psub">{{ current()?.code }}</span>
           </span>
           <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-text-muted)" />
         </button>
@@ -64,7 +63,6 @@ interface QuickItem {
                 </span>
                 <span class="pm-meta">
                   <span class="pm-name">{{ p.name }}</span>
-                  <span class="pm-code">{{ p.code }}</span>
                 </span>
                 @if (p.id === current()?.id) {
                   <lx-icon name="Check" [size]="15" color="var(--lx-accent-hover)" />
@@ -88,10 +86,6 @@ interface QuickItem {
           <lx-icon name="LayoutGrid" [size]="15" />
           <span>Projects</span>
           <span class="count">{{ projects().length }}</span>
-        </a>
-        <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
-          <lx-icon name="WandSparkles" [size]="15" />
-          <span>Translation AI</span>
         </a>
         <a class="navitem" [routerLink]="['/', 'organisation']" routerLinkActive="active">
           <lx-icon name="Users" [size]="15" />

@@ -138,23 +138,11 @@ test('capture baseline screenshots of every functionality', async ({ page }) => 
   await page.locator('button', { hasText: 'Import / Export' }).click();
   await shot(page, '17-settings-import-export', true);
 
-  // --- Translation AI (all four tabs) -----------------------------------------
-  await page.goto('/ai');
+  // --- AI settings + cache (organisation) --------------------------------------
+  await page.goto('/organisation?tab=ai');
   await waitShell(page);
-  await page.locator('.panel textarea').fill('Welcome back');
-  await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-  await expect(page.locator('.panel .card').last()).toBeVisible();
-  await shot(page, '18-ai-playground-result', true);
-
-  await page.locator('.subnav button', { hasText: 'Requests' }).click();
-  await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
-  await shot(page, '19-ai-requests', true);
-
-  await page.locator('.subnav button', { hasText: 'Cache' }).click();
-  await shot(page, '20-ai-cache', true);
-
-  await page.locator('.subnav button', { hasText: 'Settings' }).click();
-  await shot(page, '21-ai-settings', true);
+  await expect(page.locator('button', { hasText: 'Save settings' })).toBeVisible();
+  await shot(page, '18-org-ai-settings', true);
 
   // --- Global chrome -----------------------------------------------------------
   await page.goto('/editor');

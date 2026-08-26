@@ -1,13 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
-import { Btn } from '../../shared/primitives';
+import { Btn, SearchBox } from '../../shared/primitives';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
 import {
   AgentActivityRow,
+  AiSettings,
   ApiKeyView,
+  CacheEntryView,
+  CacheStats,
   OrgApiKeyCreated,
   CredentialView,
   OrgMemberView,
@@ -15,12 +18,12 @@ import {
   UsageSummary,
 } from '../../core/models';
 
-type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
+type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
 
 @Component({
   selector: 'lx-org-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, ConfirmDialog],
+  imports: [Icon, Btn, SearchBox, ConfirmDialog],
   template: `
     <div class="scr">
       <header class="ohead">
@@ -52,7 +55,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
 
       <nav class="subnav">
         @for (t of tabs; track t.id) {
-          <button [class.on]="tab() === t.id" (click)="tab.set(t.id)">{{ t.label }}</button>
+          <button [class.on]="tab() === t.id" (click)="setTab(t.id)">{{ t.label }}</button>
         }
       </nav>
 
@@ -98,6 +101,100 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
                 }
               </div>
             }
+          }
+        }
+
+        @case ('ai') {
+          <p class="muted">
+            How on-demand translation behaves everywhere — the editor's drafts and
+            suggestions, and the auto-translate runs. Identical requests are served
+            from the cache below.
+          </p>
+          @if (settings(); as s) {
+            <div class="aiform">
+              <div class="field">
+                <label>Provider</label>
+                <div class="row" style="gap:8px">
+                  @for (p of providers; track p.key) {
+                    <button
+                      [class]="'btn btn--sm ' + (draft().provider === p.key ? 'btn--ghost' : 'btn--subtle')"
+                      [style.border-color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
+                      [style.color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
+                      [disabled]="unavailable(p.key, s)"
+                      (click)="patchAi({ provider: p.key })"
+                    >{{ p.label }}</button>
+                  }
+                </div>
+                @if (!s.claudeAvailable || !s.geminiAvailable) {
+                  <div class="muted small" style="margin-top:4px">{{ missingKeysHint(s) }}</div>
+                }
+              </div>
+              <div class="field"><label>Model</label><input class="input" [value]="draft().model" (input)="patchAi({ model: $any($event.target).value })" /></div>
+              <div class="field">
+                <label>Formality</label>
+                <div class="row" style="gap:6px">
+                  @for (f of ['neutral', 'formal', 'informal']; track f) {
+                    <button [class]="'btn btn--sm ' + (draft().formality === f ? 'btn--ghost' : 'btn--subtle')"
+                      [style.border-color]="draft().formality === f ? 'var(--lx-accent)' : null"
+                      (click)="patchAi({ formality: f })">{{ f }}</button>
+                  }
+                </div>
+              </div>
+              <div class="field">
+                <label>Style guidance</label>
+                <textarea class="textarea" rows="2" [value]="draft().tone || ''" (input)="patchAi({ tone: $any($event.target).value })" placeholder="e.g. Keep it concise; never translate the word 'Lexstore'."></textarea>
+              </div>
+              <div class="row">
+                <button [class]="draft().autoFlagFuzzy ? 'toggle on' : 'toggle'" [attr.aria-pressed]="draft().autoFlagFuzzy" (click)="patchAi({ autoFlagFuzzy: !draft().autoFlagFuzzy })"><i></i></button>
+                <div>
+                  <div style="font-size:var(--lx-size-13)">Machine output needs review</div>
+                  <div class="muted small">An accepted draft stays flagged until a person confirms it.</div>
+                </div>
+              </div>
+              <div class="row" style="gap:14px">
+                <div class="field" style="width:140px"><label>Cache TTL (hours)</label><input class="input" type="number" [value]="draft().cacheTtlHours" (input)="patchAi({ cacheTtlHours: +$any($event.target).value })" /></div>
+                <lx-btn variant="primary" style="align-self:flex-end" (clicked)="saveAiSettings()">Save settings</lx-btn>
+              </div>
+            </div>
+          }
+
+          <h2 class="sect">
+            Cache
+            @if (cacheStats(); as cs) {
+              <span class="muted small" style="text-transform:none;letter-spacing:0">
+                · {{ cs.entries }} entries · {{ cs.hitRate }}% of {{ cs.requests }} requests served from it
+              </span>
+            }
+          </h2>
+          <div class="row" style="gap:10px">
+            <lx-search placeholder="Search source or target" [value]="cacheQuery()" [width]="260" (changed)="onCacheSearch($event)" />
+            <div class="spacer"></div>
+            <button class="btn btn--subtle btn--sm" style="color:var(--lx-danger)" (click)="clearCache()">
+              <lx-icon name="Trash2" [size]="14" />Clear all
+            </button>
+          </div>
+          @if (cache().length) {
+            <table class="otable" aria-label="Cached translations">
+              <thead><tr><th>Source</th><th>Translation</th><th>Langs</th><th>Hits</th><th>Last used</th><th></th></tr></thead>
+              <tbody>
+                @for (c of cache(); track c.id) {
+                  <tr>
+                    <td class="atext">{{ c.sourceText }}</td>
+                    <td class="atext">{{ c.targetText }}</td>
+                    <td><span class="locale">{{ c.sourceLang }}</span> → <span class="locale">{{ c.targetLang }}</span></td>
+                    <td class="tnum">{{ c.hits }}</td>
+                    <td class="muted">{{ c.lastUsedAt }}</td>
+                    <td style="text-align:right">
+                      <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete entry" (click)="deleteCacheEntry(c)">
+                        <lx-icon name="Trash2" [size]="14" color="var(--lx-text-muted)" />
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="muted">Cache is empty.</p>
           }
         }
 
@@ -267,6 +364,7 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
   `,
   styles: `
     .scr { display: flex; flex-direction: column; gap: 20px; padding: 24px 28px; overflow: auto; }
+    .aiform { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
     .ohead { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
     .otitle { font-size: var(--lx-size-20); font-weight: var(--lx-weight-medium); letter-spacing: var(--lx-track-tight); margin: 4px 0; }
     .quota { min-width: 260px; border: 1px solid var(--lx-line); border-radius: var(--lx-radius-3); padding: 14px 16px; }
@@ -315,6 +413,7 @@ export class OrgScreen implements OnInit {
 
   protected readonly tabs = [
     { id: 'overview' as const, label: 'Usage' },
+    { id: 'ai' as const, label: 'AI settings' },
     { id: 'keys' as const, label: 'AI keys' },
     { id: 'access' as const, label: 'API access' },
     { id: 'activity' as const, label: 'Activity' },
@@ -322,6 +421,90 @@ export class OrgScreen implements OnInit {
   ];
 
   protected readonly tab = signal<Tab>('overview');
+
+  /** Optional ?tab= deep link, so other screens can open a section directly. */
+  readonly tabParam = input<string | undefined>(undefined, { alias: 'tab' });
+
+  private readonly applyTabParam = effect(() => {
+    const t = this.tabParam();
+    if (t && this.tabs.some((x) => x.id === t)) this.setTab(t as Tab);
+  });
+
+  protected setTab(t: Tab): void {
+    this.tab.set(t);
+    if (t === 'ai') {
+      if (!this.settings()) {
+        this.api.aiSettings().subscribe((s) => {
+          this.settings.set(s);
+          this.draft.set(s);
+        });
+      }
+      this.loadCache();
+    }
+  }
+
+  // ---- AI settings + cache (shared by every on-demand translation) ----
+  protected readonly providers = [
+    { key: 'mock', label: 'Mock' },
+    { key: 'claude', label: 'Claude' },
+    { key: 'gemini', label: 'Gemini' },
+  ];
+  protected readonly settings = signal<AiSettings | null>(null);
+  protected readonly draft = signal<AiSettings>({
+    provider: 'mock', model: '', temperature: 0.2, formality: 'neutral', tone: null,
+    autoFlagFuzzy: true, cacheTtlHours: 720, claudeAvailable: false, geminiAvailable: false,
+  });
+  protected readonly cache = signal<CacheEntryView[]>([]);
+  protected readonly cacheStats = signal<CacheStats | null>(null);
+  protected readonly cacheQuery = signal('');
+
+  protected unavailable(key: string, s: AiSettings): boolean {
+    return (key === 'claude' && !s.claudeAvailable) || (key === 'gemini' && !s.geminiAvailable);
+  }
+
+  /** Names the providers whose server-side API key is missing. */
+  protected missingKeysHint(s: AiSettings): string {
+    const missing: string[] = [];
+    if (!s.claudeAvailable) missing.push('Claude needs ANTHROPIC_API_KEY');
+    if (!s.geminiAvailable) missing.push('Gemini needs GEMINI_API_KEY');
+    return `${missing.join(', ')} on the server; mock is used until then.`;
+  }
+
+  protected patchAi(patch: Partial<AiSettings>): void {
+    this.draft.update((d) => ({ ...d, ...patch }));
+  }
+
+  protected saveAiSettings(): void {
+    this.api.aiUpdateSettings(this.draft()).subscribe((s) => {
+      this.settings.set(s);
+      this.draft.set(s);
+      this.toast.show('AI settings saved');
+    });
+  }
+
+  private loadCache(): void {
+    this.api.aiCache(this.cacheQuery()).subscribe((c) => this.cache.set(c));
+    this.api.aiCacheStats().subscribe((s) => this.cacheStats.set(s));
+  }
+
+  protected onCacheSearch(q: string): void {
+    this.cacheQuery.set(q);
+    this.api.aiCache(q).subscribe((c) => this.cache.set(c));
+  }
+
+  protected deleteCacheEntry(c: CacheEntryView): void {
+    this.api.aiDeleteCacheEntry(c.id).subscribe(() => {
+      this.loadCache();
+      this.toast.show('Cache entry removed');
+    });
+  }
+
+  protected clearCache(): void {
+    this.api.aiClearCache().subscribe(() => {
+      this.loadCache();
+      this.toast.show('Cache cleared');
+    });
+  }
   protected readonly org = signal<OrganisationView | null>(null);
   protected readonly usage = signal<UsageSummary | null>(null);
   protected readonly activity = signal<AgentActivityRow[]>([]);

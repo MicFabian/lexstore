@@ -41,7 +41,6 @@
 /* ---------- Page scaffolding ---------- */
 /* Routed screens are inline hosts by default, which collapses their height and
    stops .well from scrolling; each screen fills the main column instead. */
-.main > lx-ai-overview,
 .main > lx-projects-dashboard,
 .main > lx-terms-screen,
 .main > lx-features-screen,

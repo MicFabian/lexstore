@@ -8,6 +8,17 @@ import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
 import { ProjectSummary } from '../../core/models';
 
+/** The identifier the API and CLI use, derived from the name so nobody has to invent one. */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'project';
+}
+
 @Component({
   selector: 'lx-projects-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -82,7 +93,6 @@ import { ProjectSummary } from '../../core/models';
               </span>
               <span class="pid">
                 <span class="pname">{{ p.name }}</span>
-                <span class="pcode">{{ p.code }}</span>
               </span>
               <span class="pprog">
                 <span class="pprog-head">
@@ -214,10 +224,6 @@ import { ProjectSummary } from '../../core/models';
       font-weight: var(--lx-weight-medium);
       color: var(--lx-text-primary);
     }
-    .pcode {
-      font: 500 12.5px var(--lx-font-mono);
-      color: var(--lx-text-muted);
-    }
     .pprog {
       flex: 1;
       max-width: 340px;
@@ -261,7 +267,6 @@ export class ProjectsDashboard implements OnInit {
   protected readonly creating = signal(false);
   protected readonly newProjectFields = [
     { name: 'name', label: 'Project name', placeholder: 'Mosaic Web App' },
-    { name: 'code', label: 'Slug', placeholder: 'mosaic-web', hint: 'Lowercase letters, numbers, and hyphens.', mono: true },
   ];
 
   protected readonly totalTerms = computed(() =>
@@ -308,14 +313,14 @@ export class ProjectsDashboard implements OnInit {
 
   protected createProject(values: Record<string, string>): void {
     const name = values['name'];
-    const code = values['code'];
+    const code = slugify(name);
     this.creating.set(false);
     this.api.createProject({ name, code }).subscribe({
       next: (p) => {
         this.state.load();
         this.toast.show(`Created ${p.name}`);
       },
-      error: () => this.toast.show({ message: 'That slug already exists or is invalid', tone: 'error' }),
+      error: () => this.toast.show({ message: 'A project with that name already exists', tone: 'error' }),
     });
   }
 }

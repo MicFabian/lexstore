@@ -163,36 +163,27 @@ test.describe('languages + contributors + settings', () => {
   });
 });
 
-test.describe('Translation AI', () => {
-  test('translate playground hits the cache on a repeat', async ({ page }) => {
-    await page.goto('/ai');
-    await expect(page.locator('h1', { hasText: 'Translation AI' })).toBeVisible();
-    await page.locator('.panel textarea').fill('Welcome back');
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    const result = page.locator('.panel .card').last();
-    await expect(result).toBeVisible();
-    await expect(result).toContainText('Bon retour');
-
-    // Second identical translate is served from cache.
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await expect(page.locator('.panel .card .chip', { hasText: 'Cache hit' })).toBeVisible();
-  });
-
-  test('request log records hit and miss', async ({ page }) => {
-    await page.goto('/ai');
-    // Ensure at least one translation exists, then open the log.
-    await page.locator('.panel textarea').fill('Projects');
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await page.locator('.subnav button', { hasText: 'Requests' }).click();
-    await expect(page.locator('.panel', { hasText: 'Request log' })).toBeVisible();
-    await expect(page.locator('.ttable tbody tr').first()).toBeVisible();
-  });
-
-  test('AI nav link is reachable from the project shell', async ({ page }) => {
+test.describe('AI on demand', () => {
+  test('adding a term drafts a translation for every language', async ({ page }) => {
     await page.goto('/editor');
     await waitShell(page);
-    await page.locator('.navitem', { hasText: 'Translation AI' }).click();
-    await expect(page).toHaveURL(/\/ai/);
+    await page.locator('.ed-head .btn--primary', { hasText: 'Add term' }).click();
+    const dialog = page.locator('lx-prompt-dialog');
+    await dialog.locator('#prompt-key').fill('e2e.ai.drafted');
+    await dialog.locator('#prompt-source').fill('Welcome back');
+    // The AI toggle defaults to on; submitting drafts every project language.
+    await dialog.locator('button', { hasText: 'Add term' }).click();
+    await expect(page.locator('.toast')).toContainText('to review');
+
+    const row = page.locator('.trow', { has: page.locator('.keytag', { hasText: 'e2e.ai.drafted' }) });
+    await expect(row).toBeVisible();
+    await expect(row.locator('.tgt')).not.toContainText('Add translation');
+    await expect(row.locator('.stcap', { hasText: 'Needs review' })).toBeVisible();
+  });
+
+  test('the old ai route lands in the organisation', async ({ page }) => {
+    await page.goto('/ai');
+    await expect(page).toHaveURL(/organisation/);
   });
 });
 

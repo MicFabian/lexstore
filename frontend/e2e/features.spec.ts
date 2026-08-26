@@ -452,27 +452,24 @@ test.describe('terms — filters + per-translation author', () => {
 });
 
 // ----------------------------------------------------------------------------
-test.describe('Translation AI — cache + settings', () => {
+test.describe('AI settings + cache in the organisation', () => {
 
-  test('skip cache forces a fresh result', async ({ page }) => {
-    await page.goto('/ai');
-    await page.locator('.panel textarea').fill('Dashboard');
-    // Prime the cache.
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await expect(page.locator('.panel .card').last()).toBeVisible();
-    // Skip cache → fresh.
-    await page.locator('.panel button', { hasText: 'Skip cache' }).click();
-    await expect(page.locator('.panel .card .chip', { hasText: 'Fresh' })).toBeVisible();
-  });
+  /** Drafting a term with AI is what fills the cache now. */
+  async function primeCache(page: import('@playwright/test').Page, key: string, source: string) {
+    await page.goto('/editor');
+    await expect(page.locator('.rail__brand')).toBeVisible();
+    await page.locator('.ed-head .btn--primary', { hasText: 'Add term' }).click();
+    const dialog = page.locator('lx-prompt-dialog');
+    await dialog.locator('#prompt-key').fill(key);
+    await dialog.locator('#prompt-source').fill(source);
+    await dialog.locator('button', { hasText: 'Add term' }).click();
+    await expect(page.locator('.toast')).toContainText('to review');
+  }
 
   test('cache browser lists entries and deletes one', async ({ page }) => {
-    await page.goto('/ai');
-    await page.locator('.panel textarea').fill('Welcome back');
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await expect(page.locator('.panel .card').last()).toBeVisible();
-
-    await page.locator('.subnav button', { hasText: 'Cache' }).click();
-    const rows = page.locator('.ttable tbody tr.trow');
+    await primeCache(page, 'e2e.cache.list', 'Welcome back');
+    await page.goto('/organisation?tab=ai');
+    const rows = page.locator('.otable tbody tr');
     await expect(rows.first()).toBeVisible();
     const before = await rows.count();
     await rows.first().locator('button[aria-label="Delete entry"]').click();
@@ -481,27 +478,22 @@ test.describe('Translation AI — cache + settings', () => {
   });
 
   test('clear-all empties the cache', async ({ page }) => {
-    await page.goto('/ai');
-    await page.locator('.panel textarea').fill('Pay now');
-    await page.locator('.panel button', { hasText: 'Translate' }).first().click();
-    await expect(page.locator('.panel .card').last()).toBeVisible();
-
-    await page.locator('.subnav button', { hasText: 'Cache' }).click();
+    await primeCache(page, 'e2e.cache.clear', 'Pay now');
+    await page.goto('/organisation?tab=ai');
+    await expect(page.locator('.otable tbody tr').first()).toBeVisible();
     await page.locator('button', { hasText: 'Clear all' }).click();
     await expect(page.locator('.toast')).toContainText('Cache cleared');
-    await expect(page.locator('.ttable tbody')).toContainText('Cache is empty');
+    await expect(page.locator('text=Cache is empty')).toBeVisible();
   });
 
   test('settings save persists provider + formality', async ({ page }) => {
-    await page.goto('/ai');
-    await page.locator('.subnav button', { hasText: 'Settings' }).click();
+    await page.goto('/organisation?tab=ai');
     const formalBtn = page.getByRole('button', { name: 'formal', exact: true });
     await formalBtn.click();
     await page.locator('button', { hasText: 'Save settings' }).click();
     await expect(page.locator('.toast')).toContainText('AI settings saved');
     // Reload and confirm the formality stuck (active button gets the ghost class).
-    await page.reload();
-    await page.locator('.subnav button', { hasText: 'Settings' }).click();
+    await page.goto('/organisation?tab=ai');
     await expect(page.getByRole('button', { name: 'formal', exact: true })).toHaveClass(/btn--ghost/);
   });
 });
