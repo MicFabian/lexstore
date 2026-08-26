@@ -204,6 +204,7 @@ export class Sidebar {
     const open = c ? c.untranslated + c.needsReview : undefined;
     return [
       { path: 'editor', icon: 'Languages', label: 'Translations', count: open },
+      { path: 'ai-review', icon: 'WandSparkles', label: 'AI review' },
       { path: 'terms', icon: 'FileText', label: 'Terms', count: c?.terms },
       { path: 'features', icon: 'LayoutGrid', label: 'Features' },
       { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },

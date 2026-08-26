@@ -21,6 +21,10 @@ export const routes: Routes = [
         loadComponent: () => import('./screens/editor/editor').then((m) => m.EditorScreen),
       },
       {
+        path: 'ai-review',
+        loadComponent: () => import('./screens/ai-review/ai-review').then((m) => m.AiReviewScreen),
+      },
+      {
         path: 'features',
         loadComponent: () => import('./screens/features/features').then((m) => m.FeaturesScreen),
       },

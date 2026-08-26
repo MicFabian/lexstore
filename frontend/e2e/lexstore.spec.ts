@@ -185,6 +185,30 @@ test.describe('AI on demand', () => {
     await page.goto('/ai');
     await expect(page).toHaveURL(/organisation/);
   });
+
+  test('a machine draft carries its origin and can be approved in AI review', async ({ page }) => {
+    await page.goto('/editor');
+    await waitShell(page);
+    await page.locator('.ed-head .btn--primary', { hasText: 'Add term' }).click();
+    const dialog = page.locator('lx-prompt-dialog');
+    await dialog.locator('#prompt-key').fill('e2e.ai.review');
+    await dialog.locator('#prompt-source').fill('Review this draft');
+    await dialog.locator('button', { hasText: 'Add term' }).click();
+    await expect(page.locator('.toast')).toContainText('to review');
+
+    // The cell shows the machine origin next to its status.
+    const row = page.locator('.trow', { has: page.locator('.keytag', { hasText: 'e2e.ai.review' }) });
+    await expect(row.locator('.ai-mark').first()).toBeVisible();
+
+    // The review queue lists the draft with its provenance, and approval clears it.
+    await page.locator('.navitem', { hasText: 'AI review' }).click();
+    const draft = page.locator('.draft', { hasText: 'e2e.ai.review' });
+    await expect(draft.first()).toBeVisible();
+    const before = await page.locator('.draft').count();
+    await draft.first().locator('button', { hasText: 'Approve' }).click();
+    await expect(page.locator('.toast', { hasText: 'Proofread' })).toBeVisible();
+    await expect(page.locator('.draft')).toHaveCount(before - 1);
+  });
 });
 
 test.describe('projects dashboard + theming', () => {

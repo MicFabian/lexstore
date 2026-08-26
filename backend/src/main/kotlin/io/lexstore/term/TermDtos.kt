@@ -59,6 +59,8 @@ data class EditorRow(
     /** Row version of the stored translation; echo it back when saving. */
     val version: Long?,
     val status: String,
+    /** 'human' or 'ai' — who wrote the current text. */
+    val origin: String,
     /** Who last changed this translation, and when (null if never edited). */
     val modifiedBy: AuditEntry?,
     val modifiedAt: String?,

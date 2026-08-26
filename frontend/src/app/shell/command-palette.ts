@@ -164,6 +164,7 @@ export class CommandPalette {
   private readonly base = computed<Command[]>(() => {
     const nav: Command[] = [
       { id: 'go-editor', label: 'Go to Translations', hint: 'editor', icon: 'List', run: () => this.go('/editor') },
+      { id: 'go-ai-review', label: 'Go to AI review', hint: 'drafts', icon: 'WandSparkles', run: () => this.go('/ai-review') },
       { id: 'go-terms', label: 'Go to Terms', hint: 'terms', icon: 'FileText', run: () => this.go('/terms') },
       { id: 'go-langs', label: 'Go to Languages', hint: 'languages', icon: 'Languages', run: () => this.go('/languages') },
       { id: 'go-contrib', label: 'Go to Contributors', hint: 'contributors', icon: 'Users', run: () => this.go('/contributors') },

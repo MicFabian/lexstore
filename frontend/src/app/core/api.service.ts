@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
+  AiDraftResult,
+  AiReviewRow,
   ApiKeyCreated,
   ApiKeyView,
   CommentView,
@@ -179,6 +181,15 @@ export class ApiService {
         params: { page, size },
       })
       .pipe(map((p) => p.content));
+  }
+  aiDraftTerm(projectId: string, termId: string): Observable<AiDraftResult> {
+    return this.http.post<AiDraftResult>(
+      `${BASE}/projects/${projectId}/terms/${termId}/ai-drafts`,
+      {},
+    );
+  }
+  aiReview(projectId: string): Observable<AiReviewRow[]> {
+    return this.http.get<AiReviewRow[]>(`${BASE}/projects/${projectId}/ai-review`);
   }
   createTerm(
     projectId: string,

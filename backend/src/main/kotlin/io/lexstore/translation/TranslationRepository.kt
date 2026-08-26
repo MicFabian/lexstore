@@ -23,6 +23,18 @@ interface TranslationRepository : JpaRepository<Translation, UUID> {
     fun findByTermIdInAndLanguageCode(termIds: Collection<UUID>, languageCode: String): List<Translation>
     fun findByTermIdAndLanguageCode(termId: UUID, languageCode: String): Translation?
 
+    /** Machine drafts still waiting for a person: origin 'ai', status fuzzy. */
+    @Query(
+        """
+        select tr from Translation tr
+        where tr.origin = 'ai'
+          and tr.status = io.lexstore.common.TranslationStatus.FUZZY
+          and tr.termId in (select t.id from Term t where t.projectId = :projectId)
+        order by tr.updatedAt desc
+        """,
+    )
+    fun findAiDraftsForReview(projectId: UUID): List<Translation>
+
     /** Removes a language's translations across a project, when it is deleted. */
     @org.springframework.data.jpa.repository.Modifying
     @Query(

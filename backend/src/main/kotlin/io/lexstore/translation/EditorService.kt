@@ -144,6 +144,9 @@ class EditorService(
 
         val saved = if (existing != null) {
             existing.apply {
+                // The text's origin flips to human only when a person changes the
+                // text; confirming or re-flagging an AI draft keeps it machine-made.
+                if (value != req.value) origin = "human"
                 value = req.value
                 pluralOne = req.pluralOne
                 status = newStatus
@@ -258,7 +261,7 @@ class EditorService(
         var failed = 0
         for (termId in batch) {
             val sourceText = terms.findById(termId).orElse(null)?.sourceText ?: continue
-            val text = try {
+            val result = try {
                 ai.translate(
                     TranslateRequest(
                         sourceText,
@@ -267,13 +270,13 @@ class EditorService(
                         projectContext = contextFor(projectId, languageCode, project.translationContext),
                         projectId = projectId,
                     ),
-                ).text
+                )
             } catch (ex: Exception) {
                 log.warn("Auto-translate failed for term {} in {}", termId, languageCode, ex)
                 failed++
                 continue
             }
-            self.save(projectId, termId, languageCode, SaveTranslationRequest(text, null, targetStatus))
+            self.saveMachine(projectId, termId, languageCode, result.text, result.provider, targetStatus)
             translated++
         }
         return AutoTranslateResult(
@@ -282,6 +285,131 @@ class EditorService(
             failed = failed,
             remaining = (pending.size - batch.size).coerceAtLeast(0),
         )
+    }
+
+    /**
+     * Draft this term into every project language that has no text yet. Each
+     * language gets one machine translation, attributed to the provider and
+     * marked by the organisation's review policy. Like auto-translate, each
+     * save commits on its own so one failing language cannot roll back the rest.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    fun draftTerm(projectId: UUID, termId: UUID): AiDraftResult {
+        val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
+        require(term.projectId == projectId) { "Term does not belong to this project." }
+        val project = projects.findById(projectId)
+            .orElseThrow { ProjectNotFoundException(projectId.toString()) }
+
+        val targetStatus = if (ai.settings().autoFlagFuzzy) "fuzzy" else "translated"
+        var drafted = 0
+        var failed = 0
+        var skipped = 0
+        for (lang in languages.findByProjectIdOrderByName(projectId)) {
+            val existing = translations.findByTermIdAndLanguageCode(termId, lang.code)
+            if (!existing?.value.isNullOrBlank()) {
+                skipped++
+                continue
+            }
+            val result = try {
+                ai.translate(
+                    TranslateRequest(
+                        term.sourceText,
+                        project.sourceLang,
+                        lang.code,
+                        projectContext = contextFor(projectId, lang.code, project.translationContext),
+                        projectId = projectId,
+                    ),
+                )
+            } catch (ex: Exception) {
+                log.warn("AI draft failed for term {} in {}", termId, lang.code, ex)
+                failed++
+                continue
+            }
+            self.saveMachine(projectId, termId, lang.code, result.text, result.provider, targetStatus)
+            drafted++
+        }
+        return AiDraftResult(drafted = drafted, failed = failed, skipped = skipped, status = targetStatus)
+    }
+
+    /** A machine wrote this text: the provider is the author, and the origin says so. */
+    @Transactional
+    fun saveMachine(
+        projectId: UUID,
+        termId: UUID,
+        languageCode: String,
+        text: String,
+        provider: String,
+        status: String,
+    ) {
+        val term = terms.findById(termId).orElseThrow { TermNotFoundException(termId.toString()) }
+        require(term.projectId == projectId) { "Term does not belong to this project." }
+        val newStatus = TranslationStatus.parse(status)
+        val author = provider.replaceFirstChar { it.uppercase() }
+        val now = Instant.now()
+
+        val existing = translations.findByTermIdAndLanguageCode(termId, languageCode)
+        val oldValue = existing?.value
+        val oldStatus = existing?.status
+        if (existing != null) {
+            existing.apply {
+                value = text
+                this.status = newStatus
+                updatedAt = now
+                modifiedByName = author
+                modifiedByAvatar = null
+                origin = "ai"
+            }
+        } else {
+            translations.save(
+                Translation(
+                    termId = termId,
+                    languageCode = languageCode,
+                    value = text,
+                    status = newStatus,
+                    updatedAt = now,
+                    modifiedByName = author,
+                    origin = "ai",
+                ),
+            )
+        }
+        events.save(
+            TranslationEvent(
+                projectId = projectId,
+                termId = termId,
+                languageCode = languageCode,
+                action = actionFor(oldValue, text, newStatus),
+                oldValue = oldValue,
+                newValue = text,
+                oldStatus = oldStatus,
+                newStatus = newStatus,
+                authorName = author,
+                authorAvatar = 0,
+                createdAt = now,
+            ),
+        )
+        projects.touch(projectId, now)
+    }
+
+    /** Machine drafts still waiting for a person, newest first. */
+    fun aiReview(projectId: UUID): List<AiReviewRow> {
+        projects.findById(projectId).orElseThrow { ProjectNotFoundException(projectId.toString()) }
+        val drafts = translations.findAiDraftsForReview(projectId)
+        val termById = terms.findAllById(drafts.map { it.termId }.distinct()).associateBy { it.id }
+        val langNames = languages.findByProjectIdOrderByName(projectId).associate { it.code to it.name }
+        return drafts.mapNotNull { tr ->
+            val term = termById[tr.termId] ?: return@mapNotNull null
+            AiReviewRow(
+                termId = tr.termId,
+                key = term.key,
+                source = term.sourceText,
+                languageCode = tr.languageCode,
+                languageName = langNames[tr.languageCode] ?: tr.languageCode,
+                value = tr.value.orEmpty(),
+                version = tr.version,
+                provider = tr.modifiedByName ?: "AI",
+                at = RelativeTime.format(tr.updatedAt),
+            )
+        }
     }
 
     /** The project's own guidance plus its glossary for this language. */
@@ -334,6 +462,7 @@ class EditorService(
             target = tr?.value,
             version = tr?.version,
             status = (tr?.status?.name ?: "UNTRANSLATED").lowercase(),
+            origin = tr?.origin ?: "human",
             modifiedBy = tr?.modifiedByName?.let {
                 AuditEntry(it, tr.modifiedByAvatar ?: 0, "edited", editedAt.orEmpty())
             },

@@ -30,6 +30,28 @@ data class AutoTranslateResult(
     val remaining: Int = 0,
 )
 
+/** Outcome of drafting one term into every project language. */
+data class AiDraftResult(
+    val drafted: Int,
+    val failed: Int,
+    val skipped: Int,
+    /** The status the drafts were saved with — fuzzy under the review policy. */
+    val status: String,
+)
+
+/** One machine draft awaiting a person, in the review queue. */
+data class AiReviewRow(
+    val termId: java.util.UUID,
+    val key: String,
+    val source: String,
+    val languageCode: String,
+    val languageName: String,
+    val value: String,
+    val version: Long,
+    val provider: String,
+    val at: String,
+)
+
 /** One audit entry in a term's translation history, newest first. */
 data class TranslationHistoryEntry(
     val languageCode: String,

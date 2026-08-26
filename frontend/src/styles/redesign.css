@@ -42,6 +42,7 @@
 /* Routed screens are inline hosts by default, which collapses their height and
    stops .well from scrolling; each screen fills the main column instead. */
 .main > lx-projects-dashboard,
+.main > lx-ai-review-screen,
 .main > lx-terms-screen,
 .main > lx-features-screen,
 .main > lx-languages-screen,

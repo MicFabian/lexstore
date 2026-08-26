@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { forkJoin, map, of, catchError, switchMap } from 'rxjs';
+import { forkJoin, map, of, catchError } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
@@ -140,6 +140,9 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                     <span class="tgt__value">{{ cellRow?.target || 'Add translation…' }}</span>
                     @if (cellRow && (cellRow.status === 'fuzzy' || cellRow.status === 'proofread')) {
                       <span class="stcap tgt__status" [style.color]="statusColor(cellRow.status)">
+                        @if (cellRow.origin === 'ai') {
+                          <span class="ai-mark" title="Machine translation">◑ AI ·</span>
+                        }
                         {{ statusLabel(cellRow.status) }}
                       </span>
                     }
@@ -347,6 +350,14 @@ export class EditorScreen implements OnInit {
     }
   });
   protected readonly query = signal('');
+
+  /** Optional ?q= deep link, so a review row can land on its exact term. */
+  readonly qParam = input<string | undefined>(undefined, { alias: 'q' });
+
+  private readonly applyQParam = effect(() => {
+    const q = this.qParam();
+    if (q) this.query.set(q);
+  });
   /** The open cell: which term, in which language column. */
   protected readonly sel = signal<{ termId: string; lang: string } | null>(null);
   protected readonly savedId = signal<string | null>(null);
@@ -667,32 +678,21 @@ export class EditorScreen implements OnInit {
     });
   }
 
-  /** One cached AI draft per project language, saved as needing review. */
+  /** One machine draft per project language, attributed to the AI, awaiting review. */
   private draftWithAi(pid: string, termId: string, source: string): void {
-    const codes = this.languages().map((l) => l.code);
-    if (codes.length === 0) {
-      this.loadEditor(pid);
-      this.toast.show('Term added');
-      return;
-    }
-    forkJoin(
-      codes.map((code) =>
-        this.api.aiTranslate({ sourceText: source, sourceLang: 'en', targetLang: code }).pipe(
-          switchMap((r) =>
-            this.api.saveTranslation(pid, termId, code, { value: r.text, status: 'fuzzy' }),
-          ),
-          map(() => true),
-          catchError(() => of(false)),
-        ),
-      ),
-    ).subscribe((results) => {
-      const done = results.filter(Boolean).length;
-      this.loadEditor(pid);
-      this.toast.show(
-        done === codes.length
-          ? `Term added · ${done} draft${done === 1 ? '' : 's'} to review`
-          : `Term added · ${done} of ${codes.length} drafts — the rest stay untranslated`,
-      );
+    this.api.aiDraftTerm(pid, termId).subscribe({
+      next: (r) => {
+        this.loadEditor(pid);
+        this.toast.show(
+          r.failed === 0
+            ? `Term added · ${r.drafted} draft${r.drafted === 1 ? '' : 's'} to review`
+            : `Term added · ${r.drafted} of ${r.drafted + r.failed} drafts — the rest stay untranslated`,
+        );
+      },
+      error: () => {
+        this.loadEditor(pid);
+        this.toast.show({ message: 'Term added, but the AI drafts failed', tone: 'error' });
+      },
     });
   }
 

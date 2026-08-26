@@ -98,6 +98,7 @@ export interface EditorRow {
   target: string | null;
   version: number | null;
   status: TranslationStatus;
+  origin: 'human' | 'ai';
   modifiedBy: AuditEntry | null;
   modifiedAt: string | null;
 }
@@ -248,6 +249,25 @@ export interface AutoTranslateResult {
   status: string;
   failed: number;
   remaining: number;
+}
+
+export interface AiDraftResult {
+  drafted: number;
+  failed: number;
+  skipped: number;
+  status: string;
+}
+
+export interface AiReviewRow {
+  termId: string;
+  key: string;
+  source: string;
+  languageCode: string;
+  languageName: string;
+  value: string;
+  version: number;
+  provider: string;
+  at: string;
 }
 
 export interface FeatureView {

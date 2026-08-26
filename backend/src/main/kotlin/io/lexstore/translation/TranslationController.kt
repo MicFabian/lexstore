@@ -24,6 +24,27 @@ class TermHistoryController(private val service: EditorService) {
     ): List<TranslationHistoryEntry> = service.history(projectId, termId)
 }
 
+/** Draft one term into every project language with the AI, on demand. */
+@RestController
+@RequestMapping("/api/projects/{projectId}/terms/{termId}/ai-drafts")
+class AiDraftController(private val service: EditorService) {
+    @org.springframework.web.bind.annotation.PostMapping
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','TRANSLATOR')")
+    @io.lexstore.common.RequiresProjectRole(io.lexstore.common.ContributorRole.OWNER, io.lexstore.common.ContributorRole.ADMIN, io.lexstore.common.ContributorRole.TRANSLATOR)
+    fun draft(
+        @PathVariable projectId: UUID,
+        @PathVariable termId: UUID,
+    ): AiDraftResult = service.draftTerm(projectId, termId)
+}
+
+/** The queue of machine drafts a person has not looked at yet. */
+@RestController
+@RequestMapping("/api/projects/{projectId}/ai-review")
+class AiReviewController(private val service: EditorService) {
+    @GetMapping
+    fun list(@PathVariable projectId: UUID): List<AiReviewRow> = service.aiReview(projectId)
+}
+
 /**
  * Translations as a sub-resource of a language. The collection
  * `…/languages/{code}/translations` is the editor view (one entry per term);

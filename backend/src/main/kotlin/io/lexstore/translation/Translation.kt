@@ -48,4 +48,8 @@ class Translation(
 
     @Column(name = "modified_by_avatar")
     var modifiedByAvatar: Int? = null,
+
+    /** 'human' or 'ai' — who wrote the current text, independent of its status. */
+    @Column(nullable = false)
+    var origin: String = "human",
 )
