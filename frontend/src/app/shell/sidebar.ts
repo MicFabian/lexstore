@@ -98,7 +98,7 @@ interface QuickItem {
           <span>Organisation</span>
         </a>
 
-        <div class="rail__group">{{ current()?.name || 'Project' }}</div>
+        <div class="rail__group">Project</div>
         @for (n of projectNav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
             <lx-icon [name]="n.icon" [size]="15" />

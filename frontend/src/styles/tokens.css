@@ -96,9 +96,10 @@
 
   --lx-numeric-tabular: tabular-nums;
 
-  /* Locali ships no webfont binaries: Helvetica Neue from the OS, real mono for keys. */
-  --lx-font-sans: 'Helvetica Neue', Helvetica, 'Liberation Sans', Arial, sans-serif;
-  --lx-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Inter for the interface, JetBrains Mono for keys and code (loaded from
+     Google Fonts in index.html); system stacks carry the page until they land. */
+  --lx-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --lx-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Spacing */
   --lx-space-1: 2px;

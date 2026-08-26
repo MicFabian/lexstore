@@ -1,7 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { filter, map, startWith } from 'rxjs';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Icon } from '../shared/icon';
 import { ApiService } from '../core/api.service';
 import { Btn } from '../shared/primitives';
@@ -9,32 +6,12 @@ import { ToastService } from '../core/toast.service';
 import { ProjectStateService } from '../core/project-state.service';
 import { CommandService } from '../core/command.service';
 
-const LABELS: Record<string, string> = {
-  editor: 'Translations',
-  terms: 'Terms',
-  features: 'Features',
-  languages: 'Languages',
-  contributors: 'Contributors',
-  organisation: 'Organisation',
-  settings: 'Settings',
-  projects: 'Projects',
-  ai: 'Translation AI',
-};
-
-/** Screens that belong to the workspace, not the selected project. */
-const WORKSPACE = new Set(['projects', 'ai']);
-
 @Component({
   selector: 'lx-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, RouterLink],
+  imports: [Icon, Btn],
   template: `
     <header class="topbar">
-      <nav class="crumb" aria-label="Breadcrumb">
-        <a class="crumb-link" [routerLink]="['/', 'projects']">{{ crumbRoot() }}</a>
-        <lx-icon name="ChevronRight" [size]="14" color="var(--lx-line)" />
-        <span class="crumb-active" aria-current="page">{{ screenLabel() }}</span>
-      </nav>
       <div class="spacer"></div>
 
       <button class="cmdk" type="button" (click)="cmd.show()">
@@ -89,15 +66,6 @@ const WORKSPACE = new Set(['projects', 'ai']);
     </header>
   `,
   styles: `
-    .crumb-link {
-      color: inherit;
-      text-decoration: none;
-      border-radius: var(--lx-radius-1);
-    }
-    .crumb-link:hover {
-      color: var(--lx-text-primary);
-      text-decoration: underline;
-    }
     .invite {
       top: calc(100% + 6px);
       right: 0;
@@ -106,10 +74,6 @@ const WORKSPACE = new Set(['projects', 'ai']);
       display: flex;
       flex-direction: column;
       gap: 12px;
-    }
-    .crumb-active {
-      color: var(--lx-text-primary);
-      font-weight: 600;
     }
   `,
 })
@@ -123,25 +87,7 @@ export class Topbar {
   protected readonly role = signal('Translator');
   protected readonly roles = ['Translator', 'Proofreader', 'Admin'];
   protected readonly cmd = inject(CommandService);
-  private readonly router = inject(Router);
   protected readonly project = inject(ProjectStateService).current;
-
-  private readonly url = toSignal(
-    this.router.events.pipe(
-      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map((e) => e.urlAfterRedirects),
-      startWith(this.router.url),
-    ),
-    { initialValue: this.router.url },
-  );
-
-  private readonly segment = computed(
-    () => this.url().split('?')[0].split('/').filter(Boolean)[0] ?? 'editor',
-  );
-  protected readonly screenLabel = computed(() => LABELS[this.segment()] ?? 'Translations');
-  protected readonly crumbRoot = computed(() =>
-    WORKSPACE.has(this.segment()) ? 'Workspace' : (this.project()?.name ?? ''),
-  );
 
   protected openInvite(): void {
     this.name.set('');

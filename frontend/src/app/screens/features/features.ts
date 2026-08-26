@@ -147,7 +147,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                             <div class="open-row">
                               <span class="keytag">{{ r.key }}</span>
                               <span class="open-src">{{ r.sourceText }}</span>
-                              <span class="stcap" [style.color]="'var(--lx-st-' + r.status + ')'">
+                              <span class="stcap" [style.color]="r.status === 'fuzzy' ? 'var(--lx-unsure)' : 'var(--lx-untranslated)'">
                                 {{ r.status === 'fuzzy' ? 'Needs review' : 'Untranslated' }}
                               </span>
                             </div>

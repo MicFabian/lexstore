@@ -30,8 +30,8 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     <div class="editor" [class.editor--split]="!!selectedRow()" style="position:relative">
       <div class="ed-head">
         <div>
-          <div class="eyebrow">Editing · {{ langsLabel() }}</div>
-          <div style="display:flex;align-items:baseline;gap:14px;margin-top:12px">
+          <h1 class="sr-only">Translations</h1>
+          <div style="display:flex;align-items:baseline;gap:14px">
             <span class="display tnum" style="font-size:var(--lx-size-34);line-height:var(--lx-leading-tight)">{{ pct().done }}%</span>
             <span style="font-size:var(--lx-size-13);color:var(--lx-text-muted)">translated</span>
           </div>
@@ -39,10 +39,6 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
             <i class="seg-translated" [style.width.%]="pct().done"></i>
             <i class="seg-fuzzy" [style.width.%]="pct().fuzzy"></i>
             <i class="seg-untranslated" [style.width.%]="pct().open"></i>
-          </div>
-          <div class="ed-counts">
-            {{ counts().all - counts().untranslated - counts().fuzzy }} translated ·
-            {{ counts().fuzzy }} need review · {{ counts().untranslated }} untranslated
           </div>
         </div>
         <div style="display:flex;gap:8px">
@@ -53,9 +49,6 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
               [attr.aria-expanded]="langMenuOpen()"
               (click)="langMenuOpen.set(!langMenuOpen())"
             >
-              @for (c of langs(); track c) {
-                <span class="locale">{{ c }}</span>
-              }
               {{ langsLabel() }}
               <lx-icon name="ChevronDown" [size]="15" color="var(--lx-text-muted)" />
             </button>
@@ -145,7 +138,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                     (click)="select(r.id, c)"
                   >
                     <span class="tgt__value">{{ cellRow?.target || 'Add translation…' }}</span>
-                    @if (cellRow && cellRow.status !== 'translated') {
+                    @if (cellRow && (cellRow.status === 'fuzzy' || cellRow.status === 'proofread')) {
                       <span class="stcap tgt__status" [style.color]="statusColor(cellRow.status)">
                         {{ statusLabel(cellRow.status) }}
                       </span>
