@@ -33,7 +33,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       <div class="phead" style="margin-bottom:14px">
         <div>
           <div class="eyebrow">Source strings · English</div>
-          <h1 class="serif">Terms</h1>
+          <h1 class="display">Terms</h1>
           <div class="psub">{{ rows().length }} terms · manage the keys; translate them per language</div>
         </div>
         <div style="display:flex;gap:8px">
@@ -46,8 +46,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
         <lx-search placeholder="Search terms" [value]="query()" [width]="220" (changed)="query.set($event)" />
         <button
           [class]="'btn btn--sm ' + (newOnly() ? 'btn--ghost' : 'btn--subtle')"
-          [style.border-color]="newOnly() ? 'var(--lx-st-new)' : null"
-          [style.color]="newOnly() ? 'var(--lx-st-new)' : null"
+          [style.border-color]="newOnly() ? 'var(--lx-accent)' : null"
+          [style.color]="newOnly() ? 'var(--lx-accent)' : null"
           (click)="newOnly.set(!newOnly())"
         >
           <lx-icon name="Sparkles" [size]="13" />New only
@@ -56,7 +56,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
           <button
             [class]="'btn btn--sm ' + (tag() === null ? 'btn--ghost' : 'btn--subtle')"
             [style.border-color]="tag() === null ? 'var(--lx-accent)' : null"
-            [style.color]="tag() === null ? 'var(--lx-accent-text)' : null"
+            [style.color]="tag() === null ? 'var(--lx-accent)' : null"
             (click)="tag.set(null)"
           >
             All tags
@@ -65,7 +65,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
             <button
               [class]="'btn btn--sm ' + (tag() === t ? 'btn--ghost' : 'btn--subtle')"
               [style.border-color]="tag() === t ? 'var(--lx-accent)' : null"
-              [style.color]="tag() === t ? 'var(--lx-accent-text)' : null"
+              [style.color]="tag() === t ? 'var(--lx-accent)' : null"
               (click)="tag.set(t)"
             >
               <lx-icon name="Tag" [size]="12" />{{ t }}
@@ -77,7 +77,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       <div>
         @if (selectedCount() > 0) {
           <div class="bulk-bar">
-            <span style="font-size:13px;font-weight:600;color:var(--lx-accent-text)">{{ selectedCount() }} selected</span>
+            <span style="font-size:13px;font-weight:600;color:var(--lx-accent)">{{ selectedCount() }} selected</span>
             <div class="spacer"></div>
             <button class="btn btn--subtle btn--sm" (click)="$event.stopPropagation(); clearSelection()">Clear</button>
             <button class="btn btn--subtle btn--sm" style="color:var(--lx-danger)" (click)="$event.stopPropagation(); pendingBulkDelete.set(true)">
@@ -145,7 +145,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete term" (click)="pendingDelete.set(r)">
-                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-text-muted)" />
                   </button>
                 </td>
               </tr>
@@ -169,7 +169,7 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
                             <span class="tr-name">{{ t.name }}</span>
                             <span
                               class="tr-value"
-                              [style.color]="t.value ? 'var(--lx-ink)' : 'var(--lx-muted)'"
+                              [style.color]="t.value ? 'var(--lx-text-primary)' : 'var(--lx-text-muted)'"
                               [style.font-style]="t.value ? 'normal' : 'italic'"
                             >{{ t.value || 'Untranslated' }}</span>
                             <span class="tr-author">
@@ -270,8 +270,8 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       justify-content: flex-end;
     }
     .covnum {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
       width: 34px;
       text-align: right;
     }
@@ -296,14 +296,14 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
       align-items: center;
       gap: 14px;
       padding: 9px 0;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .tr-row:last-child {
       border-bottom: none;
     }
     .tr-name {
       font-size: 12.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .tr-value {
       font-size: 14px;

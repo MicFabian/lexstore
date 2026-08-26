@@ -49,12 +49,12 @@ export interface PromptField {
   styles: `
     .hint {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       line-height: 1.5;
       margin: 6px 0 0;
     }
     .mono {
-      font-family: var(--lx-mono);
+      font-family: var(--lx-font-mono);
       font-size: 13px;
     }
   `,

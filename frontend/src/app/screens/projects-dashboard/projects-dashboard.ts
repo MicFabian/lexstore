@@ -18,7 +18,7 @@ import { ProjectSummary } from '../../core/models';
         <div class="phead">
           <div>
             <div class="eyebrow">Workspace</div>
-            <h1 class="serif">Projects</h1>
+            <h1 class="display">Projects</h1>
             <div class="psub">
               {{ projects().length }} projects · {{ totalTerms().toLocaleString() }} terms total
             </div>
@@ -32,15 +32,15 @@ import { ProjectSummary } from '../../core/models';
         <div class="statstrip">
           <div class="statcell">
             <div class="eyebrow">Active projects</div>
-            <div class="serif statnum">{{ projects().length }}</div>
+            <div class="display statnum">{{ projects().length }}</div>
           </div>
           <div class="statcell">
             <div class="eyebrow">Untranslated</div>
-            <div class="serif statnum" style="color:var(--lx-st-untranslated)">{{ totalUntranslated().toLocaleString() }}</div>
+            <div class="display statnum" style="color:var(--lx-untranslated)">{{ totalUntranslated().toLocaleString() }}</div>
           </div>
           <div class="statcell">
             <div class="eyebrow">New this week</div>
-            <div class="serif statnum" style="color:var(--lx-accent-text)">{{ totalNew() }}</div>
+            <div class="display statnum" style="color:var(--lx-accent)">{{ totalNew() }}</div>
           </div>
         </div>
 
@@ -58,9 +58,9 @@ import { ProjectSummary } from '../../core/models';
                 </span>
                 <span class="work-name">{{ p.name }}</span>
                 <span class="work-open">
-                  <span class="cap" style="color:var(--lx-st-untranslated)">{{ p.untranslated }} untranslated</span>
+                  <span class="cap" style="color:var(--lx-untranslated)">{{ p.untranslated }} untranslated</span>
                   @if (p.needsReview > 0) {
-                    <span class="cap" style="color:var(--lx-st-fuzzy)">{{ p.needsReview }} need review</span>
+                    <span class="cap" style="color:var(--lx-unsure)">{{ p.needsReview }} need review</span>
                   }
                 </span>
                 <span class="work-go">Continue<lx-icon name="ArrowRight" [size]="15" /></span>
@@ -86,26 +86,26 @@ import { ProjectSummary } from '../../core/models';
               </span>
               <span class="pprog">
                 <span class="pprog-head">
-                  <span class="serif" style="font-size:17px">{{ p.progress }}%</span>
+                  <span class="display" style="font-size:17px">{{ p.progress }}%</span>
                   <span class="pmeta">{{ p.terms.toLocaleString() }} terms · {{ p.langs }} langs</span>
                 </span>
                 <span class="progress" style="height:5px"><i class="seg-translated" [style.width.%]="p.progress"></i></span>
               </span>
               <span class="ptag">
                 @if (p.terms === 0) {
-                  <span class="cap" style="color:var(--lx-slate)">No terms yet</span>
+                  <span class="cap" style="color:var(--lx-text-secondary)">No terms yet</span>
                 } @else if (p.untranslated > 0) {
-                  <span class="cap" style="color:var(--lx-st-untranslated)">{{ p.untranslated }} untranslated</span>
+                  <span class="cap" style="color:var(--lx-untranslated)">{{ p.untranslated }} untranslated</span>
                 } @else {
-                  <span class="cap" style="color:var(--lx-st-translated)">Complete</span>
+                  <span class="cap" style="color:var(--lx-translated)">Complete</span>
                 }
                 <span class="pupd">{{ p.updated }}</span>
               </span>
-              <lx-icon name="ArrowUpRight" [size]="17" color="var(--lx-muted)" />
+              <lx-icon name="ArrowUpRight" [size]="17" color="var(--lx-text-muted)" />
             </button>
           }
           @if (filtered().length === 0) {
-            <div style="padding:48px 0;color:var(--lx-slate);font-size:13.5px">No projects match your search.</div>
+            <div style="padding:48px 0;color:var(--lx-text-secondary);font-size:13.5px">No projects match your search.</div>
           }
         </div>
       </div>
@@ -127,8 +127,8 @@ import { ProjectSummary } from '../../core/models';
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-xl);
-      background: var(--lx-card);
+      border-radius: var(--lx-radius-3);
+      background: var(--lx-bg-card);
       overflow: hidden;
       margin-bottom: 34px;
     }
@@ -139,7 +139,9 @@ import { ProjectSummary } from '../../core/models';
       border-left: 1px solid var(--lx-line);
     }
     .statnum {
-      font-size: 40px;
+      font-size: var(--lx-size-34);
+      letter-spacing: var(--lx-track-tight);
+      font-variant-numeric: var(--lx-numeric-tabular);
       margin-top: 8px;
     }
     .worklist {
@@ -157,9 +159,9 @@ import { ProjectSummary } from '../../core/models';
       padding: 14px 0;
     }
     .work-name {
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--lx-ink);
+      font-size: var(--lx-size-13);
+      font-weight: var(--lx-weight-medium);
+      color: var(--lx-text-primary);
       flex: 1;
     }
     .work-open {
@@ -173,9 +175,9 @@ import { ProjectSummary } from '../../core/models';
       gap: 6px;
       width: 110px;
       justify-content: flex-end;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--lx-accent-text);
+      font-size: var(--lx-size-12);
+      font-weight: var(--lx-weight-medium);
+      color: var(--lx-accent);
     }
     .proj-row {
       width: 100%;
@@ -189,7 +191,7 @@ import { ProjectSummary } from '../../core/models';
     .pmark {
       width: 36px;
       height: 36px;
-      border-radius: 9px;
+      border-radius: var(--lx-radius-3);
       display: grid;
       place-items: center;
       flex: none;
@@ -208,13 +210,13 @@ import { ProjectSummary } from '../../core/models';
       gap: 2px;
     }
     .pname {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--lx-ink);
+      font-size: var(--lx-size-13);
+      font-weight: var(--lx-weight-medium);
+      color: var(--lx-text-primary);
     }
     .pcode {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-muted);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-muted);
     }
     .pprog {
       flex: 1;
@@ -230,8 +232,8 @@ import { ProjectSummary } from '../../core/models';
       gap: 16px;
     }
     .pmeta {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-muted);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-muted);
       white-space: nowrap;
     }
     .ptag {
@@ -243,8 +245,8 @@ import { ProjectSummary } from '../../core/models';
       gap: 5px;
     }
     .pupd {
-      font: 500 12px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
     }
   `,
 })

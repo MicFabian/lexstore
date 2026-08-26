@@ -18,7 +18,7 @@ import { LanguageView } from '../../core/models';
         <div class="phead">
           <div>
             <div class="eyebrow">Localization</div>
-            <h1 class="serif">Languages</h1>
+            <h1 class="display">Languages</h1>
             <div class="psub">{{ langs().length }} languages · source is English</div>
           </div>
           <div style="display:flex;gap:8px">
@@ -76,19 +76,19 @@ import { LanguageView } from '../../core/models';
             <div class="lang-row">
               <span class="locale" style="font-size:12px">{{ l.code }}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:14.5px;font-weight:600;color:var(--lx-ink)">{{ l.name }}</div>
+                <div style="font-size:14.5px;font-weight:600;color:var(--lx-text-primary)">{{ l.name }}</div>
                 <div class="lmeta">
                   {{ l.contributors }} contributor{{ l.contributors === 1 ? '' : 's' }}
                   @if (l.fuzzy > 0) { · {{ l.fuzzy }}% in review }
                 </div>
               </div>
-              <span class="serif" style="font-size:24px">{{ l.translated }}%</span>
+              <span class="display tnum" style="font-size:var(--lx-size-20)">{{ l.translated }}%</span>
               <span class="progress" style="width:90px;height:5px">
                 <i class="seg-translated" [style.width.%]="l.translated"></i>
                 <i class="seg-fuzzy" [style.width.%]="l.fuzzy"></i>
               </span>
               <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove language" (click)="pendingRemove.set(l)">
-                <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
+                <lx-icon name="Trash2" [size]="15" color="var(--lx-text-muted)" />
               </button>
             </div>
           }
@@ -128,7 +128,7 @@ import { LanguageView } from '../../core/models';
       align-items: center;
       gap: 18px;
       padding: 22px 0;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .export {
       top: calc(100% + 6px);
@@ -142,13 +142,13 @@ import { LanguageView } from '../../core/models';
     }
     .export__hint {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       line-height: 1.5;
       margin: 0;
     }
     .lmeta {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
       margin-top: 3px;
     }
   `,

@@ -47,7 +47,7 @@ interface QuickItem {
             <span class="pname">{{ current()?.name }}</span>
             <span class="psub">{{ current()?.code }}</span>
           </span>
-          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-muted)" />
+          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-text-muted)" />
         </button>
         @if (switcherOpen()) {
           <div class="menu-backdrop" (click)="switcherOpen.set(false)"></div>
@@ -67,7 +67,7 @@ interface QuickItem {
                   <span class="pm-code">{{ p.code }}</span>
                 </span>
                 @if (p.id === current()?.id) {
-                  <lx-icon name="Check" [size]="15" color="var(--lx-accent-hi)" />
+                  <lx-icon name="Check" [size]="15" color="var(--lx-accent-hover)" />
                 } @else {
                   <span class="pm-prog">{{ p.progress }}%</span>
                 }
@@ -75,7 +75,7 @@ interface QuickItem {
             }
             <div class="menu__divider"></div>
             <button class="menu__item" (click)="viewAll()">
-              <lx-icon name="LayoutGrid" [size]="15" color="var(--lx-slate)" />
+              <lx-icon name="LayoutGrid" [size]="15" color="var(--lx-text-secondary)" />
               <span>View all projects</span>
             </button>
           </div>
@@ -83,32 +83,25 @@ interface QuickItem {
       </div>
 
       <nav class="rail__nav">
-        <div class="rail__group">Workspace</div>
+        <div class="rail__group">Account</div>
         <a class="navitem" [routerLink]="['/', 'projects']" routerLinkActive="active">
-          <lx-icon name="LayoutGrid" [size]="17" />
+          <lx-icon name="LayoutGrid" [size]="15" />
           <span>Projects</span>
           <span class="count">{{ projects().length }}</span>
         </a>
         <a class="navitem" [routerLink]="['/', 'ai']" routerLinkActive="active">
-          <lx-icon name="WandSparkles" [size]="16" />
+          <lx-icon name="WandSparkles" [size]="15" />
           <span>Translation AI</span>
         </a>
+        <a class="navitem" [routerLink]="['/', 'organisation']" routerLinkActive="active">
+          <lx-icon name="Users" [size]="15" />
+          <span>Organisation</span>
+        </a>
 
-        <div class="rail__group">Work</div>
-        @for (n of workNav(); track n.path) {
+        <div class="rail__group">{{ current()?.name || 'Project' }}</div>
+        @for (n of projectNav(); track n.path) {
           <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
-            <lx-icon [name]="n.icon" [size]="17" />
-            <span>{{ n.label }}</span>
-            @if (n.count != null) {
-              <span class="count">{{ n.count.toLocaleString() }}</span>
-            }
-          </a>
-        }
-
-        <div class="rail__group">Manage</div>
-        @for (n of manageNav(); track n.path) {
-          <a class="navitem" [routerLink]="['/', n.path]" routerLinkActive="active">
-            <lx-icon [name]="n.icon" [size]="17" />
+            <lx-icon [name]="n.icon" [size]="15" />
             <span>{{ n.label }}</span>
             @if (n.count != null) {
               <span class="count">{{ n.count.toLocaleString() }}</span>
@@ -133,7 +126,7 @@ interface QuickItem {
             <div class="foot-name">{{ userName() }}</div>
             <div class="foot-role">{{ topRole() }}</div>
           </div>
-          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-muted)" />
+          <lx-icon name="ChevronsUpDown" [size]="15" color="var(--lx-text-muted)" />
         </button>
         @if (userMenuOpen()) {
           <div class="menu-backdrop" (click)="userMenuOpen.set(false)"></div>
@@ -141,12 +134,12 @@ interface QuickItem {
             <div class="menu__label">{{ userEmail() || userName() }}</div>
             @for (r of roles(); track r) {
               <div class="menu__item" style="cursor:default">
-                <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" /><span style="text-transform:capitalize">{{ r }}</span>
+                <lx-icon name="Check" [size]="14" color="var(--lx-accent-hover)" /><span style="text-transform:capitalize">{{ r }}</span>
               </div>
             }
             <div class="menu__divider"></div>
             <button class="menu__item" (click)="logout()">
-              <lx-icon name="ArrowRight" [size]="15" color="var(--lx-slate)" /><span>Sign out</span>
+              <lx-icon name="ArrowRight" [size]="15" color="var(--lx-text-secondary)" /><span>Sign out</span>
             </button>
           </div>
         }
@@ -173,19 +166,19 @@ interface QuickItem {
       cursor: pointer;
     }
     .foot-btn:hover {
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
     }
     .foot-name {
       font-size: 14px;
       font-weight: 600;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .foot-role {
       font-size: 12.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       text-transform: capitalize;
     }
   `,
@@ -209,23 +202,18 @@ export class Sidebar {
   protected readonly projects = this.state.projects;
   protected readonly current = this.state.current;
 
-  /** What a translator opens to get work done. */
-  protected readonly workNav = computed<NavItem[]>(() => {
+  /** The selected project's own navigation. The Translations count is open
+   *  work (untranslated + needs review), not the term total — a number the
+   *  translator can actually burn down. */
+  protected readonly projectNav = computed<NavItem[]>(() => {
     const c = this.current();
+    const open = c ? c.untranslated + c.needsReview : undefined;
     return [
-      { path: 'editor', icon: 'Languages', label: 'Translations', count: c?.terms },
+      { path: 'editor', icon: 'Languages', label: 'Translations', count: open },
       { path: 'terms', icon: 'FileText', label: 'Terms', count: c?.terms },
       { path: 'features', icon: 'LayoutGrid', label: 'Features' },
-    ];
-  });
-
-  /** What an owner or admin configures, rather than works in. */
-  protected readonly manageNav = computed<NavItem[]>(() => {
-    const c = this.current();
-    return [
       { path: 'languages', icon: 'Globe', label: 'Languages', count: c?.langs },
       { path: 'contributors', icon: 'Users', label: 'Contributors' },
-      { path: 'organisation', icon: 'Users', label: 'Organisation' },
       { path: 'settings', icon: 'Settings', label: 'Settings' },
     ];
   });
@@ -238,7 +226,7 @@ export class Sidebar {
         icon: 'CircleDashed',
         label: 'Untranslated',
         count: c?.untranslated ?? 0,
-        color: 'var(--lx-st-untranslated)',
+        color: 'var(--lx-untranslated)',
         link: ['/editor'],
         params: { filter: 'untranslated' },
       },
@@ -246,7 +234,7 @@ export class Sidebar {
         icon: 'Sparkles',
         label: 'Newly added',
         count: c?.newTerms ?? 0,
-        color: 'var(--lx-st-new)',
+        color: 'var(--lx-accent)',
         link: ['/terms'],
         params: { new: '1' },
       },
@@ -254,7 +242,7 @@ export class Sidebar {
         icon: 'Eye',
         label: 'Needs review',
         count: c?.needsReview ?? 0,
-        color: 'var(--lx-st-fuzzy)',
+        color: 'var(--lx-unsure)',
         link: ['/editor'],
         params: { filter: 'fuzzy' },
       },

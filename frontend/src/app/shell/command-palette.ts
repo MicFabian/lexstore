@@ -28,7 +28,7 @@ interface Command {
       <div class="cmd-backdrop" (click)="close()"></div>
       <div class="cmd" role="dialog" aria-label="Command palette">
         <div class="cmd__input">
-          <lx-icon name="Search" [size]="17" color="var(--lx-muted)" />
+          <lx-icon name="Search" [size]="17" color="var(--lx-text-muted)" />
           <input
             #box
             autofocus
@@ -47,7 +47,7 @@ interface Command {
               (mouseenter)="active.set(i)"
               (click)="exec(c)"
             >
-              <lx-icon [name]="c.icon" [size]="16" color="var(--lx-slate)" />
+              <lx-icon [name]="c.icon" [size]="16" color="var(--lx-text-secondary)" />
               <span class="cmd__label">{{ c.label }}</span>
               <span class="cmd__hint">{{ c.hint }}</span>
             </button>
@@ -69,7 +69,7 @@ interface Command {
     .cmd-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-bg-page) 55%, transparent);
       backdrop-filter: blur(2px);
       pointer-events: auto;
     }
@@ -79,10 +79,10 @@ interface Command {
       left: 50%;
       transform: translateX(-50%);
       width: min(600px, calc(100vw - 32px));
-      background: var(--lx-elev, var(--lx-card));
+      background: var(--lx-bg-card, var(--lx-bg-card));
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-xl);
-      box-shadow: var(--lx-shadow-pop);
+      border-radius: var(--lx-radius-3);
+      box-shadow: var(--lx-shadow-dialog);
       overflow: hidden;
       pointer-events: auto;
       animation: cmdIn 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -106,12 +106,12 @@ interface Command {
       border: none;
       background: none;
       outline: none;
-      font-family: var(--lx-sans);
+      font-family: var(--lx-font-sans);
       font-size: 15px;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .cmd__input input::placeholder {
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
     }
     .cmd__list {
       max-height: 50vh;
@@ -127,8 +127,8 @@ interface Command {
       background: none;
       text-align: left;
       padding: 9px 11px;
-      border-radius: var(--lx-r-sm);
-      color: var(--lx-ink);
+      border-radius: var(--lx-radius-2);
+      color: var(--lx-text-primary);
     }
     .cmd__item.active {
       background: var(--lx-accent-soft);
@@ -139,14 +139,14 @@ interface Command {
     }
     .cmd__hint {
       margin-left: auto;
-      font-family: var(--lx-mono);
+      font-family: var(--lx-font-mono);
       font-size: 11px;
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
     }
     .cmd__empty {
       padding: 24px;
       text-align: center;
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
       font-size: 13px;
     }
   `,

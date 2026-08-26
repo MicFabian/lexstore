@@ -38,7 +38,7 @@ const WORKSPACE = new Set(['projects', 'ai']);
       <div class="spacer"></div>
 
       <button class="cmdk" type="button" (click)="cmd.show()">
-        <lx-icon name="Search" [size]="14" color="var(--lx-muted)" />
+        <lx-icon name="Search" [size]="14" color="var(--lx-text-muted)" />
         <span>Search</span>
         <span class="cmdk__keys"><span class="kbd">⌘</span><span class="kbd">K</span></span>
       </button>
@@ -92,10 +92,10 @@ const WORKSPACE = new Set(['projects', 'ai']);
     .crumb-link {
       color: inherit;
       text-decoration: none;
-      border-radius: var(--lx-r-xs);
+      border-radius: var(--lx-radius-1);
     }
     .crumb-link:hover {
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
       text-decoration: underline;
     }
     .invite {
@@ -108,7 +108,7 @@ const WORKSPACE = new Set(['projects', 'ai']);
       gap: 12px;
     }
     .crumb-active {
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
       font-weight: 600;
     }
   `,

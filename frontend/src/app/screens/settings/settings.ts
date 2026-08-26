@@ -28,7 +28,7 @@ interface IntegrationItem {
         <div class="phead" style="margin-bottom:20px">
           <div>
             <div class="eyebrow">Configuration</div>
-            <h1 class="serif">Settings</h1>
+            <h1 class="display">Settings</h1>
           </div>
         </div>
         <div class="subnav" style="margin-bottom:30px">
@@ -45,14 +45,14 @@ interface IntegrationItem {
               <div style="display:flex;flex-direction:column;gap:18px">
                 <div class="panel">
                   <div class="panel__head">
-                    <lx-icon name="KeyRound" [size]="17" color="var(--lx-accent-hi)" />
+                    <lx-icon name="KeyRound" [size]="17" color="var(--lx-accent-hover)" />
                     <h2>API keys</h2>
                     <div class="spacer"></div>
                     <lx-btn variant="primary" [sm]="true" icon="Plus" (clicked)="generating.set(true)">Generate key</lx-btn>
                   </div>
                   <div style="padding:6px 0">
                     @for (k of keys(); track k.id; let last = $last) {
-                      <div class="keyrow" [style.border-bottom]="last ? 'none' : '1px solid var(--lx-line-2)'">
+                      <div class="keyrow" [style.border-bottom]="last ? 'none' : '1px solid var(--lx-line-soft)'">
                         <div style="flex:1;min-width:0">
                           <div class="row" style="gap:8px;margin-bottom:6px">
                             <span style="font-weight:600;font-size:13.5px">{{ k.label }}</span>
@@ -79,10 +79,10 @@ interface IntegrationItem {
                 </div>
 
                 <div class="card cli-card">
-                  <lx-icon name="Terminal" [size]="18" color="var(--lx-accent-text)" style="margin-top:1px" />
+                  <lx-icon name="Terminal" [size]="18" color="var(--lx-accent)" style="margin-top:1px" />
                   <div>
                     <div style="font-weight:600;font-size:13.5px;margin-bottom:4px">Pull translations from your terminal</div>
-                    <code class="lx-mono" style="font-size:12.5px;color:var(--lx-accent-text)">$ lexstore pull --project {{ project()?.code }} --lang fr</code>
+                    <code class="lx-mono" style="font-size:12.5px;color:var(--lx-accent)">$ lexstore pull --project {{ project()?.code }} --lang fr</code>
                   </div>
                 </div>
               </div>
@@ -91,7 +91,7 @@ interface IntegrationItem {
               <div class="panel" style="max-width:520px">
                 <div class="panel__head"><h2>Appearance</h2></div>
                 <div style="padding:18px">
-                  <p style="margin:0 0 16px;font-size:13.5px;color:var(--lx-slate);line-height:1.55">
+                  <p style="margin:0 0 16px;font-size:13.5px;color:var(--lx-text-secondary);line-height:1.55">
                     Theme, accent, and row density. Saved in this browser, for you only.
                   </p>
                   <lx-appearance-controls />
@@ -163,7 +163,7 @@ interface IntegrationItem {
 
                 <div class="panel">
                   <div class="panel__head">
-                    <lx-icon name="WandSparkles" [size]="17" color="var(--lx-accent-hi)" />
+                    <lx-icon name="WandSparkles" [size]="17" color="var(--lx-accent-hover)" />
                     <h2>Translation context</h2>
                   </div>
                   <div style="padding:18px;display:flex;flex-direction:column;gap:12px;max-width:640px">
@@ -262,7 +262,7 @@ interface IntegrationItem {
                 @for (it of integrations; track it.name) {
                   <div class="card" style="padding:16px">
                     <div class="row" style="margin-bottom:10px">
-                      <span class="int-ico"><lx-icon [name]="it.icon" [size]="18" color="var(--lx-ink)" /></span>
+                      <span class="int-ico"><lx-icon [name]="it.icon" [size]="18" color="var(--lx-text-primary)" /></span>
                       <span style="font-weight:700;font-size:14px">{{ it.name }}</span>
                       <div class="spacer"></div>
                       <span class="chip chip--neutral">Available</span>
@@ -283,7 +283,7 @@ interface IntegrationItem {
               <lx-poeditor-wizard />
               <div class="two-col">
                 <div class="card" style="padding:18px">
-                  <lx-icon name="FileUp" [size]="20" color="var(--lx-accent-hi)" />
+                  <lx-icon name="FileUp" [size]="20" color="var(--lx-accent-hover)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Import strings</div>
                   <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Upload a JSON file of key→value pairs into a language.</p>
                   <div class="field" style="margin-bottom:10px">
@@ -294,7 +294,7 @@ interface IntegrationItem {
                   <lx-btn variant="ghost" icon="Upload" (clicked)="fileInput.click()">Choose JSON file</lx-btn>
                 </div>
                 <div class="card" style="padding:18px">
-                  <lx-icon name="FileDown" [size]="20" color="var(--lx-accent-hi)" />
+                  <lx-icon name="FileDown" [size]="20" color="var(--lx-accent-hover)" />
                   <div style="font-weight:700;font-size:14.5px;margin:10px 0 4px">Export translations</div>
                   <p class="muted" style="font-size:12.5px;margin:0 0 14px;line-height:1.5">Download one language as JSON or CSV.</p>
                   <div class="field" style="margin-bottom:10px">
@@ -361,9 +361,9 @@ interface IntegrationItem {
     .gform select {
       padding: 8px 10px;
       border: 1px solid var(--lx-line);
-      border-radius: 8px;
-      background: var(--lx-card);
-      color: var(--lx-ink);
+      border-radius: var(--lx-radius-3);
+      background: var(--lx-bg-card);
+      color: var(--lx-text-primary);
       font-size: 13.5px;
     }
     .gkeep {
@@ -371,7 +371,7 @@ interface IntegrationItem {
       align-items: center;
       gap: 6px;
       font-size: 13px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .gtable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     .gtable th {
@@ -379,7 +379,7 @@ interface IntegrationItem {
       font-size: 11.5px;
       text-transform: uppercase;
       letter-spacing: 0.07em;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       padding: 8px 10px;
       border-bottom: 1px solid var(--lx-line);
     }
@@ -387,7 +387,7 @@ interface IntegrationItem {
     .proj-image {
       width: 44px;
       height: 44px;
-      border-radius: 11px;
+      border-radius: var(--lx-radius-3);
       display: grid;
       place-items: center;
       overflow: hidden;
@@ -401,7 +401,7 @@ interface IntegrationItem {
     }
     .hint {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       line-height: 1.5;
       margin: 6px 0 0;
     }
@@ -412,12 +412,12 @@ interface IntegrationItem {
       padding: 13px 18px;
     }
     .keycode {
-      font-family: var(--lx-mono);
+      font-family: var(--lx-font-mono);
       font-size: 12.5px;
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
       padding: 4px 9px;
-      border-radius: var(--lx-r-sm);
-      color: var(--lx-ink-80);
+      border-radius: var(--lx-radius-2);
+      color: var(--lx-text-secondary);
     }
     .cli-card {
       padding: 16px;
@@ -425,7 +425,7 @@ interface IntegrationItem {
       gap: 12px;
       align-items: flex-start;
       background: var(--lx-accent-soft);
-      border-color: var(--lx-accent-soft-2);
+      border-color: var(--lx-accent-line);
     }
     .two-col {
       display: grid;
@@ -435,8 +435,8 @@ interface IntegrationItem {
     .int-ico {
       width: 36px;
       height: 36px;
-      border-radius: 9px;
-      background: var(--lx-fill);
+      border-radius: var(--lx-radius-3);
+      background: var(--lx-surface-hover);
       display: grid;
       place-items: center;
     }

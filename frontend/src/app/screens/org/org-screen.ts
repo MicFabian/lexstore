@@ -268,34 +268,34 @@ type Tab = 'overview' | 'keys' | 'access' | 'activity' | 'members';
   styles: `
     .scr { display: flex; flex-direction: column; gap: 20px; padding: 24px 28px; overflow: auto; }
     .ohead { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
-    .otitle { font-size: 30px; font-weight: 300; letter-spacing: -0.02em; margin: 4px 0; }
-    .quota { min-width: 260px; border: 1px solid var(--lx-line); border-radius: 10px; padding: 14px 16px; }
+    .otitle { font-size: var(--lx-size-20); font-weight: var(--lx-weight-medium); letter-spacing: var(--lx-track-tight); margin: 4px 0; }
+    .quota { min-width: 260px; border: 1px solid var(--lx-line); border-radius: var(--lx-radius-3); padding: 14px 16px; }
     .quota--none { border-style: dashed; }
     .quota__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .quota__num { font-size: 18px; font-weight: 600; }
-    .bar { height: 6px; border-radius: 3px; background: var(--lx-fill); margin: 10px 0 6px; overflow: hidden; }
+    .bar { height: 6px; border-radius: 3px; background: var(--lx-surface-hover); margin: 10px 0 6px; overflow: hidden; }
     .bar i { display: block; height: 100%; background: var(--lx-accent); }
     .small { font-size: 12px; }
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    .card { border: 1px solid var(--lx-line); border-radius: 10px; padding: 16px; }
+    .card { border: 1px solid var(--lx-line); border-radius: var(--lx-radius-3); padding: 16px; }
     .card--bad .cnum { color: var(--lx-danger); }
-    .cnum { font-size: 26px; font-weight: 300; }
-    .clab { font-size: 12.5px; color: var(--lx-slate); margin-top: 4px; }
-    .sect { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lx-slate); margin: 8px 0 0; }
+    .cnum { font-size: var(--lx-size-26); font-weight: var(--lx-weight-regular); letter-spacing: var(--lx-track-tight); font-variant-numeric: var(--lx-numeric-tabular); }
+    .clab { font-size: 12.5px; color: var(--lx-text-secondary); margin-top: 4px; }
+    .sect { font-size: var(--lx-size-10); font-weight: var(--lx-weight-medium); text-transform: uppercase; letter-spacing: var(--lx-track-caps); color: var(--lx-text-secondary); margin: 8px 0 0; }
     .otable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-    .otable th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--lx-slate); padding: 8px 10px; border-bottom: 1px solid var(--lx-line); }
+    .otable th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--lx-text-secondary); padding: 8px 10px; border-bottom: 1px solid var(--lx-line); }
     .otable td { padding: 10px; border-bottom: 1px solid var(--lx-line); vertical-align: top; }
     .atext { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .keyform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .keyform select, .keyform .input { padding: 8px 10px; border: 1px solid var(--lx-line); border-radius: 8px; background: var(--lx-card); color: var(--lx-ink); font-size: 13.5px; }
+    .keyform select, .keyform .input { padding: 8px 10px; border: 1px solid var(--lx-line); border-radius: 8px; background: var(--lx-bg-card); color: var(--lx-text-primary); font-size: 13.5px; }
     .keyform .input { flex: 1; min-width: 240px; }
     .spark { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
     .spark__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; flex: 1; height: 100%; }
     .spark__col i { display: block; width: 100%; background: var(--lx-accent); border-radius: 3px 3px 0 0; min-height: 2px; }
-    .spark__col span { font-size: 10px; color: var(--lx-muted); }
+    .spark__col span { font-size: 10px; color: var(--lx-text-muted); }
     .newkey {
       border: 1px solid var(--lx-accent);
-      border-radius: 10px;
+      border-radius: var(--lx-radius-3);
       padding: 12px 14px;
       margin-bottom: 4px;
       background: var(--lx-accent-soft);

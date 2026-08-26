@@ -52,21 +52,21 @@ const ICONS: Record<ContentStateKind, IconName> = {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: var(--lx-fill);
-      color: var(--lx-slate);
+      background: var(--lx-surface-hover);
+      color: var(--lx-text-secondary);
     }
     .cstate__icon--error {
-      background: var(--lx-danger-bg, var(--lx-fill));
+      background: var(--lx-danger-soft, var(--lx-surface-hover));
       color: var(--lx-danger);
     }
     .cstate__title {
       font-size: 17px;
       font-weight: 600;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .cstate__desc {
       font-size: 13.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       line-height: 1.55;
       max-width: 46ch;
       margin: 0;

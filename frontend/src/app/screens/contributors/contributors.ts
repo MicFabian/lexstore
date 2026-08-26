@@ -18,7 +18,7 @@ import { ContributorView } from '../../core/models';
         <div class="phead">
           <div>
             <div class="eyebrow">Team</div>
-            <h1 class="serif">Contributors</h1>
+            <h1 class="display">Contributors</h1>
             <div class="psub">{{ people().length }} people · scoped by language</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
@@ -44,7 +44,7 @@ import { ContributorView } from '../../core/models';
                   <div class="row">
                     <lx-avatar [i]="c.avatar" [name]="c.name" />
                     <div>
-                      <div style="font-size:14px;font-weight:600;white-space:nowrap;color:var(--lx-ink)">{{ c.name }}</div>
+                      <div style="font-size:14px;font-weight:600;white-space:nowrap;color:var(--lx-text-primary)">{{ c.name }}</div>
                       <div class="cmail">{{ c.email }}</div>
                     </div>
                   </div>
@@ -57,7 +57,7 @@ import { ContributorView } from '../../core/models';
                     (click)="roleMenu.set(roleMenu() === c.id ? null : c.id)"
                   >
                     {{ c.role }}
-                    <lx-icon name="ChevronDown" [size]="13" color="var(--lx-muted)" />
+                    <lx-icon name="ChevronDown" [size]="13" color="var(--lx-text-muted)" />
                   </button>
                   @if (roleMenu() === c.id) {
                     <div class="menu-backdrop" (click)="roleMenu.set(null)"></div>
@@ -67,7 +67,7 @@ import { ContributorView } from '../../core/models';
                         <button class="menu__item" [class.on]="r === c.role" (click)="setRole(c, r)">
                           <span class="cap" [style.color]="roleColor(r)">{{ r }}</span>
                           @if (r === c.role) {
-                            <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
+                            <lx-icon name="Check" [size]="14" color="var(--lx-accent-hover)" style="margin-left:auto" />
                           }
                         </button>
                       }
@@ -86,14 +86,14 @@ import { ContributorView } from '../../core/models';
                 </td>
                 <td style="text-align:right">
                   @if (c.active === 'Online') {
-                    <span style="color:var(--lx-st-translated);font-weight:600;font-size:12px">● Online</span>
+                    <span style="color:var(--lx-translated);font-weight:600;font-size:12px">● Online</span>
                   } @else {
                     <span class="cwhen">{{ c.active }}</span>
                   }
                 </td>
                 <td>
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Remove contributor" (click)="pendingRemove.set(c)">
-                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-text-muted)" />
                   </button>
                 </td>
               </tr>
@@ -134,23 +134,23 @@ import { ContributorView } from '../../core/models';
       margin-left: -6px;
       border: none;
       background: none;
-      border-radius: var(--lx-r-sm);
+      border-radius: var(--lx-radius-2);
       cursor: pointer;
     }
     .role-btn:hover {
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
     }
     .people {
       background: transparent;
     }
     .cmail {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
       margin-top: 2px;
     }
     .cwhen {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
     }
   `,
 })
@@ -185,9 +185,9 @@ export class ContributorsScreen implements OnInit {
   });
 
   protected roleColor(role: string): string {
-    if (role === 'Owner' || role === 'Admin') return 'var(--lx-accent-text)';
-    if (role === 'Proofreader') return 'var(--lx-st-proofread)';
-    return 'var(--lx-st-translated)';
+    if (role === 'Owner' || role === 'Admin') return 'var(--lx-accent)';
+    if (role === 'Proofreader') return 'var(--lx-reviewed)';
+    return 'var(--lx-translated)';
   }
 
   protected setRole(c: ContributorView, role: string): void {

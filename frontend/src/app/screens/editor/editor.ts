@@ -32,8 +32,8 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
         <div>
           <div class="eyebrow">Editing · {{ langsLabel() }}</div>
           <div style="display:flex;align-items:baseline;gap:14px;margin-top:12px">
-            <span class="serif" style="font-size:52px;line-height:1">{{ pct().done }}%</span>
-            <span class="serif" style="font-size:22px;color:var(--lx-slate);font-style:italic">translated</span>
+            <span class="display tnum" style="font-size:var(--lx-size-34);line-height:var(--lx-leading-tight)">{{ pct().done }}%</span>
+            <span style="font-size:var(--lx-size-13);color:var(--lx-text-muted)">translated</span>
           </div>
           <div class="progress" style="width:340px;margin-top:16px;height:5px">
             <i class="seg-translated" [style.width.%]="pct().done"></i>
@@ -57,7 +57,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                 <span class="locale">{{ c }}</span>
               }
               {{ langsLabel() }}
-              <lx-icon name="ChevronDown" [size]="15" color="var(--lx-muted)" />
+              <lx-icon name="ChevronDown" [size]="15" color="var(--lx-text-muted)" />
             </button>
             @if (langMenuOpen()) {
               <div class="menu-backdrop" (click)="langMenuOpen.set(false)"></div>
@@ -73,7 +73,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                     <span class="locale">{{ l.code }}</span>
                     <span>{{ l.name }}</span>
                     @if (langs().includes(l.code)) {
-                      <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
+                      <lx-icon name="Check" [size]="14" color="var(--lx-accent-hover)" style="margin-left:auto" />
                     }
                   </button>
                 }
@@ -86,7 +86,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
 
       @if (activeFeature(); as f) {
         <div class="feature-scope">
-          <lx-icon name="LayoutGrid" [size]="14" color="var(--lx-slate)" />
+          <lx-icon name="LayoutGrid" [size]="14" color="var(--lx-text-secondary)" />
           <span>Showing <b>{{ f.name }}</b> only</span>
           <a class="feature-scope__clear" [routerLink]="['/', 'editor']">Show all terms</a>
         </div>
@@ -130,7 +130,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                 <td class="keycell" (click)="select(r.id, langs()[0])">
                   <div class="keytag">{{ r.key }}</div>
                   @if (r.isNew) {
-                    <div class="stcap" style="margin-top:7px;color:var(--lx-st-new)">New</div>
+                    <div class="stcap" style="margin-top:7px;color:var(--lx-accent)">New</div>
                   }
                 </td>
                 <td class="src" (click)="select(r.id, langs()[0])">
@@ -146,7 +146,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                   >
                     <span class="tgt__value">{{ cellRow?.target || 'Add translation…' }}</span>
                     @if (cellRow && cellRow.status !== 'translated') {
-                      <span class="stcap tgt__status" [style.color]="'var(--lx-st-' + cellRow.status + ')'">
+                      <span class="stcap tgt__status" [style.color]="statusColor(cellRow.status)">
                         {{ statusLabel(cellRow.status) }}
                       </span>
                     }
@@ -224,7 +224,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     .ed-counts {
       margin-top: 10px;
       font-size: 12.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .ed-tabs {
       display: flex;
@@ -255,7 +255,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       padding: 10px 20px;
       font-size: 13px;
       border-bottom: 1px solid var(--lx-line);
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
     }
     .feature-scope__clear {
       margin-left: auto;
@@ -268,7 +268,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       gap: 12px;
       padding: 16px 20px;
       font-size: 13px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       border-top: 1px solid var(--lx-line);
     }
     .editor__scroll {
@@ -282,7 +282,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       position: sticky;
       left: 0;
       z-index: 2;
-      background: var(--lx-card);
+      background: var(--lx-bg-card);
       width: var(--key-col);
       min-width: var(--key-col);
       max-width: var(--key-col);
@@ -295,14 +295,14 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
       position: sticky;
       left: var(--key-col);
       z-index: 2;
-      background: var(--lx-card);
+      background: var(--lx-bg-card);
       min-width: 260px;
     }
     .ttable thead th {
       position: sticky;
       top: 0;
       z-index: 3;
-      background: var(--lx-card);
+      background: var(--lx-bg-card);
     }
     .ttable thead th.keycell,
     .ttable thead th.src-col {
@@ -310,7 +310,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
     }
     .trow:hover .keycell,
     .trow:hover .src {
-      background: var(--lx-row-hover);
+      background: var(--lx-bg-row-hover);
     }
     .trow.sel .keycell,
     .trow.sel .src {
@@ -424,6 +424,11 @@ export class EditorScreen implements OnInit {
 
   protected statusLabel(s: TranslationStatus): string {
     return s === 'fuzzy' ? 'Needs review' : s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  protected statusColor(s: TranslationStatus): string {
+    const token = { untranslated: 'untranslated', translated: 'translated', fuzzy: 'unsure', proofread: 'reviewed' }[s];
+    return `var(--lx-${token})`;
   }
 
   protected readonly filterOptions = computed<SegmentOption[]>(() => {

@@ -20,7 +20,7 @@ type Target = 'existing' | 'new';
   template: `
     <div class="card wiz">
       <div class="wiz__head">
-        <span class="int-ico"><lx-icon name="Download" [size]="18" color="var(--lx-ink)" /></span>
+        <span class="int-ico"><lx-icon name="Download" [size]="18" color="var(--lx-text-primary)" /></span>
         <div style="flex:1;min-width:0">
           <div class="wiz__title">Import from POEditor</div>
           <div class="wiz__sub">Pull terms and translations straight from a POEditor project.</div>
@@ -62,7 +62,7 @@ type Target = 'existing' | 'new';
                 <button class="wiz__row" (click)="pickProject(p)">
                   <span class="wiz__row-name">{{ p.name }}</span>
                   <span class="wiz__row-meta">#{{ p.id }}</span>
-                  <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
+                  <lx-icon name="ChevronRight" [size]="15" color="var(--lx-text-muted)" />
                 </button>
               }
               @if (projects().length === 0) {
@@ -82,14 +82,14 @@ type Target = 'existing' | 'new';
                   Import into {{ currentProject()?.name }}
                   <span class="wiz__row-note">Adds languages and terms to the project you are in.</span>
                 </span>
-                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
+                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-text-muted)" />
               </button>
               <button class="wiz__row" (click)="pickTarget('new')">
                 <span class="wiz__row-name">
                   Import as a new project
                   <span class="wiz__row-note">Creates “{{ target()?.name }}” in Lexstore and imports everything into it.</span>
                 </span>
-                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-muted)" />
+                <lx-icon name="ChevronRight" [size]="15" color="var(--lx-text-muted)" />
               </button>
             </div>
             <lx-btn variant="subtle" [sm]="true" (clicked)="step.set('project')">Back</lx-btn>
@@ -178,7 +178,7 @@ type Target = 'existing' | 'new';
         @case ('done') {
           <div class="wiz__body">
             <div class="wiz__done">
-              <lx-icon name="CheckCheck" [size]="18" color="var(--lx-st-translated)" />
+              <lx-icon name="CheckCheck" [size]="18" color="var(--lx-translated)" />
               <span>{{ summary() }}</span>
             </div>
             <lx-btn variant="subtle" [sm]="true" (clicked)="restart()">Import more</lx-btn>
@@ -197,7 +197,7 @@ type Target = 'existing' | 'new';
       align-items: center;
       gap: 12px;
       padding: 16px 18px;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .wiz__title {
       font-weight: 700;
@@ -205,11 +205,11 @@ type Target = 'existing' | 'new';
     }
     .wiz__sub {
       font-size: 12.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       margin-top: 2px;
     }
     .wiz__step {
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
       white-space: nowrap;
     }
     .wiz__body {
@@ -221,13 +221,13 @@ type Target = 'existing' | 'new';
     }
     .wiz__hint {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       line-height: 1.5;
       margin: 6px 0 0;
     }
     .wiz__list {
       width: 100%;
-      border-top: 1px solid var(--lx-line-2);
+      border-top: 1px solid var(--lx-line-soft);
       max-height: 280px;
       overflow-y: auto;
     }
@@ -238,31 +238,31 @@ type Target = 'existing' | 'new';
       gap: 12px;
       padding: 12px 2px;
       border: none;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
       background: none;
       text-align: left;
       cursor: pointer;
       min-height: 44px;
     }
     .wiz__row:hover {
-      background: var(--lx-row-hover);
+      background: var(--lx-bg-row-hover);
     }
     .wiz__row-name {
       font-size: 13.5px;
       font-weight: 600;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
       flex: 1;
     }
     .wiz__row-note {
       display: block;
       font-size: 12.5px;
       font-weight: 400;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       margin-top: 3px;
     }
     .wiz__row-meta {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       font-variant-numeric: tabular-nums;
     }
     .wiz__table {
@@ -270,7 +270,7 @@ type Target = 'existing' | 'new';
       max-height: 320px;
       overflow: auto;
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-lg);
+      border-radius: var(--lx-radius-3);
     }
     .wiz__table .ttable {
       background: transparent;
@@ -280,7 +280,7 @@ type Target = 'existing' | 'new';
       align-items: center;
       gap: 9px;
       font-size: 13.5px;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
   `,
 })

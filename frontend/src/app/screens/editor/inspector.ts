@@ -61,7 +61,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
 
         <div>
           <div class="lx-eyebrow" style="margin-bottom:6px">Source — <span class="locale">en</span></div>
-          <div class="card" style="padding:11px 13px;font-size:13.5px;line-height:1.5;background:var(--lx-paper)">
+          <div class="card" style="padding:11px 13px;font-size:13.5px;line-height:1.5;background:var(--lx-bg-page)">
             {{ row().plural ? row().plural!.one + ' / ' + row().plural!.other : row().source }}
           </div>
         </div>
@@ -77,7 +77,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
               >
                 <span class="locale">{{ lang() }}</span>
                 {{ langName() }}
-                <lx-icon name="ChevronDown" [size]="13" color="var(--lx-muted)" />
+                <lx-icon name="ChevronDown" [size]="13" color="var(--lx-text-muted)" />
               </button>
               @if (langMenuOpen()) {
                 <span class="menu-backdrop" (click)="langMenuOpen.set(false)"></span>
@@ -88,7 +88,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
                       <span class="locale">{{ l.code }}</span>
                       <span>{{ l.name }}</span>
                       @if (l.code === lang()) {
-                        <lx-icon name="Check" [size]="14" color="var(--lx-accent-hi)" style="margin-left:auto" />
+                        <lx-icon name="Check" [size]="14" color="var(--lx-accent-hover)" style="margin-left:auto" />
                       }
                     </button>
                   }
@@ -124,7 +124,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
 
         <div class="helper suggestor" aria-live="polite">
           <div class="helper__head">
-            <lx-icon name="WandSparkles" [size]="14" color="var(--lx-slate)" />
+            <lx-icon name="WandSparkles" [size]="14" color="var(--lx-text-secondary)" />
             <span class="helper__title">Translation helper</span>
             <div class="spacer"></div>
             <button class="btn btn--subtle btn--sm" [disabled]="suggestBusy()" (click)="fetchSuggestion()">
@@ -151,7 +151,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
 
         <div class="helper proofread" aria-live="polite">
           <div class="helper__head">
-            <lx-icon name="Eye" [size]="14" color="var(--lx-slate)" />
+            <lx-icon name="Eye" [size]="14" color="var(--lx-text-secondary)" />
             <span class="helper__title">Proofreader</span>
             <div class="spacer"></div>
             <button
@@ -214,7 +214,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
           <div class="lx-eyebrow" style="margin-bottom:12px">
             Comments
             @if (comments().length) {
-              <span class="tnum" style="color:var(--lx-muted)">· {{ comments().length }}</span>
+              <span class="tnum" style="color:var(--lx-text-muted)">· {{ comments().length }}</span>
             }
           </div>
           <div style="display:flex;flex-direction:column;gap:14px">
@@ -227,10 +227,10 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
                     <span class="muted" style="font-size:11.5px">{{ c.time }}</span>
                     <div class="spacer"></div>
                     <button class="btn btn--subtle btn--sm btn--icon" style="height:24px;width:24px" aria-label="Delete comment" (click)="deleteComment(c)">
-                      <lx-icon name="Trash2" [size]="12" color="var(--lx-muted)" />
+                      <lx-icon name="Trash2" [size]="12" color="var(--lx-text-muted)" />
                     </button>
                   </div>
-                  <div style="color:var(--lx-ink-80);margin-top:2px">{{ c.text }}</div>
+                  <div style="color:var(--lx-text-secondary);margin-top:2px">{{ c.text }}</div>
                 </div>
               </div>
             }
@@ -280,11 +280,11 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
     .verdict {
       font-size: 13px;
       font-weight: 600;
-      color: var(--lx-st-fuzzy);
+      color: var(--lx-unsure);
       margin-bottom: 8px;
     }
     .verdict--ok {
-      color: var(--lx-st-translated);
+      color: var(--lx-translated);
     }
     .issue {
       display: flex;
@@ -301,7 +301,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
       font-size: 10.5px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       flex: none;
       min-width: 76px;
     }
@@ -315,7 +315,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
       background: none;
       font-family: inherit;
       font-size: 12px;
-      color: var(--lx-ink-80);
+      color: var(--lx-text-secondary);
       outline: none;
       border-bottom: 1px solid transparent;
       padding: 1px 0;
@@ -324,7 +324,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
       border-bottom-color: var(--lx-accent);
     }
     .ctx-input::placeholder {
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
     }
     .lx-tag-edit {
       display: inline-flex;
@@ -333,11 +333,11 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
       height: 20px;
       padding: 0 4px 0 7px;
       border-radius: 5px;
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
       border: 1px solid var(--lx-line);
       font-size: 11.5px;
       font-weight: 600;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .tag-x {
       border: none;
@@ -349,7 +349,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
       width: 24px;
       height: 24px;
       margin: -2px -6px -2px 0;
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
     }
     .tag-x:hover {
       color: var(--lx-danger);
@@ -361,10 +361,10 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
     }
     .lastedit__text {
       font-size: 12px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .lastedit__text b {
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
       font-weight: 600;
     }
     .lang-pick {
@@ -374,8 +374,8 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
     }
     .helper {
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-lg);
-      background: var(--lx-paper);
+      border-radius: var(--lx-radius-3);
+      background: var(--lx-bg-page);
       padding: 11px 13px;
     }
     .tfield__head {
@@ -395,7 +395,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
     .helper__title {
       font-size: 11px;
       font-weight: 700;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
@@ -405,12 +405,12 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
     .helper__text {
       font-size: 13.5px;
       line-height: 1.5;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .helper__meta,
     .helper__hint {
       font-size: 11.5px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       margin-top: 4px;
     }
     .helper__hint {

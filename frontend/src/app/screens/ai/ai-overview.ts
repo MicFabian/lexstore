@@ -23,7 +23,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
           <div class="phead" style="margin-bottom:26px">
             <div>
               <div class="eyebrow">Workspace</div>
-              <h1 class="serif">Translation AI</h1>
+              <h1 class="display">Translation AI</h1>
               <div class="psub">
                 A caching machine-translation service. Every call is logged; identical requests are served from cache.
               </div>
@@ -31,10 +31,10 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
           </div>
 
           <div class="statstrip">
-            <div class="statcell"><div class="eyebrow">Requests</div><div class="serif statnum">{{ stats()?.requests ?? 0 }}</div></div>
-            <div class="statcell"><div class="eyebrow">Cache hit rate</div><div class="serif statnum" style="color:var(--lx-st-translated)">{{ stats()?.hitRate ?? 0 }}%</div></div>
-            <div class="statcell"><div class="eyebrow">Cached entries</div><div class="serif statnum">{{ stats()?.entries ?? 0 }}</div></div>
-            <div class="statcell"><div class="eyebrow">Cache hits served</div><div class="serif statnum" style="color:var(--lx-st-proofread)">{{ stats()?.totalHits ?? 0 }}</div></div>
+            <div class="statcell"><div class="eyebrow">Requests</div><div class="display statnum">{{ stats()?.requests ?? 0 }}</div></div>
+            <div class="statcell"><div class="eyebrow">Cache hit rate</div><div class="display statnum" style="color:var(--lx-translated)">{{ stats()?.hitRate ?? 0 }}%</div></div>
+            <div class="statcell"><div class="eyebrow">Cached entries</div><div class="display statnum">{{ stats()?.entries ?? 0 }}</div></div>
+            <div class="statcell"><div class="eyebrow">Cache hits served</div><div class="display statnum" style="color:var(--lx-reviewed)">{{ stats()?.totalHits ?? 0 }}</div></div>
           </div>
 
           <div class="subnav" style="margin-bottom:26px">
@@ -59,7 +59,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                   <lx-btn variant="ghost" icon="Sparkles" [disabled]="!srcText()" (clicked)="translate(true)">Skip cache</lx-btn>
                 </div>
                 @if (result(); as r) {
-                  <div class="card" style="padding:14px;background:var(--lx-paper)">
+                  <div class="card" style="padding:14px;background:var(--lx-bg-page)">
                     <div class="row" style="gap:8px;margin-bottom:8px">
                       @if (r.cacheHit) {
                         <span class="chip chip--translated">Cache hit</span>
@@ -70,7 +70,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                       <div class="spacer"></div>
                       <span class="muted tnum" style="font-size:12px">{{ r.latencyMs }}ms · {{ r.inputTokens + r.outputTokens }} tok</span>
                     </div>
-                    <div style="font-size:15px;color:var(--lx-ink)">{{ r.text }}</div>
+                    <div style="font-size:15px;color:var(--lx-text-primary)">{{ r.text }}</div>
                   </div>
                 }
               </div>
@@ -101,7 +101,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                           <div style="font-size:13px">{{ truncate(r.sourceText, 48) }}</div>
                           <div class="row" style="gap:5px;margin-top:3px">
                             <span class="locale">{{ r.sourceLang }}</span>
-                            <lx-icon name="ArrowRight" [size]="12" color="var(--lx-muted)" />
+                            <lx-icon name="ArrowRight" [size]="12" color="var(--lx-text-muted)" />
                             <span class="locale">{{ r.targetLang }}</span>
                           </div>
                         </td>
@@ -157,11 +157,11 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                     @for (c of cache(); track c.id) {
                       <tr class="trow" style="cursor:default">
                         <td style="padding-left:18px"><span style="font-size:13px">{{ truncate(c.sourceText, 44) }}</span></td>
-                        <td><span style="font-size:13px;color:var(--lx-ink)">{{ truncate(c.targetText, 48) }}</span></td>
+                        <td><span style="font-size:13px;color:var(--lx-text-primary)">{{ truncate(c.targetText, 48) }}</span></td>
                         <td>
                           <div class="row" style="gap:5px">
                             <span class="locale">{{ c.sourceLang }}</span>
-                            <lx-icon name="ArrowRight" [size]="11" color="var(--lx-muted)" />
+                            <lx-icon name="ArrowRight" [size]="11" color="var(--lx-text-muted)" />
                             <span class="locale">{{ c.targetLang }}</span>
                           </div>
                         </td>
@@ -169,7 +169,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                         <td><span class="muted tnum" style="font-size:12px">{{ c.lastUsedAt }}</span></td>
                         <td>
                           <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete entry" (click)="deleteEntry(c)">
-                            <lx-icon name="Trash2" [size]="14" color="var(--lx-muted)" />
+                            <lx-icon name="Trash2" [size]="14" color="var(--lx-text-muted)" />
                           </button>
                         </td>
                       </tr>
@@ -185,7 +185,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
             @case ('settings') {
               @if (settings(); as s) {
                 <div class="panel" style="max-width:640px">
-                  <div class="panel__head"><lx-icon name="WandSparkles" [size]="17" color="var(--lx-accent-hi)" /><h2>AI translation settings</h2></div>
+                  <div class="panel__head"><lx-icon name="WandSparkles" [size]="17" color="var(--lx-accent-hover)" /><h2>AI translation settings</h2></div>
                   <div style="padding:18px;display:flex;flex-direction:column;gap:18px">
                     <div class="field">
                       <label>Provider</label>
@@ -194,7 +194,7 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
                           <button
                             [class]="'btn btn--sm ' + (draft().provider === p.key ? 'btn--ghost' : 'btn--subtle')"
                             [style.border-color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
-                            [style.color]="draft().provider === p.key ? 'var(--lx-accent-text)' : null"
+                            [style.color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
                             [disabled]="unavailable(p.key, s)"
                             (click)="patch({ provider: p.key })"
                           >{{ p.label }}</button>
@@ -244,8 +244,8 @@ type Tab = 'playground' | 'requests' | 'cache' | 'settings';
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-xl);
-      background: var(--lx-card);
+      border-radius: var(--lx-radius-3);
+      background: var(--lx-bg-card);
       overflow: hidden;
       margin-bottom: 26px;
     }

@@ -67,28 +67,28 @@ const FOCUSABLE =
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-bg-page) 55%, transparent);
       backdrop-filter: blur(2px);
     }
     .modal {
       position: relative;
       max-width: calc(100vw - 32px);
-      background: var(--lx-elev, var(--lx-card));
+      background: var(--lx-bg-card, var(--lx-bg-card));
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-xl);
-      box-shadow: var(--lx-shadow-pop);
+      border-radius: var(--lx-radius-3);
+      box-shadow: var(--lx-shadow-dialog);
     }
     .modal__head {
       display: flex;
       align-items: flex-start;
       gap: 10px;
       padding: 16px 18px;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .modal__title {
       font-size: 15px;
       font-weight: 700;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .dlg {
       display: flex;
@@ -97,7 +97,7 @@ const FOCUSABLE =
     }
     .dlg__desc {
       font-size: 13px;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
       margin-top: 4px;
       line-height: 1.5;
     }
@@ -113,7 +113,7 @@ const FOCUSABLE =
       gap: 8px;
       align-items: center;
       padding: 14px 18px;
-      border-top: 1px solid var(--lx-line-2);
+      border-top: 1px solid var(--lx-line-soft);
     }
   `,
 })

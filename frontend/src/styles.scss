@@ -1,16 +1,9 @@
 /* Lexstore global styles — design tokens + app UI kit.
-   app.css pulls in tokens.css (palette, type) and the Google Fonts @import. */
+   app.css pulls in tokens.css (palette, type); body styling lives there. */
 @import './styles/app.css';
 @import './styles/redesign.css';
 
 html,
 body {
   height: 100%;
-}
-
-body {
-  margin: 0;
-  font-family: var(--lx-sans);
-  background: var(--lx-paper);
-  color: var(--lx-ink);
 }

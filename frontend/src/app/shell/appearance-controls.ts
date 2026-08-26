@@ -38,11 +38,11 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       display: block;
     }
     .tweaks-label {
-      font-family: var(--lx-mono);
+      font-family: var(--lx-font-mono);
       font-size: 10.5px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
       margin: 12px 0 6px;
     }
     :host > .tweaks-label:first-child {
@@ -51,9 +51,9 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
     .tweaks-seg {
       display: flex;
       gap: 4px;
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-md);
+      border-radius: var(--lx-radius-2);
       padding: 3px;
       max-width: 260px;
     }
@@ -62,16 +62,16 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       height: 26px;
       border: none;
       background: none;
-      border-radius: var(--lx-r-sm);
+      border-radius: var(--lx-radius-2);
       font-size: 12px;
       font-weight: 600;
       text-transform: capitalize;
-      color: var(--lx-slate);
+      color: var(--lx-text-secondary);
     }
     .tweaks-seg button.on {
-      background: var(--lx-elev, var(--lx-card));
-      color: var(--lx-ink);
-      box-shadow: var(--lx-shadow-xs);
+      background: var(--lx-bg-card, var(--lx-bg-card));
+      color: var(--lx-text-primary);
+      box-shadow: var(--lx-shadow-none);
     }
     .tweaks-accents {
       display: flex;
@@ -85,8 +85,8 @@ import { ACCENTS, Density, TweaksService } from '../core/tweaks.service';
       cursor: pointer;
     }
     .swatch.on {
-      border-color: var(--lx-ink);
-      box-shadow: 0 0 0 2px var(--lx-card);
+      border-color: var(--lx-text-primary);
+      box-shadow: 0 0 0 2px var(--lx-bg-card);
     }
   `,
 })
@@ -94,5 +94,5 @@ export class AppearanceControls {
   protected readonly tw = inject(TweaksService);
   protected readonly accents = ACCENTS;
   protected readonly themes: ('dark' | 'light')[] = ['dark', 'light'];
-  protected readonly densities: Density[] = ['compact', 'cozy', 'roomy'];
+  protected readonly densities: Density[] = ['compact', 'regular', 'comfy'];
 }

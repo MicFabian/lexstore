@@ -14,11 +14,11 @@ import { ApiService } from '../core/api.service';
 import { TranslationHistoryEntry } from '../core/models';
 
 const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCheck' | 'Flag' | 'Sparkles' | 'X'; color: string }> = {
-  translated: { label: 'Translated', icon: 'Sparkles', color: 'var(--lx-st-translated)' },
-  edited: { label: 'Edited', icon: 'PencilLine', color: 'var(--lx-slate)' },
-  proofread: { label: 'Proofread', icon: 'CheckCheck', color: 'var(--lx-st-proofread)' },
-  flagged: { label: 'Flagged', icon: 'Flag', color: 'var(--lx-st-fuzzy)' },
-  cleared: { label: 'Cleared', icon: 'X', color: 'var(--lx-st-untranslated)' },
+  translated: { label: 'Translated', icon: 'Sparkles', color: 'var(--lx-translated)' },
+  edited: { label: 'Edited', icon: 'PencilLine', color: 'var(--lx-text-secondary)' },
+  proofread: { label: 'Proofread', icon: 'CheckCheck', color: 'var(--lx-reviewed)' },
+  flagged: { label: 'Flagged', icon: 'Flag', color: 'var(--lx-unsure)' },
+  cleared: { label: 'Cleared', icon: 'X', color: 'var(--lx-untranslated)' },
 };
 
 @Component({
@@ -69,7 +69,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
                     <div class="event__diff">
                       @if (e.oldValue) {
                         <span class="diff-old">{{ e.oldValue }}</span>
-                        <lx-icon name="ArrowRight" [size]="12" color="var(--lx-muted)" />
+                        <lx-icon name="ArrowRight" [size]="12" color="var(--lx-text-muted)" />
                       }
                       <span class="diff-new">{{ e.newValue || '—' }}</span>
                     </div>
@@ -93,7 +93,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: color-mix(in srgb, var(--lx-paper) 55%, transparent);
+      background: color-mix(in srgb, var(--lx-bg-page) 55%, transparent);
       backdrop-filter: blur(2px);
     }
     .modal {
@@ -102,10 +102,10 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       max-height: min(640px, calc(100vh - 64px));
       display: flex;
       flex-direction: column;
-      background: var(--lx-elev, var(--lx-card));
+      background: var(--lx-bg-card, var(--lx-bg-card));
       border: 1px solid var(--lx-line);
-      border-radius: var(--lx-r-xl);
-      box-shadow: var(--lx-shadow-pop);
+      border-radius: var(--lx-radius-3);
+      box-shadow: var(--lx-shadow-dialog);
       animation: modalIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     @keyframes modalIn {
@@ -150,7 +150,7 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       height: 8px;
       border-radius: 50%;
       margin-top: 14px;
-      box-shadow: 0 0 0 3px var(--lx-elev, var(--lx-card));
+      box-shadow: 0 0 0 3px var(--lx-bg-card, var(--lx-bg-card));
     }
     .event__body { flex: 1; min-width: 0; padding: 10px 0; }
     .event__head { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
@@ -172,11 +172,11 @@ const ACTION_META: Record<string, { label: string; icon: 'PencilLine' | 'CheckCh
       flex-wrap: wrap;
     }
     .diff-old {
-      color: var(--lx-muted);
+      color: var(--lx-text-muted);
       text-decoration: line-through;
-      text-decoration-color: color-mix(in srgb, var(--lx-muted) 60%, transparent);
+      text-decoration-color: color-mix(in srgb, var(--lx-text-muted) 60%, transparent);
     }
-    .diff-new { color: var(--lx-ink); }
+    .diff-new { color: var(--lx-text-primary); }
   `,
 })
 export class HistoryModal {

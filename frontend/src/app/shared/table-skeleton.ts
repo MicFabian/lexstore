@@ -24,12 +24,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       align-items: center;
       gap: 24px;
       padding: 16px 16px;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .skel__cell {
       height: 12px;
       border-radius: 4px;
-      background: var(--lx-fill);
+      background: var(--lx-surface-hover);
       animation: skelPulse 1.4s ease-in-out infinite;
     }
     @keyframes skelPulse {

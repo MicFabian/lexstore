@@ -61,10 +61,10 @@ import { ToastItem, ToastService } from '../core/toast.service';
       background: none;
       padding: 2px 6px;
       margin-left: 2px;
-      font: 600 13px var(--lx-sans);
-      color: var(--lx-accent-hi);
+      font: 600 13px var(--lx-font-sans);
+      color: var(--lx-accent-hover);
       cursor: pointer;
-      border-radius: var(--lx-r-sm);
+      border-radius: var(--lx-radius-2);
     }
     .toast__action:hover {
       background: rgba(255, 255, 255, 0.12);

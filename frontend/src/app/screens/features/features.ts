@@ -21,7 +21,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
         <div class="phead">
           <div>
             <div class="eyebrow">Delivery</div>
-            <h1 class="serif">Features</h1>
+            <h1 class="display">Features</h1>
             <div class="psub">
               {{ features().length }} features · {{ openTotal() }} translations still open
             </div>
@@ -71,16 +71,16 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 <td style="text-align:right"><span class="fnum">{{ f.terms }}</span></td>
                 <td style="text-align:right">
                   @if (f.fuzzy > 0) {
-                    <span class="fnum" style="color:var(--lx-st-fuzzy)">{{ f.fuzzy }}</span>
+                    <span class="fnum" style="color:var(--lx-unsure)">{{ f.fuzzy }}</span>
                   } @else {
-                    <span class="fnum" style="color:var(--lx-muted)">—</span>
+                    <span class="fnum" style="color:var(--lx-text-muted)">—</span>
                   }
                 </td>
                 <td style="text-align:right">
                   @if (f.untranslated > 0) {
-                    <span class="fnum" style="color:var(--lx-st-untranslated)">{{ f.untranslated }}</span>
+                    <span class="fnum" style="color:var(--lx-untranslated)">{{ f.untranslated }}</span>
                   } @else {
-                    <span class="fnum" style="color:var(--lx-st-translated)">0</span>
+                    <span class="fnum" style="color:var(--lx-translated)">0</span>
                   }
                 </td>
                 <td>
@@ -94,7 +94,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <button class="btn btn--subtle btn--sm btn--icon" aria-label="Delete feature" (click)="pendingDelete.set(f)">
-                    <lx-icon name="Trash2" [size]="15" color="var(--lx-muted)" />
+                    <lx-icon name="Trash2" [size]="15" color="var(--lx-text-muted)" />
                   </button>
                 </td>
               </tr>
@@ -139,7 +139,7 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
                         <div class="eyebrow" style="margin:18px 0 8px">
                           Open in {{ openLang() }} · {{ openRows().length }}
                           @if (openRows().length >= 500) {
-                            <span style="color:var(--lx-slate)"> · first 500 shown</span>
+                            <span style="color:var(--lx-text-secondary)"> · first 500 shown</span>
                           }
                         </div>
                         <div class="open-list">
@@ -220,15 +220,15 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
     .fname {
       font-size: 14px;
       font-weight: 600;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .fkey {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
       margin-top: 2px;
     }
     .fnum {
-      font: 500 13px var(--lx-mono);
+      font: 500 13px var(--lx-font-mono);
       font-variant-numeric: tabular-nums;
     }
     .covcell {
@@ -238,8 +238,8 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       justify-content: flex-end;
     }
     .covnum {
-      font: 500 12.5px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12.5px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
       width: 40px;
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -260,13 +260,13 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       margin: 0 -8px;
       border: none;
       background: none;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
       text-align: left;
       cursor: pointer;
-      border-radius: var(--lx-r-sm);
+      border-radius: var(--lx-radius-2);
     }
     .cov-row:hover {
-      background: var(--lx-row-hover);
+      background: var(--lx-bg-row-hover);
     }
     .cov-row.on {
       background: var(--lx-accent-soft);
@@ -274,16 +274,16 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
     .cov-name {
       flex: 1;
       font-size: 13.5px;
-      color: var(--lx-ink);
+      color: var(--lx-text-primary);
     }
     .cov-open {
       width: 88px;
       text-align: right;
-      font: 500 12px var(--lx-mono);
-      color: var(--lx-slate);
+      font: 500 12px var(--lx-font-mono);
+      color: var(--lx-text-secondary);
     }
     .open-list {
-      border-top: 1px solid var(--lx-line-2);
+      border-top: 1px solid var(--lx-line-soft);
     }
     .open-row {
       display: grid;
@@ -291,11 +291,11 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
       gap: 16px;
       align-items: center;
       padding: 10px 0;
-      border-bottom: 1px solid var(--lx-line-2);
+      border-bottom: 1px solid var(--lx-line-soft);
     }
     .open-src {
       font-size: 13.5px;
-      color: var(--lx-ink-80);
+      color: var(--lx-text-secondary);
     }
   `,
 })

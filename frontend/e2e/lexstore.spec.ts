@@ -11,8 +11,8 @@ test.describe('shell + navigation', () => {
     await page.goto('/');
     await waitShell(page);
     await expect(page.locator('.rail__proj')).toContainText('Mosaic Web App');
-    // Nav shows term count loaded from the API.
-    await expect(page.locator('.navitem', { hasText: 'Translations' })).toContainText('14');
+    // Nav shows the open-work count (untranslated + needs review) from the API.
+    await expect(page.locator('.navitem', { hasText: 'Translations' })).toContainText('49');
     // Editor table has rows.
     await expect(page.locator('.ttable tbody tr')).toHaveCount(14);
   });
@@ -233,9 +233,9 @@ test.describe('projects dashboard + theming', () => {
     await page.goto('/settings');
     await waitShell(page);
     await page.locator('.subnav button', { hasText: 'Appearance' }).click();
-    await page.locator('.swatch[aria-label="emerald"]').click();
-    await expect(page.locator('html')).toHaveAttribute('data-accent', 'emerald');
-    await page.locator('.swatch[aria-label="cobalt"]').click();
-    await expect(page.locator('html')).toHaveAttribute('data-accent', 'cobalt');
+    await page.locator('.swatch[aria-label="teal"]').click();
+    await expect(page.locator('html')).toHaveAttribute('data-accent', 'teal');
+    await page.locator('.swatch[aria-label="slate"]').click();
+    await expect(page.locator('html')).toHaveAttribute('data-accent', 'slate');
   });
 });

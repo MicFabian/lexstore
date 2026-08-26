@@ -1,25 +1,25 @@
 import { Injectable, effect, signal } from '@angular/core';
 
 export type Theme = 'dark' | 'light';
-export type Accent = 'cobalt' | 'violet' | 'emerald' | 'amber';
-export type Density = 'compact' | 'cozy' | 'roomy';
+export type Accent = 'slate' | 'cobalt' | 'teal' | 'graphite';
+export type Density = 'compact' | 'regular' | 'comfy';
 
 export const ACCENTS: { key: Accent; hex: string }[] = [
-  { key: 'cobalt', hex: '#5e7bff' },
-  { key: 'violet', hex: '#9a7cff' },
-  { key: 'emerald', hex: '#2fd08a' },
-  { key: 'amber', hex: '#f7a83b' },
+  { key: 'slate', hex: '#4e6fa8' },
+  { key: 'cobalt', hex: '#3a5bff' },
+  { key: 'teal', hex: '#0f7b8a' },
+  { key: 'graphite', hex: '#4a4a52' },
 ];
 
-/* v2: the editorial redesign made light the default — the bump discards
-   pre-redesign persisted tweaks so everyone starts from the new baseline. */
-const KEY = 'lexstore.tweaks.v2';
+/* v3: the Locali design system replaced the accent set — the bump discards
+   persisted tweaks so everyone starts from the new baseline. */
+const KEY = 'lexstore.tweaks.v3';
 
 @Injectable({ providedIn: 'root' })
 export class TweaksService {
   readonly theme = signal<Theme>('light');
-  readonly accent = signal<Accent>('cobalt');
-  readonly density = signal<Density>('cozy');
+  readonly accent = signal<Accent>('slate');
+  readonly density = signal<Density>('regular');
 
   constructor() {
     this.restore();

@@ -15,7 +15,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     >
       <rect width="120" height="120" rx="27" fill="var(--lx-accent)" />
       <g
-        stroke="#fff"
+        stroke="var(--lx-text-on-accent)"
         stroke-width="8"
         stroke-linecap="round"
         stroke-linejoin="round"

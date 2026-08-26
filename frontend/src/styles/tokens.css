@@ -1,111 +1,247 @@
 /* ============================================================
-   Lexstore — Foundations: Color + Type
-   Editorial precision meets developer utility.
-   Import this file, then use the semantic vars below.
-   Fonts load from Google Fonts (see @import). If you vendor
-   the TTFs into /fonts, swap the @import for @font-face.
+   Lexstore — design tokens, imported from the Locali design
+   project (claude.ai/design b4223e44). Raw ramps first, then
+   semantic aliases —
+   the only vocabulary the app speaks.
    ============================================================ */
-
-/* Fonts: system Helvetica Neue (see redesign.css) — no webfont download. */
 
 :root {
-  /* ---------- Brand palette ---------- */
-  --lx-cobalt-50:  #eef2ff;
-  --lx-cobalt-100: #dce4ff;
-  --lx-cobalt-200: #bccaff;
-  --lx-cobalt-300: #8fa6ff;
-  --lx-cobalt-400: #5e7bff;
-  --lx-cobalt-500: #3a5bff;   /* PRIMARY — electric cobalt */
-  --lx-cobalt-600: #2a44e6;   /* hover */
-  --lx-cobalt-700: #2236bd;   /* press */
-  --lx-cobalt-800: #1f3094;
-  --lx-cobalt-900: #1d2c75;
+  /* Neutrals — warm-free, slightly blue-cast greys so the accent sits in the same family */
+  --lx-ink-900: #14161a;
+  --lx-ink-700: #3d434d;
+  --lx-ink-500: #6b727e;
+  --lx-ink-300: #9aa1ac;
+  --lx-ink-100: #c6cbd3;
 
-  /* ---------- Ink / warm neutrals ---------- */
-  --lx-ink:    #151723;   /* near-black, cool navy-charcoal */
-  --lx-ink-80: #2d3142;
-  --lx-slate:  #5a6072;   /* secondary text */
-  --lx-muted:  #868da0;   /* tertiary / placeholder */
-  --lx-line:   #e3e5eb;   /* hairline borders (cool) */
-  --lx-line-2: #edeff3;   /* lighter divider */
-  --lx-fill:   #eff1f6;   /* subtle fill / track */
-  --lx-card:   #ffffff;
-  --lx-paper:  #f6f7fa;   /* cool off-white app background */
-  --lx-paper-2:#eef0f5;   /* secondary paper (rails) */
+  --lx-line-strong: #d2d6dd;
+  --lx-line: #e4e7ec;
+  --lx-line-soft: #eef0f4;
 
-  /* ---------- Semantic (UI feedback) ---------- */
-  --lx-success:    #1f9d57;
-  --lx-success-bg: #e7f6ee;
-  --lx-warning:    #c97a09;
-  --lx-warning-bg: #fbf0dc;
-  --lx-danger:     #d83a3a;
-  --lx-danger-bg:  #fbe9e9;
-  --lx-info:       var(--lx-cobalt-500);
-  --lx-info-bg:    var(--lx-cobalt-50);
+  --lx-surface: #ffffff;
+  --lx-surface-sunken: #f7f8fa;
+  --lx-surface-hover: #f2f4f7;
+  --lx-surface-selected: #f1f4fa;
+  --lx-overlay-scrim: rgba(20, 22, 26, 0.32);
 
-  /* ---------- Translation status (domain-specific) ---------- */
-  --lx-st-untranslated: #c97a09;  --lx-st-untranslated-bg: #fbf0dc;  /* amber  */
-  --lx-st-translated:   #1f9d57;  --lx-st-translated-bg:   #e7f6ee;  /* green  */
-  --lx-st-fuzzy:        #7b53d6;  --lx-st-fuzzy-bg:        #efe9fb;  /* violet — needs review */
-  --lx-st-new:          #3a5bff;  --lx-st-new-bg:          #eef2ff;  /* cobalt — newly added */
-  --lx-st-proofread:    #0f8aa0;  --lx-st-proofread-bg:    #e2f4f7;  /* teal — verified */
+  /* Accent — slate blue. Interaction only, never decoration. */
+  --lx-accent: #4e6fa8;
+  --lx-accent-hover: #436198;
+  --lx-accent-active: #3a5486;
+  --lx-accent-soft: #f1f4fa;
+  --lx-accent-line: #ccd7e9;
+  --lx-accent-on: #ffffff;
 
-  /* ---------- Type families ---------- */
-  --lx-serif: 'Newsreader', Georgia, 'Times New Roman', serif;   /* editorial display */
-  --lx-sans:  'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;  /* UI workhorse */
-  --lx-mono:  'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;            /* keys / codes */
+  /* The four term states. Learned across the whole app — never re-mapped. */
+  --lx-untranslated: #79808c;
+  --lx-untranslated-soft: #f0f2f5;
+  --lx-untranslated-line: #d8dce2;
 
-  /* ---------- Type scale (UI = sans) ---------- */
-  --lx-text-xs:   12px;   /* meta, table chrome, tags */
-  --lx-text-sm:   13px;   /* dense table cells, secondary */
-  --lx-text-base: 14px;   /* body / default UI */
-  --lx-text-md:   15px;
-  --lx-text-lg:   17px;
-  --lx-text-xl:   20px;   /* card titles */
-  --lx-text-2xl:  24px;
-  --lx-display-1: 56px;   /* serif hero */
-  --lx-display-2: 40px;   /* serif section */
-  --lx-display-3: 30px;
+  --lx-translated: #0f7b8a;
+  --lx-translated-soft: #e6f4f6;
+  --lx-translated-line: #a9d7dd;
 
-  --lx-lh-tight:  1.15;
-  --lx-lh-snug:   1.35;
-  --lx-lh-normal: 1.55;
+  --lx-unsure: #a2650a;
+  --lx-unsure-soft: #fdf3e2;
+  --lx-unsure-line: #e8ce9c;
 
-  /* ---------- Radii ---------- */
-  --lx-r-xs: 4px;
-  --lx-r-sm: 6px;
-  --lx-r-md: 9px;
-  --lx-r-lg: 12px;
-  --lx-r-xl: 16px;
-  --lx-r-pill: 999px;
+  --lx-reviewed: #1a7f4b;
+  --lx-reviewed-soft: #e8f5ed;
+  --lx-reviewed-line: #a8d9bd;
 
-  /* ---------- Spacing (4px base) ---------- */
-  --lx-s-1: 4px;  --lx-s-2: 8px;  --lx-s-3: 12px; --lx-s-4: 16px;
-  --lx-s-5: 20px; --lx-s-6: 24px; --lx-s-8: 32px; --lx-s-10: 40px;
-  --lx-s-12: 48px; --lx-s-16: 64px;
+  /* Alarms — placeholder violations, 409 conflicts, destructive intent */
+  --lx-danger: #c2261f;
+  --lx-danger-soft: #fdecea;
+  --lx-danger-line: #f0b6b1;
 
-  /* ---------- Elevation (cool, low, tight) ---------- */
-  --lx-shadow-xs: 0 1px 2px rgba(21,23,35,.06);
-  --lx-shadow-sm: 0 1px 2px rgba(21,23,35,.05), 0 1px 1px rgba(21,23,35,.04);
-  --lx-shadow-md: 0 4px 12px rgba(21,23,35,.08), 0 1px 3px rgba(21,23,35,.05);
-  --lx-shadow-lg: 0 12px 32px rgba(21,23,35,.12), 0 4px 10px rgba(21,23,35,.06);
-  --lx-shadow-pop: 0 18px 48px rgba(21,23,35,.18), 0 6px 14px rgba(21,23,35,.10);
-  --lx-ring: 0 0 0 3px rgba(58,91,255,.20);   /* focus ring */
+  /* Semantic aliases: components reference these, not the raw ramp. */
+  --lx-text-primary: var(--lx-ink-900);
+  --lx-text-secondary: var(--lx-ink-700);
+  --lx-text-muted: var(--lx-ink-500);
+  --lx-text-faint: var(--lx-ink-300);
+  --lx-text-on-accent: var(--lx-accent-on);
+  --lx-text-link: var(--lx-accent);
+
+  --lx-bg-page: var(--lx-surface-sunken);
+  --lx-bg-card: var(--lx-surface);
+  --lx-bg-field: var(--lx-surface);
+  --lx-bg-row-hover: var(--lx-surface-hover);
+  --lx-bg-row-selected: var(--lx-surface-selected);
+  --lx-bg-header: var(--lx-surface);
+
+  --lx-border-card: var(--lx-line);
+  --lx-border-field: var(--lx-line-strong);
+  --lx-border-divider: var(--lx-line-soft);
+  --lx-focus-ring: var(--lx-accent);
+
+  /* One family, eight sizes. Nothing between 13 and 16 — the gap is deliberate. */
+  --lx-size-10: 10px;
+  --lx-size-11: 11px;
+  --lx-size-12: 12px;
+  --lx-size-13: 13px;
+  --lx-size-16: 16px;
+  --lx-size-20: 20px;
+  --lx-size-26: 26px;
+  --lx-size-34: 34px;
+
+  --lx-weight-regular: 400;
+  --lx-weight-medium: 500;
+  --lx-weight-bold: 700;
+
+  --lx-leading-tight: 1.15;
+  --lx-leading-snug: 1.35;
+  --lx-leading-body: 1.5;
+
+  --lx-track-tight: -0.01em;
+  --lx-track-caps: 0.07em;
+
+  --lx-numeric-tabular: tabular-nums;
+
+  /* Locali ships no webfont binaries: Helvetica Neue from the OS, real mono for keys. */
+  --lx-font-sans: 'Helvetica Neue', Helvetica, 'Liberation Sans', Arial, sans-serif;
+  --lx-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Spacing */
+  --lx-space-1: 2px;
+  --lx-space-2: 4px;
+  --lx-space-3: 6px;
+  --lx-space-4: 8px;
+  --lx-space-5: 12px;
+  --lx-space-6: 16px;
+  --lx-space-7: 20px;
+  --lx-space-8: 24px;
+  --lx-space-9: 32px;
+  --lx-space-10: 40px;
+  --lx-space-11: 48px;
+  --lx-space-12: 64px;
+
+  /* Fixed frame measurements */
+  --lx-sidebar-w: 216px;
+  --lx-inspector-w: 336px;
+  --lx-topbar-h: 48px;
+  --lx-toolbar-h: 40px;
+  --lx-row-h: 36px;
+  --lx-control-h: 28px;
+  --lx-control-h-lg: 34px;
+  --lx-key-col-w: 280px;
+  --lx-lang-col-w: 260px;
+
+  /* Hairlines carry structure. Shadow appears only where something floats. */
+  --lx-hairline: 1px;
+  --lx-radius-0: 0;
+  --lx-radius-1: 2px;
+  --lx-radius-2: 3px;
+  --lx-radius-3: 6px;
+  --lx-radius-pill: 999px;
+
+  --lx-shadow-none: none;
+  --lx-shadow-popover: 0 4px 12px rgba(20, 22, 26, 0.1), 0 0 0 1px var(--lx-line);
+  --lx-shadow-dialog: 0 16px 48px rgba(20, 22, 26, 0.18);
+  --lx-shadow-sticky: 6px 0 8px -8px rgba(20, 22, 26, 0.18);
+  --lx-ring-focus: 0 0 0 2px var(--lx-surface), 0 0 0 4px var(--lx-focus-ring);
+  --lx-ring-inset: inset 0 0 0 1px var(--lx-accent);
+
+  /* Short, linear-ish, no bounce. */
+  --lx-dur-instant: 80ms;
+  --lx-dur-fast: 120ms;
+  --lx-dur-normal: 180ms;
+  --lx-dur-slow: 260ms;
+  --lx-ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --lx-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --lx-transition-control: background-color var(--lx-dur-fast) var(--lx-ease-standard),
+    border-color var(--lx-dur-fast) var(--lx-ease-standard),
+    color var(--lx-dur-fast) var(--lx-ease-standard);
 }
 
-/* ============================================================
-   Semantic element styles — apply via classes .lx-h1 etc.
-   ============================================================ */
-.lx-display { font-family: var(--lx-serif); font-weight: 500; letter-spacing: -0.02em; line-height: var(--lx-lh-tight); color: var(--lx-ink); }
-.lx-display-1 { font-family: var(--lx-serif); font-weight: 500; font-size: var(--lx-display-1); line-height: 1.05; letter-spacing: -0.025em; color: var(--lx-ink); }
-.lx-display-2 { font-family: var(--lx-serif); font-weight: 500; font-size: var(--lx-display-2); line-height: 1.1; letter-spacing: -0.02em; color: var(--lx-ink); }
-.lx-display-3 { font-family: var(--lx-serif); font-weight: 500; font-size: var(--lx-display-3); line-height: 1.15; letter-spacing: -0.015em; color: var(--lx-ink); }
+/* ---- Accent choices are whole ramps, not one hex: hover, press, soft fill
+   and hairline move together. Applied in light theme; dark keeps its own. ---- */
+:root[data-accent='cobalt'] {
+  --lx-accent: #3a5bff;
+  --lx-accent-hover: #2c49e0;
+  --lx-accent-active: #2340c4;
+  --lx-accent-soft: #eaefff;
+  --lx-accent-line: #b9c6ff;
+  --lx-surface-selected: #eaefff;
+}
+:root[data-accent='teal'] {
+  --lx-accent: #0f7b8a;
+  --lx-accent-hover: #0c6873;
+  --lx-accent-active: #0a565f;
+  --lx-accent-soft: #eef6f7;
+  --lx-accent-line: #bfdde1;
+  --lx-surface-selected: #eef6f7;
+}
+:root[data-accent='graphite'] {
+  --lx-accent: #4a4a52;
+  --lx-accent-hover: #3d3d44;
+  --lx-accent-active: #313136;
+  --lx-accent-soft: #f3f3f4;
+  --lx-accent-line: #d6d6da;
+  --lx-surface-selected: #f3f3f4;
+}
 
-.lx-h1 { font-family: var(--lx-sans); font-weight: 700; font-size: var(--lx-text-2xl); line-height: var(--lx-lh-snug); letter-spacing: -0.015em; color: var(--lx-ink); }
-.lx-h2 { font-family: var(--lx-sans); font-weight: 700; font-size: var(--lx-text-xl); line-height: var(--lx-lh-snug); letter-spacing: -0.01em; color: var(--lx-ink); }
-.lx-h3 { font-family: var(--lx-sans); font-weight: 600; font-size: var(--lx-text-lg); line-height: var(--lx-lh-snug); color: var(--lx-ink); }
-.lx-body { font-family: var(--lx-sans); font-weight: 400; font-size: var(--lx-text-base); line-height: var(--lx-lh-normal); color: var(--lx-ink-80); }
-.lx-small { font-family: var(--lx-sans); font-weight: 400; font-size: var(--lx-text-sm); line-height: var(--lx-lh-snug); color: var(--lx-slate); }
-.lx-eyebrow { font-family: var(--lx-sans); font-weight: 600; font-size: var(--lx-text-xs); letter-spacing: 0.10em; text-transform: uppercase; color: var(--lx-muted); }
-.lx-mono { font-family: var(--lx-mono); font-weight: 500; font-size: var(--lx-text-sm); letter-spacing: -0.01em; color: var(--lx-ink-80); }
-.lx-key { font-family: var(--lx-mono); font-weight: 500; font-size: var(--lx-text-sm); color: var(--lx-cobalt-700); background: var(--lx-cobalt-50); padding: 2px 6px; border-radius: var(--lx-r-xs); }
+/* ---- Dark: designed, not inverted. Surfaces get lighter as they come
+   forward, accent is lifted for contrast, state hues keep their identity.
+   Declared after the accent blocks so dark always wins the accent vars. ---- */
+:root[data-theme='dark'] {
+  --lx-ink-900: #eceef2;
+  --lx-ink-700: #c3c8d1;
+  --lx-ink-500: #949ba6;
+  --lx-ink-300: #6f7681;
+  --lx-ink-100: #4a5058;
+
+  --lx-line-strong: #3a3f47;
+  --lx-line: #2a2e35;
+  --lx-line-soft: #22262c;
+
+  --lx-surface: #181b20;
+  --lx-surface-sunken: #101216;
+  --lx-surface-hover: #20242a;
+  --lx-surface-selected: #1e2634;
+  --lx-overlay-scrim: rgba(6, 7, 9, 0.6);
+
+  --lx-accent: #9db4e0;
+  --lx-accent-hover: #b0c3e8;
+  --lx-accent-active: #8ba3d3;
+  --lx-accent-soft: #1e2634;
+  --lx-accent-line: #3c4a63;
+  --lx-accent-on: #0d1017;
+
+  --lx-untranslated: #9199a5;
+  --lx-untranslated-soft: #23272e;
+  --lx-untranslated-line: #3a4048;
+
+  --lx-translated: #4fc3d2;
+  --lx-translated-soft: #12292e;
+  --lx-translated-line: #265961;
+
+  --lx-unsure: #e0a445;
+  --lx-unsure-soft: #2c2313;
+  --lx-unsure-line: #5c4a22;
+
+  --lx-reviewed: #4cc183;
+  --lx-reviewed-soft: #12291d;
+  --lx-reviewed-line: #265c3d;
+
+  --lx-danger: #f0827a;
+  --lx-danger-soft: #2e1615;
+  --lx-danger-line: #5e2c29;
+
+  --lx-shadow-popover: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--lx-line-strong);
+  --lx-shadow-dialog: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --lx-shadow-sticky: 6px 0 8px -8px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Base utilities from the design system ---- */
+.lx-num {
+  font-variant-numeric: var(--lx-numeric-tabular);
+}
+.lx-eyebrow {
+  font-size: var(--lx-size-10);
+  letter-spacing: var(--lx-track-caps);
+  text-transform: uppercase;
+  color: var(--lx-text-muted);
+  font-weight: var(--lx-weight-medium);
+}
+.lx-mono {
+  font-family: var(--lx-font-mono);
+}

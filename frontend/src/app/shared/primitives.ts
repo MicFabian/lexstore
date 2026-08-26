@@ -156,15 +156,16 @@ export class SearchBox {
     .lx-tag {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: var(--lx-space-3);
       height: 20px;
-      padding: 0 7px;
-      border-radius: 5px;
-      background: var(--lx-fill);
-      border: 1px solid var(--lx-line);
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--lx-slate);
+      padding: 0 var(--lx-space-4);
+      border-radius: var(--lx-radius-2);
+      background: var(--lx-surface-sunken);
+      border: var(--lx-hairline) solid var(--lx-line-strong);
+      font-size: var(--lx-size-11);
+      font-weight: var(--lx-weight-regular);
+      color: var(--lx-text-secondary);
+      white-space: nowrap;
     }
   `,
 })

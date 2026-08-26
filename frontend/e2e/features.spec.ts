@@ -532,10 +532,10 @@ test.describe('search + theming', () => {
     await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
-    // Reset to cozy.
+    // Reset to regular.
     await page.locator('.subnav button', { hasText: 'Appearance' }).click();
-    await page.locator('.tweaks-seg button', { hasText: 'cozy' }).click();
-    await expect(page.locator('html')).toHaveAttribute('data-density', 'cozy');
+    await page.locator('.tweaks-seg button', { hasText: 'regular' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-density', 'regular');
   });
 
   test('sidebar project switcher changes the active project', async ({ page }) => {
