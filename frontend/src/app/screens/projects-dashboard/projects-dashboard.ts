@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
+import { StatValue } from '../../shared/stat-value';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
@@ -22,36 +24,33 @@ function slugify(name: string): string {
 @Component({
   selector: 'lx-projects-dashboard',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, PromptDialog],
+  imports: [Icon, Btn, SearchBox, PageHeader, StatValue, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead">
-          <div>
-            <div class="eyebrow">Workspace</div>
-            <h1 class="display">Projects</h1>
-            <div class="psub">
-              {{ projects().length }} projects · {{ totalTerms().toLocaleString() }} terms total
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <lx-search placeholder="Search projects" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New project</lx-btn>
-          </div>
-        </div>
+        <lx-page-header
+          eyebrow="Workspace"
+          heading="Projects"
+          [sub]="projects().length + ' projects · ' + totalTerms().toLocaleString() + ' terms total'"
+        >
+          <lx-search placeholder="Search projects" [value]="query()" [width]="200" (changed)="query.set($event)" />
+          <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New project</lx-btn>
+        </lx-page-header>
 
         <div class="statstrip">
           <div class="statcell">
-            <div class="eyebrow">Active projects</div>
-            <div class="display statnum">{{ projects().length }}</div>
+            <lx-stat label="Active projects" [value]="projects().length" [large]="true" />
           </div>
           <div class="statcell">
-            <div class="eyebrow">Untranslated</div>
-            <div class="display statnum" style="color:var(--lx-untranslated)">{{ totalUntranslated().toLocaleString() }}</div>
+            <lx-stat
+              label="Untranslated"
+              [value]="totalUntranslated().toLocaleString()"
+              [large]="true"
+              numColor="var(--lx-untranslated)"
+            />
           </div>
           <div class="statcell">
-            <div class="eyebrow">New this week</div>
-            <div class="display statnum" style="color:var(--lx-accent)">{{ totalNew() }}</div>
+            <lx-stat label="New this week" [value]="totalNew()" [large]="true" numColor="var(--lx-accent)" />
           </div>
         </div>
 
@@ -136,27 +135,21 @@ function slugify(name: string): string {
     .statstrip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      border: 1px solid var(--lx-line);
+      border: var(--lx-hairline) solid var(--lx-line);
       border-radius: var(--lx-radius-3);
       background: var(--lx-bg-card);
       overflow: hidden;
-      margin-bottom: 34px;
+      margin-bottom: var(--lx-space-9);
     }
     .statcell {
-      padding: 22px 24px;
+      padding: var(--lx-space-7) var(--lx-space-8);
     }
     .statcell + .statcell {
-      border-left: 1px solid var(--lx-line);
-    }
-    .statnum {
-      font-size: var(--lx-size-34);
-      letter-spacing: var(--lx-track-tight);
-      font-variant-numeric: var(--lx-numeric-tabular);
-      margin-top: 8px;
+      border-left: var(--lx-hairline) solid var(--lx-line);
     }
     .worklist {
-      margin-bottom: 34px;
-      border-top: 1px solid var(--lx-line);
+      margin-bottom: var(--lx-space-9);
+      border-top: var(--lx-hairline) solid var(--lx-line);
     }
     .work-row {
       width: 100%;

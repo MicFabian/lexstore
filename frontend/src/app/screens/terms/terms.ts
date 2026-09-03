@@ -11,6 +11,7 @@ import {
 import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox, StatusChip, Tag } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
 import { HistoryModal } from '../../shared/history-modal';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { PromptDialog } from '../../shared/prompt-dialog';
@@ -26,21 +27,18 @@ const TAGS = ['checkout', 'billing', 'auth', 'onboarding'];
 @Component({
   selector: 'lx-terms-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, HistoryModal, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
+  imports: [Icon, Avatar, Btn, SearchBox, StatusChip, Tag, PageHeader, HistoryModal, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
     <div class="well">
       <div class="pad">
-      <div class="phead" style="margin-bottom:14px">
-        <div>
-          <div class="eyebrow">Source strings · English</div>
-          <h1 class="display">Terms</h1>
-          <div class="psub">{{ rows().length }} terms · manage the keys; translate them per language</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <lx-btn variant="ghost" icon="FileUp" (clicked)="goImport()">Import</lx-btn>
-          <lx-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add term</lx-btn>
-        </div>
-      </div>
+      <lx-page-header
+        eyebrow="Source strings · English"
+        heading="Terms"
+        [sub]="rows().length + ' terms · manage the keys; translate them per language'"
+      >
+        <lx-btn variant="ghost" icon="FileUp" (clicked)="goImport()">Import</lx-btn>
+        <lx-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add term</lx-btn>
+      </lx-page-header>
 
       <div class="row" style="margin:16px 0 12px;gap:8px;flex-wrap:wrap">
         <lx-search placeholder="Search terms" [value]="query()" [width]="220" (changed)="query.set($event)" />

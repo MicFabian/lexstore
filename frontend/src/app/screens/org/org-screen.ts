@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
-import { Btn, SearchBox } from '../../shared/primitives';
+import { Btn, SearchBox, Toggle } from '../../shared/primitives';
+import { StatValue } from '../../shared/stat-value';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
@@ -23,7 +24,7 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
 @Component({
   selector: 'lx-org-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, ConfirmDialog],
+  imports: [Icon, Btn, SearchBox, Toggle, StatValue, ConfirmDialog],
   template: `
     <div class="scr">
       <header class="ohead">
@@ -63,11 +64,11 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
         @case ('overview') {
           @if (usage(); as u) {
             <div class="cards">
-              <div class="card"><div class="cnum">{{ u.totalRequests }}</div><div class="clab">AI requests · 30d</div></div>
-              <div class="card"><div class="cnum">{{ u.cacheHitRate }}%</div><div class="clab">Served from cache</div></div>
-              <div class="card"><div class="cnum">{{ (u.inputTokens + u.outputTokens).toLocaleString() }}</div><div class="clab">Tokens used</div></div>
-              <div class="card" [class.card--bad]="u.failures > 0">
-                <div class="cnum">{{ u.failures }}</div><div class="clab">Failed</div>
+              <div class="card"><lx-stat label="AI requests · 30d" [value]="u.totalRequests" /></div>
+              <div class="card"><lx-stat label="Served from cache" [value]="u.cacheHitRate + '%'" /></div>
+              <div class="card"><lx-stat label="Tokens used" [value]="(u.inputTokens + u.outputTokens).toLocaleString()" /></div>
+              <div class="card">
+                <lx-stat label="Failed" [value]="u.failures" [numColor]="u.failures > 0 ? 'var(--lx-danger)' : null" />
               </div>
             </div>
 
@@ -78,7 +79,7 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
                 <tbody>
                   @for (p of u.byProvider; track p.provider) {
                     <tr>
-                      <td><span class="chip">{{ p.provider }}</span></td>
+                      <td><span class="chip chip--neutral">{{ p.provider }}</span></td>
                       <td>{{ p.requests }}</td>
                       <td>{{ p.inputTokens.toLocaleString() }}</td>
                       <td>{{ p.outputTokens.toLocaleString() }}</td>
@@ -114,12 +115,10 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
             <div class="aiform">
               <div class="field">
                 <label>Provider</label>
-                <div class="row" style="gap:8px">
+                <div class="segmented">
                   @for (p of providers; track p.key) {
                     <button
-                      [class]="'btn btn--sm ' + (draft().provider === p.key ? 'btn--ghost' : 'btn--subtle')"
-                      [style.border-color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
-                      [style.color]="draft().provider === p.key ? 'var(--lx-accent)' : null"
+                      [class.on]="draft().provider === p.key"
                       [disabled]="unavailable(p.key, s)"
                       (click)="patchAi({ provider: p.key })"
                     >{{ p.label }}</button>
@@ -132,11 +131,9 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
               <div class="field"><label>Model</label><input class="input" [value]="draft().model" (input)="patchAi({ model: $any($event.target).value })" /></div>
               <div class="field">
                 <label>Formality</label>
-                <div class="row" style="gap:6px">
+                <div class="segmented">
                   @for (f of ['neutral', 'formal', 'informal']; track f) {
-                    <button [class]="'btn btn--sm ' + (draft().formality === f ? 'btn--ghost' : 'btn--subtle')"
-                      [style.border-color]="draft().formality === f ? 'var(--lx-accent)' : null"
-                      (click)="patchAi({ formality: f })">{{ f }}</button>
+                    <button [class.on]="draft().formality === f" (click)="patchAi({ formality: f })">{{ f }}</button>
                   }
                 </div>
               </div>
@@ -145,7 +142,11 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
                 <textarea class="textarea" rows="2" [value]="draft().tone || ''" (input)="patchAi({ tone: $any($event.target).value })" placeholder="e.g. Keep it concise; never translate the word 'Lexstore'."></textarea>
               </div>
               <div class="row">
-                <button [class]="draft().autoFlagFuzzy ? 'toggle on' : 'toggle'" [attr.aria-pressed]="draft().autoFlagFuzzy" (click)="patchAi({ autoFlagFuzzy: !draft().autoFlagFuzzy })"><i></i></button>
+                <lx-toggle
+                  [on]="draft().autoFlagFuzzy"
+                  ariaLabel="Machine output needs review"
+                  (toggled)="patchAi({ autoFlagFuzzy: !draft().autoFlagFuzzy })"
+                />
                 <div>
                   <div style="font-size:var(--lx-size-13)">Machine output needs review</div>
                   <div class="muted small">An accepted draft stays flagged until a person confirms it.</div>
@@ -204,11 +205,13 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
             Keys are stored encrypted and shown only by their last four characters.
           </p>
           <form class="keyform" (submit)="saveKey($event)">
-            <select [value]="draftProvider()" (change)="draftProvider.set($any($event.target).value)">
-              <option value="claude">Claude (Anthropic)</option>
-              <option value="openai">ChatGPT (OpenAI)</option>
-              <option value="gemini">Gemini (Google)</option>
-            </select>
+            <span class="selectwrap">
+              <select class="select" aria-label="Provider" [value]="draftProvider()" (change)="draftProvider.set($any($event.target).value)">
+                <option value="claude">Claude (Anthropic)</option>
+                <option value="openai">ChatGPT (OpenAI)</option>
+                <option value="gemini">Gemini (Google)</option>
+              </select>
+            </span>
             <input
               class="input"
               type="password"
@@ -216,12 +219,14 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
               [value]="draftKey()"
               (input)="draftKey.set($any($event.target).value)"
             />
-            <select [value]="draftScope()" (change)="draftScope.set($any($event.target).value)">
-              <option value="">Whole organisation</option>
-              @for (p of projects(); track p.id) {
-                <option [value]="p.id">Only {{ p.name }}</option>
-              }
-            </select>
+            <span class="selectwrap">
+              <select class="select" aria-label="Scope" [value]="draftScope()" (change)="draftScope.set($any($event.target).value)">
+                <option value="">Whole organisation</option>
+                @for (p of projects(); track p.id) {
+                  <option [value]="p.id">Only {{ p.name }}</option>
+                }
+              </select>
+            </span>
             <lx-btn variant="primary" [disabled]="!draftKey() || saving()">
               {{ saving() ? 'Saving…' : 'Save key' }}
             </lx-btn>
@@ -233,7 +238,7 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
               <tbody>
                 @for (c of credentials(); track c.id) {
                   <tr>
-                    <td><span class="chip">{{ c.provider }}</span></td>
+                    <td><span class="chip chip--neutral">{{ c.provider }}</span></td>
                     <td>{{ c.scope === 'project' ? c.projectName : 'Organisation' }}</td>
                     <td><code>••••{{ c.tail }}</code> <span class="muted small">{{ c.label }}</span></td>
                     <td class="muted">{{ c.createdAt }}<br /><span class="small">{{ c.createdBy }}</span></td>
@@ -271,10 +276,12 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
               [value]="keyLabel()"
               (input)="keyLabel.set($any($event.target).value)"
             />
-            <select [value]="keyScope()" (change)="keyScope.set($any($event.target).value)">
-              <option value="Read only">Read only</option>
-              <option value="Read & write">Read &amp; write</option>
-            </select>
+            <span class="selectwrap">
+              <select class="select" aria-label="Scope" [value]="keyScope()" (change)="keyScope.set($any($event.target).value)">
+                <option value="Read only">Read only</option>
+                <option value="Read & write">Read &amp; write</option>
+              </select>
+            </span>
             <lx-btn variant="primary" [disabled]="!keyLabel() || creatingKey()">
               {{ creatingKey() ? 'Creating…' : 'Create key' }}
             </lx-btn>
@@ -321,7 +328,7 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
                     <td><span class="locale">{{ a.languageCode }}</span></td>
                     <td class="atext">{{ a.sourceText }}</td>
                     <td>
-                      <span class="chip">{{ a.provider }}</span>
+                      <span class="chip chip--neutral">{{ a.provider }}</span>
                       @if (a.cacheHit) { <span class="chip chip--translated">cached</span> }
                       @if (a.status !== 'ok') { <span class="chip chip--untranslated">{{ a.status }}</span> }
                     </td>
@@ -343,7 +350,7 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
                 <tr>
                   <td>{{ m.name }}</td>
                   <td class="muted">{{ m.email }}</td>
-                  <td><span class="chip">{{ m.role }}</span></td>
+                  <td><span class="chip chip--neutral">{{ m.role }}</span></td>
                 </tr>
               }
             </tbody>
@@ -363,45 +370,43 @@ type Tab = 'overview' | 'ai' | 'keys' | 'access' | 'activity' | 'members';
     </div>
   `,
   styles: `
-    .scr { display: flex; flex-direction: column; gap: 20px; padding: 24px 28px; overflow: auto; }
-    .aiform { display: flex; flex-direction: column; gap: 16px; max-width: 560px; }
-    .ohead { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+    .scr { display: flex; flex-direction: column; gap: var(--lx-space-7); padding: var(--lx-space-8) var(--lx-space-9); overflow: auto; }
+    .aiform { display: flex; flex-direction: column; gap: var(--lx-space-6); max-width: 560px; }
+    .ohead { display: flex; justify-content: space-between; gap: var(--lx-space-8); align-items: flex-start; flex-wrap: wrap; }
     .otitle { font-size: var(--lx-size-20); font-weight: var(--lx-weight-medium); letter-spacing: var(--lx-track-tight); margin: 4px 0; }
-    .quota { min-width: 260px; border: 1px solid var(--lx-line); border-radius: var(--lx-radius-3); padding: 14px 16px; }
+    .quota { min-width: 260px; border: var(--lx-hairline) solid var(--lx-line); border-radius: var(--lx-radius-3); padding: var(--lx-space-5) var(--lx-space-6); }
     .quota--none { border-style: dashed; }
-    .quota__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-    .quota__num { font-size: 18px; font-weight: 600; }
-    .bar { height: 6px; border-radius: 3px; background: var(--lx-surface-hover); margin: 10px 0 6px; overflow: hidden; }
+    .quota__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--lx-space-5); }
+    .quota__num { font-size: var(--lx-size-16); font-weight: var(--lx-weight-medium); font-variant-numeric: var(--lx-numeric-tabular); }
+    .bar { height: 6px; border-radius: var(--lx-radius-1); background: var(--lx-surface-hover); margin: 10px 0 6px; overflow: hidden; }
     .bar i { display: block; height: 100%; background: var(--lx-accent); }
-    .small { font-size: 12px; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    .card { border: 1px solid var(--lx-line); border-radius: var(--lx-radius-3); padding: 16px; }
-    .card--bad .cnum { color: var(--lx-danger); }
-    .cnum { font-size: var(--lx-size-26); font-weight: var(--lx-weight-regular); letter-spacing: var(--lx-track-tight); font-variant-numeric: var(--lx-numeric-tabular); }
-    .clab { font-size: 12.5px; color: var(--lx-text-secondary); margin-top: 4px; }
+    .small { font-size: var(--lx-size-12); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--lx-space-5); }
+    .cards .card { padding: var(--lx-space-6); }
     .sect { font-size: var(--lx-size-10); font-weight: var(--lx-weight-medium); text-transform: uppercase; letter-spacing: var(--lx-track-caps); color: var(--lx-text-secondary); margin: 8px 0 0; }
-    .otable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-    .otable th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--lx-text-secondary); padding: 8px 10px; border-bottom: 1px solid var(--lx-line); }
-    .otable td { padding: 10px; border-bottom: 1px solid var(--lx-line); vertical-align: top; }
+    .otable { width: 100%; border-collapse: collapse; font-size: var(--lx-size-13); }
+    .otable th { text-align: left; font-size: var(--lx-size-10); font-weight: var(--lx-weight-medium); text-transform: uppercase; letter-spacing: var(--lx-track-caps); color: var(--lx-text-muted); padding: 8px 10px; border-bottom: var(--lx-hairline) solid var(--lx-line); }
+    .otable td { padding: 10px; border-bottom: var(--lx-hairline) solid var(--lx-border-divider); vertical-align: top; }
     .atext { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .keyform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .keyform select, .keyform .input { padding: 8px 10px; border: 1px solid var(--lx-line); border-radius: 8px; background: var(--lx-bg-card); color: var(--lx-text-primary); font-size: 13.5px; }
+    .keyform { display: flex; gap: var(--lx-space-4); flex-wrap: wrap; align-items: center; }
+    .keyform .selectwrap { min-width: 180px; }
     .keyform .input { flex: 1; min-width: 240px; }
     .spark { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
     .spark__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; flex: 1; height: 100%; }
-    .spark__col i { display: block; width: 100%; background: var(--lx-accent); border-radius: 3px 3px 0 0; min-height: 2px; }
-    .spark__col span { font-size: 10px; color: var(--lx-text-muted); }
+    .spark__col i { display: block; width: 100%; background: var(--lx-accent); border-radius: var(--lx-radius-1) var(--lx-radius-1) 0 0; min-height: 2px; }
+    .spark__col span { font-size: var(--lx-size-10); color: var(--lx-text-muted); }
     .newkey {
-      border: 1px solid var(--lx-accent);
+      border: var(--lx-hairline) solid var(--lx-accent-line);
       border-radius: var(--lx-radius-3);
-      padding: 12px 14px;
+      padding: var(--lx-space-5) var(--lx-space-6);
       margin-bottom: 4px;
       background: var(--lx-accent-soft);
     }
     .newkey code {
       display: block;
       margin-top: 6px;
-      font-size: 13px;
+      font-size: var(--lx-size-13);
+      font-family: var(--lx-font-mono);
       word-break: break-all;
     }
   `,

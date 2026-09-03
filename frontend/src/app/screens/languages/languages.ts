@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Btn } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
@@ -11,17 +12,15 @@ import { LanguageView } from '../../core/models';
 @Component({
   selector: 'lx-languages-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, ConfirmDialog, PromptDialog],
+  imports: [Icon, Btn, PageHeader, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead">
-          <div>
-            <div class="eyebrow">Localization</div>
-            <h1 class="display">Languages</h1>
-            <div class="psub">{{ langs().length }} languages · source is English</div>
-          </div>
-          <div style="display:flex;gap:8px">
+        <lx-page-header
+          eyebrow="Localization"
+          heading="Languages"
+          [sub]="langs().length + ' languages · source is English'"
+        >
             <div style="position:relative">
               <lx-btn variant="ghost" icon="FileDown" (clicked)="exportOpen.set(!exportOpen())">Export all</lx-btn>
               @if (exportOpen()) {
@@ -68,8 +67,7 @@ import { LanguageView } from '../../core/models';
               }
             </div>
             <lx-btn variant="primary" icon="Plus" (clicked)="adding.set(true)">Add language</lx-btn>
-          </div>
-        </div>
+        </lx-page-header>
 
         <div class="lang-grid" style="border-top:1px solid var(--lx-line)">
           @for (l of langs(); track l.id) {

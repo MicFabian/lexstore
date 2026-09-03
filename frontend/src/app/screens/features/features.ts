@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } 
 import { Router } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { ContentState } from '../../shared/content-state';
 import { TableSkeleton } from '../../shared/table-skeleton';
@@ -14,23 +15,18 @@ import { FeatureView, OpenTranslationView } from '../../core/models';
 @Component({
   selector: 'lx-features-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, SearchBox, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
+  imports: [Icon, Btn, SearchBox, PageHeader, ConfirmDialog, PromptDialog, ContentState, TableSkeleton],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead">
-          <div>
-            <div class="eyebrow">Delivery</div>
-            <h1 class="display">Features</h1>
-            <div class="psub">
-              {{ features().length }} features · {{ openTotal() }} translations still open
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <lx-search placeholder="Search features" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New feature</lx-btn>
-          </div>
-        </div>
+        <lx-page-header
+          eyebrow="Delivery"
+          heading="Features"
+          [sub]="features().length + ' features · ' + openTotal() + ' translations still open'"
+        >
+          <lx-search placeholder="Search features" [value]="query()" [width]="200" (changed)="query.set($event)" />
+          <lx-btn variant="primary" icon="Plus" (clicked)="creating.set(true)">New feature</lx-btn>
+        </lx-page-header>
 
         @if (loading()) {
           <lx-table-skeleton [rows]="6" [columns]="5" />

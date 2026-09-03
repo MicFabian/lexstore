@@ -10,6 +10,9 @@ import {
 } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, StatusChip } from '../../shared/primitives';
+import { ConflictNotice } from '../../shared/conflict-notice';
+import { PlaceholderCheck } from '../../shared/placeholder-check';
+import { Provenance } from '../../shared/provenance';
 import { HistoryModal } from '../../shared/history-modal';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
@@ -20,7 +23,7 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
 @Component({
   selector: 'lx-inspector',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, StatusChip, Avatar, HistoryModal, PromptDialog],
+  imports: [Icon, Btn, StatusChip, Avatar, ConflictNotice, PlaceholderCheck, Provenance, HistoryModal, PromptDialog],
   template: `
     <div class="inspector">
       <div class="inspector__head">
@@ -105,7 +108,18 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
             (input)="value.set($any($event.target).value)"
             placeholder="Type the translation…"
           ></textarea>
+          <lx-placeholder-check [source]="checkSource()" [value]="value()" />
         </div>
+
+        @if (conflict(); as c) {
+          <lx-conflict-notice
+            [value]="c.target"
+            [author]="c.modifiedBy?.name ?? null"
+            [at]="c.modifiedAt"
+            (tookTheirs)="takeTheirs()"
+            (keptMine)="keepMine()"
+          />
+        }
 
         <div class="row insp-actions" style="gap:8px">
           <lx-btn variant="primary" [sm]="true" icon="Check" [disabled]="!value()" (clicked)="save(value() ? 'translated' : 'untranslated')">
@@ -194,7 +208,9 @@ import { ProofreadResult, CommentView, EditorRow, TranslationStatus } from '../.
         </div>
 
         <div class="lastedit">
-          @if (row().modifiedBy; as m) {
+          @if (row().origin === 'ai') {
+            <lx-provenance label="Machine draft" [detail]="row().modifiedAt" />
+          } @else if (row().modifiedBy; as m) {
             <lx-avatar [i]="m.avatar" [name]="m.name" [sm]="true" />
             <span class="lastedit__text">
               Last edited by <b>{{ m.name }}</b> · {{ row().modifiedAt }}
@@ -432,6 +448,8 @@ export class Inspector {
   readonly savedAndNext = output<void>();
   readonly closed = output<void>();
   readonly saved = output<EditorRow>();
+  /** The row was refreshed from the server without a save of ours — no toast. */
+  readonly refreshed = output<EditorRow>();
 
   protected readonly langMenuOpen = signal(false);
   protected readonly langName = computed(
@@ -452,7 +470,22 @@ export class Inspector {
   protected readonly addingTag = signal(false);
   protected readonly tagFields = [{ name: 'tag', label: 'Tag', placeholder: 'checkout' }];
 
+  /** Their version of the row after a 409 — what won the race. */
+  protected readonly conflict = signal<EditorRow | null>(null);
+  /** The status the rejected save asked for, so "keep mine" retries it. */
+  private pendingStatus: TranslationStatus = 'translated';
+
   protected readonly projectId = computed(() => this.state.current()?.id ?? null);
+
+  /** Mirrors EditorService's proofread source: every plural form joins in,
+      because checking the singular alone would miss {count}. */
+  protected readonly checkSource = computed(() => {
+    const r = this.row();
+    const parts = [r.source, r.plural?.one, r.plural?.other].filter(
+      (s): s is string => !!s,
+    );
+    return [...new Set(parts)].join(' ');
+  });
 
   constructor() {
     // Reset editable state whenever the selected row or language changes.
@@ -473,6 +506,7 @@ export class Inspector {
       this.suggestion.set(null);
       this.suggestionMeta.set(null);
       this.proof.set(null);
+      this.conflict.set(null);
     });
   }
 
@@ -557,26 +591,87 @@ export class Inspector {
     this.savedAndNext.emit();
   }
 
-  protected save(status: TranslationStatus): void {
+  protected save(status: TranslationStatus, version: number | null = this.row().version): void {
     const pid = this.state.current()?.id;
     if (!pid) return;
+    // Save & next moves the selection before this response lands; everything
+    // about the request is captured now so a late 409 cannot attach itself to
+    // whichever row the inspector shows by then.
+    const row = this.row();
+    const lang = this.lang();
     const val = this.value() || null;
     this.api
-      .saveTranslation(pid, this.row().id, this.lang(), {
+      .saveTranslation(pid, row.id, lang, {
         value: val,
         status,
-        version: this.row().version,
+        version,
       })
       .subscribe({
-        next: (updated) => this.saved.emit(updated),
+        next: (updated) => {
+          this.conflict.set(null);
+          this.saved.emit(updated);
+        },
         error: (err) => {
-          const message =
-            err?.status === 409
-              ? 'Someone else saved this translation. Reload to see their version.'
-              : 'That translation could not be saved.';
-          this.toast.show({ message, tone: 'error' });
+          if (err?.status === 409) {
+            this.pendingStatus = status;
+            this.loadConflict(row, lang);
+            return;
+          }
+          this.toast.show({ message: 'That translation could not be saved.', tone: 'error' });
         },
       });
+  }
+
+  /** Still looking at the cell whose save conflicted? */
+  private stillOn(row: EditorRow, lang: string): boolean {
+    return this.row().id === row.id && this.lang() === lang;
+  }
+
+  /** A 409 names no winner — fetch their version so the notice can show it. */
+  private loadConflict(row: EditorRow, lang: string): void {
+    const pid = this.projectId();
+    if (!pid) return;
+    // The selection already moved on: the inline notice would point at the
+    // wrong row, so the conflict is reported by name instead.
+    if (!this.stillOn(row, lang)) {
+      this.conflictToast(row, lang);
+      return;
+    }
+    this.api.editor(pid, lang, { q: row.key }).subscribe({
+      next: (res) => {
+        const theirs = res.rows.find((r) => r.id === row.id) ?? null;
+        if (theirs && this.stillOn(row, lang)) {
+          this.conflict.set(theirs);
+        } else {
+          this.conflictToast(row, lang);
+        }
+      },
+      error: () => this.conflictToast(row, lang),
+    });
+  }
+
+  private conflictToast(row: EditorRow, lang: string): void {
+    this.toast.show({
+      message: `Someone else saved ${row.key} · ${lang} first — their version stands.`,
+      tone: 'error',
+    });
+  }
+
+  /** Their version wins: adopt it, and the row is up to date without a save. */
+  protected takeTheirs(): void {
+    const theirs = this.conflict();
+    if (!theirs) return;
+    this.conflict.set(null);
+    this.value.set(theirs.target ?? '');
+    this.refreshed.emit(theirs);
+  }
+
+  /** Mine wins, knowingly: retry the save against their version number. */
+  protected keepMine(): void {
+    const theirs = this.conflict();
+    if (!theirs) return;
+    this.conflict.set(null);
+    this.save(this.pendingStatus, theirs.version);
   }
 
   /** Review what is stored, not what is typed but unsaved. */

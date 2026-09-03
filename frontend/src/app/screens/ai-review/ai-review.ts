@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Icon } from '../../shared/icon';
 import { Btn } from '../../shared/primitives';
 import { ContentState } from '../../shared/content-state';
+import { PageHeader } from '../../shared/page-header';
+import { Provenance } from '../../shared/provenance';
 import { ApiService } from '../../core/api.service';
 import { ProjectStateService } from '../../core/project-state.service';
 import { ToastService } from '../../core/toast.service';
@@ -16,19 +17,15 @@ import { AiReviewRow, ProofreadResult } from '../../core/models';
 @Component({
   selector: 'lx-ai-review-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Btn, ContentState],
+  imports: [Btn, ContentState, PageHeader, Provenance],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead">
-          <div>
-            <div class="eyebrow">{{ project()?.name }}</div>
-            <h1 class="display">AI review</h1>
-            <div class="psub">
-              {{ rows().length }} machine draft{{ rows().length === 1 ? '' : 's' }} awaiting a person
-            </div>
-          </div>
-        </div>
+        <lx-page-header
+          [eyebrow]="project()?.name ?? null"
+          heading="AI review"
+          [sub]="rows().length + ' machine draft' + (rows().length === 1 ? '' : 's') + ' awaiting a person'"
+        />
 
         @if (rows().length === 0 && loaded()) {
           <lx-content-state
@@ -49,8 +46,7 @@ import { AiReviewRow, ProofreadResult } from '../../core/models';
                   <span>{{ r.value }}</span>
                 </div>
                 <div class="draft__meta">
-                  <span class="ai-mark" title="Machine translation">◑</span>
-                  {{ r.provider }} · {{ r.languageName }} · {{ r.at }}
+                  <lx-provenance label="AI draft" [detail]="r.provider + ' · ' + r.languageName + ' · ' + r.at" />
                 </div>
               </div>
               <div class="draft__actions">
@@ -72,7 +68,7 @@ import { AiReviewRow, ProofreadResult } from '../../core/models';
                 @if (v.suggestion; as s) {
                   <div class="verdict__issue">
                     Suggestion: <em>{{ s }}</em>
-                    <button class="btn btn--accent-quiet btn--sm" style="margin-left:8px" (click)="applySuggestion(r, s)">Use it</button>
+                    <lx-btn variant="accent-quiet" [sm]="true" style="margin-left:8px" (clicked)="applySuggestion(r, s)">Use it</lx-btn>
                   </div>
                 }
                 @if (v.issues.length === 0 && !v.suggestion) {
@@ -120,9 +116,6 @@ import { AiReviewRow, ProofreadResult } from '../../core/models';
     .draft__meta {
       font-size: var(--lx-size-11);
       color: var(--lx-text-muted);
-    }
-    .ai-mark {
-      color: var(--lx-unsure);
     }
     .draft__actions {
       display: flex;

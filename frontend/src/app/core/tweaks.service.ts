@@ -52,7 +52,10 @@ export class TweaksService {
   private restore(): void {
     try {
       const raw = localStorage.getItem(KEY);
-      if (!raw) return;
+      if (!raw) {
+        this.followSystemTheme();
+        return;
+      }
       const v = JSON.parse(raw);
       if (v.theme) this.theme.set(v.theme);
       if (v.accent) this.accent.set(v.accent);
@@ -60,5 +63,11 @@ export class TweaksService {
     } catch {
       /* ignore corrupt state */
     }
+  }
+
+  /** Until the user chooses, first load respects the OS — dark is designed, not inverted. */
+  private followSystemTheme(): void {
+    if (typeof matchMedia !== 'function') return;
+    if (matchMedia('(prefers-color-scheme: dark)').matches) this.theme.set('dark');
   }
 }

@@ -13,6 +13,7 @@ import { forkJoin, map, of, catchError } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { Btn, SearchBox } from '../../shared/primitives';
+import { Provenance } from '../../shared/provenance';
 import { SegmentOption } from '../../shared/segmented';
 import { Inspector } from './inspector';
 import { PromptDialog } from '../../shared/prompt-dialog';
@@ -25,7 +26,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
 @Component({
   selector: 'lx-editor-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, Btn, SearchBox, Inspector, PromptDialog, ContentState],
+  imports: [RouterLink, Icon, Btn, SearchBox, Provenance, Inspector, PromptDialog, ContentState],
   template: `
     <div class="editor" [class.editor--split]="!!selectedRow()" style="position:relative">
       <div class="ed-head">
@@ -141,7 +142,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
                     @if (cellRow && (cellRow.status === 'fuzzy' || cellRow.status === 'proofread')) {
                       <span class="stcap tgt__status" [style.color]="statusColor(cellRow.status)">
                         @if (cellRow.origin === 'ai') {
-                          <span class="ai-mark" title="Machine translation">◑ AI ·</span>
+                          <lx-provenance style="margin-right:6px;vertical-align:-1px" />
                         }
                         {{ statusLabel(cellRow.status) }}
                       </span>
@@ -193,6 +194,7 @@ import { EditorCounts, EditorRow, FeatureView, TranslationStatus } from '../../c
           (langChanged)="selectLangInInspector($event)"
           (closed)="sel.set(null)"
           (saved)="onSaved($event)"
+          (refreshed)="onRefreshed($event)"
           (savedAndNext)="advanceAfterSave()"
         />
       }
@@ -760,6 +762,16 @@ export class EditorScreen implements OnInit {
 
   protected select(termId: string, lang: string): void {
     this.sel.set({ termId, lang });
+  }
+
+  /** A conflict resolved by taking theirs: the row is current, nothing of ours was saved. */
+  protected onRefreshed(updated: EditorRow): void {
+    const lang = this.sel()?.lang;
+    if (!lang) return;
+    this.byLang.update((m) => ({
+      ...m,
+      [lang]: (m[lang] ?? []).map((r) => (r.id === updated.id ? updated : r)),
+    }));
   }
 
   protected onSaved(updated: EditorRow): void {

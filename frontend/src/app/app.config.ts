@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { PreloadAllModules, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
 import { authInterceptor, provideAuth } from 'angular-auth-oidc-client';
 
 import { routes } from './app.routes';
@@ -11,7 +11,9 @@ import { runtimeConfig } from './core/runtime-config';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    // Screens stay lazy for a small first paint, but are fetched right after
+    // it, so every navigation lands without a chunk round trip.
+    provideRouter(routes, withComponentInputBinding(), withPreloading(PreloadAllModules)),
     provideHttpClient(withFetch(), withInterceptors([e2eTokenInterceptor, errorInterceptor, authInterceptor()])),
     provideAuth({
       config: {

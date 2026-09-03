@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { Router, RouterLink } from '@angular/router';
 import { Icon, IconName } from '../../shared/icon';
 import { Btn } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
 import { AppearanceControls } from '../../shell/appearance-controls';
 import { PoeditorWizard } from './poeditor-wizard';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
@@ -21,16 +22,11 @@ interface IntegrationItem {
 @Component({
   selector: 'lx-settings-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Icon, Btn, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
+  imports: [RouterLink, Icon, Btn, PageHeader, AppearanceControls, PoeditorWizard, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead" style="margin-bottom:20px">
-          <div>
-            <div class="eyebrow">Configuration</div>
-            <h1 class="display">Settings</h1>
-          </div>
-        </div>
+        <lx-page-header eyebrow="Configuration" heading="Settings" />
         <div class="subnav" style="margin-bottom:30px">
           @for (t of tabs; track t.id) {
             <button [class.on]="tab() === t.id" (click)="tab.set(t.id)">
@@ -186,7 +182,7 @@ interface IntegrationItem {
               </div>
             }
             @case ('glossary') {
-              <div class="panel">
+              <div class="panel panel--pad">
                 <h2 class="ptitle">Glossary</h2>
                 <p class="hint">
                   Terms this project insists on. They are given to the translator as
@@ -208,12 +204,14 @@ interface IntegrationItem {
                     [value]="gTranslation()"
                     (input)="gTranslation.set($any($event.target).value)"
                   />
-                  <select [value]="gLang()" (change)="gLang.set($any($event.target).value)">
-                    <option value="">All languages</option>
-                    @for (l of languages(); track l.code) {
-                      <option [value]="l.code">{{ l.name }}</option>
-                    }
-                  </select>
+                  <span class="selectwrap">
+                    <select class="select" aria-label="Language" [value]="gLang()" (change)="gLang.set($any($event.target).value)">
+                      <option value="">All languages</option>
+                      @for (l of languages(); track l.code) {
+                        <option [value]="l.code">{{ l.name }}</option>
+                      }
+                    </select>
+                  </span>
                   <label class="gkeep">
                     <input type="checkbox" [checked]="gKeep()" (change)="gKeep.set($any($event.target).checked)" />
                     Never translate
@@ -350,6 +348,25 @@ interface IntegrationItem {
     }
   `,
   styles: `
+    .ptitle {
+      font-size: var(--lx-size-13);
+      font-weight: var(--lx-weight-medium);
+      margin: 0;
+    }
+    .panel--pad {
+      padding: var(--lx-space-6) var(--lx-space-7) var(--lx-space-7);
+    }
+    .panel.danger {
+      border-color: var(--lx-danger-line);
+    }
+    .panel.danger .hint {
+      padding: var(--lx-space-5) var(--lx-space-7) 0;
+      margin: 0;
+    }
+    .panel.danger lx-btn {
+      display: inline-flex;
+      margin: var(--lx-space-5) var(--lx-space-7) var(--lx-space-7);
+    }
     .gform {
       display: flex;
       gap: 8px;
@@ -358,14 +375,6 @@ interface IntegrationItem {
       margin: 14px 0 18px;
     }
     .gform .input { flex: 1; min-width: 180px; }
-    .gform select {
-      padding: 8px 10px;
-      border: 1px solid var(--lx-line);
-      border-radius: var(--lx-radius-3);
-      background: var(--lx-bg-card);
-      color: var(--lx-text-primary);
-      font-size: 13.5px;
-    }
     .gkeep {
       display: flex;
       align-items: center;

@@ -205,12 +205,6 @@ lx-toast {
   display: contents;
 }
 
-/* Buttons do not inherit color, so an unstyled one renders black on any
-   theme. Every bare button in the shell speaks the theme's ink. */
-button {
-  color: inherit;
-}
-
 /* Nav takes the slack so the user footer sits at the bottom of the rail. */
 .rail__nav {
   flex: 1;
@@ -243,20 +237,7 @@ button {
   padding-bottom: 9px;
 }
 
-/* Keys are content, not chrome. */
-.keytag {
-  font-size: var(--lx-size-12);
-}
-.trow .keysub {
-  font-size: var(--lx-size-11);
-  color: var(--lx-text-muted);
-}
-
 /* An empty translation is an invitation, not a whisper. */
-.trow .tgt.empty {
-  color: var(--lx-text-faint);
-  font-style: normal;
-}
 .trow:hover .tgt.empty,
 .trow .tgt.empty:focus-visible {
   color: var(--lx-accent);

@@ -492,9 +492,9 @@ test.describe('AI settings + cache in the organisation', () => {
     await formalBtn.click();
     await page.locator('button', { hasText: 'Save settings' }).click();
     await expect(page.locator('.toast')).toContainText('AI settings saved');
-    // Reload and confirm the formality stuck (active button gets the ghost class).
+    // Reload and confirm the formality stuck (the segmented control marks it "on").
     await page.goto('/organisation?tab=ai');
-    await expect(page.getByRole('button', { name: 'formal', exact: true })).toHaveClass(/btn--ghost/);
+    await expect(page.getByRole('button', { name: 'formal', exact: true })).toHaveClass(/\bon\b/);
   });
 });
 

@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Icon, IconName } from '../shared/icon';
@@ -161,6 +163,16 @@ export class CommandPalette {
   protected readonly query = signal('');
   protected readonly active = signal(0);
 
+  /** Every open starts fresh; the service owns when, the palette owns what. */
+  private readonly resetOnOpen = effect(() => {
+    if (this.open()) {
+      untracked(() => {
+        this.query.set('');
+        this.active.set(0);
+      });
+    }
+  });
+
   private readonly base = computed<Command[]>(() => {
     const nav: Command[] = [
       { id: 'go-editor', label: 'Go to Translations', hint: 'editor', icon: 'List', run: () => this.go('/editor') },
@@ -192,14 +204,6 @@ export class CommandPalette {
       (c) => c.label.toLowerCase().includes(q) || c.hint.toLowerCase().includes(q),
     );
   });
-
-  toggle(): void {
-    this.cmd.toggle();
-    if (this.open()) {
-      this.query.set('');
-      this.active.set(0);
-    }
-  }
 
   protected close(): void {
     this.cmd.hide();

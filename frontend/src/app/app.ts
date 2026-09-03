@@ -1,14 +1,21 @@
-import { ChangeDetectionStrategy, Component, OnInit, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { TweaksService } from './core/tweaks.service';
 import { AuthService } from './core/auth.service';
+import { CommandService } from './core/command.service';
 import { CommandPalette } from './shell/command-palette';
 
 @Component({
   selector: 'lx-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, CommandPalette],
-  template: `<router-outlet /><lx-command-palette />`,
+  // The palette ships in its own chunk: prefetched once the browser is idle,
+  // instantiated on first open, and only the tiny CommandService stays in the
+  // initial bundle to catch ⌘K.
+  template: `<router-outlet />
+    @defer (when cmd.open(); prefetch on idle) {
+      <lx-command-palette />
+    }`,
   host: {
     '(document:keydown)': 'onKeydown($event)',
   },
@@ -19,7 +26,7 @@ export class App implements OnInit {
   private readonly tweaks = inject(TweaksService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly palette = viewChild.required(CommandPalette);
+  protected readonly cmd = inject(CommandService);
 
   constructor() {
     // After a login callback (URL carries ?code=&state=), the OIDC library no
@@ -44,7 +51,7 @@ export class App implements OnInit {
   protected onKeydown(e: KeyboardEvent): void {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      this.palette().toggle();
+      this.cmd.toggle();
     }
   }
 }

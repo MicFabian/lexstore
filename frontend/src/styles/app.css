@@ -28,17 +28,16 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+/* Buttons do not inherit color, so an unstyled one renders black on any
+   theme. Every bare button in the shell speaks the theme's ink. */
 button {
   font-family: inherit;
   cursor: pointer;
+  color: inherit;
 }
 a {
   color: var(--lx-text-link);
   text-decoration: none;
-}
-::selection {
-  background: var(--lx-accent-soft);
-  color: var(--lx-text-primary);
 }
 
 * {
@@ -766,10 +765,87 @@ a {
 .searchbox svg {
   color: var(--lx-text-faint);
 }
+/* Checkbox, drawn rather than themed: appearance:none makes the input a plain
+   box, so the check inherits the accent ramp in both themes. */
 input[type='checkbox'] {
-  accent-color: var(--lx-accent);
-  width: 14px;
-  height: 14px;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  background: var(--lx-bg-field);
+  border: var(--lx-hairline) solid var(--lx-border-field);
+  border-radius: var(--lx-radius-1);
+  cursor: pointer;
+  transition: var(--lx-transition-control);
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  transform: scale(0);
+  transition: transform var(--lx-dur-instant) var(--lx-ease-standard);
+  background: var(--lx-accent-on);
+  clip-path: polygon(14% 46%, 0 62%, 38% 100%, 100% 16%, 84% 2%, 36% 68%);
+}
+input[type='checkbox']:hover {
+  border-color: var(--lx-accent);
+}
+input[type='checkbox']:checked {
+  background: var(--lx-accent);
+  border-color: var(--lx-accent);
+}
+input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+/* The inset input ring disappears on an accent-filled box; checked or not,
+   a focused checkbox wears the two-ring treatment. */
+input[type='checkbox']:focus-visible {
+  outline: none;
+  box-shadow: var(--lx-ring-focus);
+}
+
+/* Select — the input's shape with a drawn chevron. The wrapper carries the
+   chevron so the native control stays a native control. */
+.selectwrap {
+  position: relative;
+  display: inline-flex;
+}
+.selectwrap::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -5px;
+  border-right: 1.5px solid var(--lx-text-muted);
+  border-bottom: 1.5px solid var(--lx-text-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.select {
+  appearance: none;
+  font-family: var(--lx-font-sans);
+  font-size: var(--lx-size-13);
+  color: var(--lx-text-primary);
+  background: var(--lx-bg-field);
+  border: var(--lx-hairline) solid var(--lx-border-field);
+  border-radius: var(--lx-radius-2);
+  padding: 7px 28px 7px 10px;
+  width: 100%;
+  cursor: pointer;
+  transition: var(--lx-transition-control);
+}
+.select:hover {
+  border-color: var(--lx-accent);
+}
+.select:focus {
+  outline: none;
+  border-color: var(--lx-accent);
+  box-shadow: inset 0 0 0 1px var(--lx-accent);
 }
 
 /* ---------- Command bar ---------- */
@@ -1013,9 +1089,6 @@ input[type='checkbox'] {
 }
 .muted {
   color: var(--lx-text-muted);
-}
-.tnum {
-  font-variant-numeric: var(--lx-numeric-tabular);
 }
 .toast {
   position: fixed;

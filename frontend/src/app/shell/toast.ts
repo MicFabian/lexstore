@@ -67,7 +67,7 @@ import { ToastItem, ToastService } from '../core/toast.service';
       border-radius: var(--lx-radius-2);
     }
     .toast__action:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--lx-surface-hover);
     }
     .toast__close {
       border: none;

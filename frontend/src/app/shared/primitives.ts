@@ -31,7 +31,7 @@ export function avatarIndexFor(name: string): number {
   `,
 })
 export class Btn {
-  readonly variant = input<'primary' | 'ghost' | 'subtle' | 'danger'>('ghost');
+  readonly variant = input<'primary' | 'ghost' | 'subtle' | 'danger' | 'accent-quiet'>('ghost');
   readonly sm = input(false);
   readonly icon = input<IconName | null>(null);
   readonly iconOnly = input(false);
@@ -114,6 +114,7 @@ export class Locale {}
   template: `<button
     [class]="on() ? 'toggle on' : 'toggle'"
     [attr.aria-pressed]="on()"
+    [attr.aria-label]="ariaLabel() || null"
     type="button"
     (click)="toggled.emit()"
   >
@@ -122,6 +123,7 @@ export class Locale {}
 })
 export class Toggle {
   readonly on = input(false);
+  readonly ariaLabel = input('');
   readonly toggled = output<void>();
 }
 

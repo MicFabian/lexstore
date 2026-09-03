@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { Avatar, Btn, SearchBox } from '../../shared/primitives';
+import { PageHeader } from '../../shared/page-header';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { PromptDialog } from '../../shared/prompt-dialog';
 import { ApiService } from '../../core/api.service';
@@ -11,21 +12,18 @@ import { ContributorView } from '../../core/models';
 @Component({
   selector: 'lx-contributors-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Icon, Avatar, Btn, SearchBox, ConfirmDialog, PromptDialog],
+  imports: [Icon, Avatar, Btn, SearchBox, PageHeader, ConfirmDialog, PromptDialog],
   template: `
     <div class="well">
       <div class="pad">
-        <div class="phead">
-          <div>
-            <div class="eyebrow">Team</div>
-            <h1 class="display">Contributors</h1>
-            <div class="psub">{{ people().length }} people · scoped by language</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <lx-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
-            <lx-btn variant="primary" icon="UserPlus" (clicked)="inviting.set(true)">Invite contributor</lx-btn>
-          </div>
-        </div>
+        <lx-page-header
+          eyebrow="Team"
+          heading="Contributors"
+          [sub]="people().length + ' people · scoped by language'"
+        >
+          <lx-search placeholder="Search people" [value]="query()" [width]="200" (changed)="query.set($event)" />
+          <lx-btn variant="primary" icon="UserPlus" (clicked)="inviting.set(true)">Invite contributor</lx-btn>
+        </lx-page-header>
 
         <table class="ttable people" aria-label="Contributors">
           <thead>
